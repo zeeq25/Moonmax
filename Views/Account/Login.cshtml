@@ -1,0 +1,88 @@
+﻿@model Moonmax.Models.Auth.LoginViewModel
+
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="login-panel">
+    <h2 class="login-title">Sign in</h2>
+
+    <form asp-action="Login" method="post" class="login-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <!-- Email -->
+        <div class="field">
+            <label asp-for="Email"></label>
+            <div class="field-inner">
+                <span class="field-icon">
+                    <i class="fa-regular fa-envelope"></i>
+                </span>
+                <input asp-for="Email" autocomplete="username" />
+            </div>
+            <span asp-validation-for="Email" class="val"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+            <label asp-for="Password"></label>
+            <div class="field-inner">
+                <span class="field-icon">
+                    <i class="fa-solid fa-lock"></i>
+                </span>
+
+                <input asp-for="Password" autocomplete="current-password" id="pwd" />
+
+                <!-- eye / eye-slash on the right -->
+                <button type="button"
+                        class="field-addon peek"
+                        aria-label="Show password"
+                        title="Show/Hide password"
+                        onclick="togglePwd(event)">
+                    <i class="fa-regular fa-eye icon-show"></i>
+                    <i class="fa-regular fa-eye-slash icon-hide"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="val"></span>
+        </div>
+
+        <!-- Remember + Forgot -->
+        <div class="row">
+            <label class="remember">
+                <input asp-for="RememberMe" />
+                <span>@Html.DisplayNameFor(m => m.RememberMe)</span>
+            </label>
+            <a asp-area="Identity" asp-page="/Account/ForgotPassword" class="muted">
+                Forgot password?
+            </a>
+        </div>
+
+        <!-- Login button -->
+        <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Log in</span>
+        </button>
+
+        <div class="summary">
+            @Html.ValidationSummary(
+            excludePropertyErrors: true,
+                        message: null,
+                        htmlAttributes: new { @class = "val" })
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePwd(e) {
+            const input = document.getElementById('pwd');
+            const btn = e.currentTarget;
+            const show = input.type === 'password';
+
+            input.type = show ? 'text' : 'password';
+            btn.classList.toggle('showing', show);
+        }
+    </script>
+}

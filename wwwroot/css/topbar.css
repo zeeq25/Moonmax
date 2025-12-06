@@ -1,0 +1,135 @@
+﻿:root {
+    --brand-blue: #0a6bb8;
+    --pill: #f6c20a;
+    --ink: #2c3a52;
+    --muted: #a0a9b7;
+    --border: #e3e9f3;
+}
+
+/* ============================= */
+/* TOPBAR WRAPPER                */
+/* ============================= */
+.mm-topbar {
+    height: 56px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Left side (empty for now, for page title) */
+.mm-topbar-left {
+    display: flex;
+    align-items: center;
+}
+
+/* Right side elements */
+.mm-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+/* ============================= */
+/* NOTIFICATION BUTTON           */
+/* ============================= */
+.mm-top-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    transition: 0.15s ease;
+}
+
+    .mm-top-btn:hover {
+        background: #f4f7fd;
+        border-color: #cfd8ea;
+    }
+
+.mm-bell {
+    width: 18px;
+    height: 18px;
+    fill: var(--ink);
+    opacity: 0.95;
+}
+
+/* Notification yellow badge */
+.mm-badge {
+    position: absolute;
+    top: -4px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--pill);
+    color: #0b1324;
+    font-size: 10px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    border: 2px solid #ffffff;
+}
+
+/* ============================= */
+/* USER CHIP                     */
+/* ============================= */
+.mm-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 4px 8px;
+    border-radius: 999px;
+    background: #0d2940;
+    color: #f6f8fc;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+    .mm-user-chip:hover {
+        background: #123553;
+    }
+
+/* Avatar circle */
+.mm-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #103852;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+    .mm-user-avatar svg {
+        width: 18px;
+        height: 18px;
+        fill: #f6f8fc;
+    }
+
+/* User details */
+.mm-user-meta {
+    line-height: 1.2;
+}
+
+.mm-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.mm-user-role {
+    font-size: 11px;
+    color: #c0cde0;
+}

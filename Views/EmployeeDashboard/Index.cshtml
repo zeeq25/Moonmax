@@ -1,0 +1,284 @@
+﻿@{
+    ViewData["Title"] = "Employee Dashboard";
+    ViewData["Nav"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // using the partial layout with sidebar + topbar
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="page page-dashboard">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Employee Dashboard Overview</h1>
+            <p class="dash-sub">Welcome back! Here’s what’s happening today in your work.</p>
+        </div>
+    </header>
+
+    <!-- KPI CARDS ======================================================= -->
+    <section class="dash-kpis">
+        <!-- Assigned Jobs -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-regular fa-clipboard"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Assigned Jobs</div>
+                <div class="kpi-main">8</div>
+            </div>
+        </article>
+
+        <!-- Completed Tasks -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Completed Tasks (Month)</div>
+                <div class="kpi-main">15</div>
+            </div>
+        </article>
+
+        <!-- Pending Approvals -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Pending Approvals</div>
+                <div class="kpi-main">3</div>
+            </div>
+        </article>
+
+        <!-- Personal Sales -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Personal Sales (Month)</div>
+                <div class="kpi-main">₱45,200</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- MAIN GRID: RECENT ACTIVITY + SUMMARY ================================== -->
+    <section class="dash-main-grid">
+        <!-- Recent Activity ------------------------------------------------>
+        <article class="panel-card activity-card">
+            <header class="panel-card-header">
+                <h2>Recent Activity</h2>
+            </header>
+
+            <ul class="activity-list">
+                <li class="activity-item">
+                    <div class="activity-icon icon-green">
+                        <i class="fa-solid fa-wrench"></i>
+                    </div>
+                    <div class="activity-body">
+                        <div class="activity-title">Work Order #015 assigned to you</div>
+                        <div class="activity-meta">Service: Hydraulic Pump Repair</div>
+                    </div>
+                    <div class="activity-time">2h ago</div>
+                </li>
+
+                <li class="activity-item">
+                    <div class="activity-icon icon-blue">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div class="activity-body">
+                        <div class="activity-title">New client added: Tech Industries</div>
+                        <div class="activity-meta">Category: Construction</div>
+                    </div>
+                    <div class="activity-time">3h ago</div>
+                </li>
+
+                <li class="activity-item">
+                    <div class="activity-icon icon-purple">
+                        <i class="fa-regular fa-file-lines"></i>
+                    </div>
+                    <div class="activity-body">
+                        <div class="activity-title">Invoice #1023 approved</div>
+                        <div class="activity-meta">Amount: ₱32,500</div>
+                    </div>
+                    <div class="activity-time">5h ago</div>
+                </li>
+            </ul>
+        </article>
+
+        <!-- Today’s Summary ------------------------------------------------>
+        <article class="panel-card summary-card">
+            <header class="panel-card-header panel-card-header--blue">
+                <h2>Today’s Summary</h2>
+            </header>
+
+            <div class="summary-rows">
+                <div class="summary-row">
+                    <span class="summary-label">Tasks Assigned</span>
+                    <span class="summary-value">4</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Tasks Completed</span>
+                    <span class="summary-value">6</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Pending Approvals</span>
+                    <span class="summary-value">2</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Sales Achieved</span>
+                    <span class="summary-value">₱45,200</span>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <!-- BOTTOM CHARTS SECTION ============================================ -->
+    <section class="dash-chart-wrap">
+
+        <!-- TOP ROW: Personal Output + Quick Links -->
+        <div class="dash-chart-row dash-chart-row--top">
+            <!-- Personal Jobs (Bar Chart) -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Jobs by Service</h3>
+                </header>
+                <div class="chart-body">
+                    <canvas id="personalJobsChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Quick Links -->
+            <article class="chart-card quick-card">
+                <header class="chart-header">
+                    <h3>Quick Links</h3>
+                </header>
+                <div class="quick-body">
+                    <ul class="quick-links">
+                        <li>
+                            <a asp-controller="JobOrders" asp-action="Index" class="quick-link-btn">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>View Job Orders</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Sales" asp-action="Index" class="quick-link-btn">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                                <span>My Sales</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Inventory" asp-action="Index" class="quick-link-btn">
+                                <i class="fa-solid fa-box-open"></i>
+                                <span>Check Inventory</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </article>
+        </div>
+
+        <!-- BOTTOM ROW: Weekly Output + Inventory Value -->
+        <div class="dash-chart-row dash-chart-row--bottom">
+            <!-- Weekly Output Trend (Line Chart) -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Weekly Output Trend</h3>
+                </header>
+                <div class="chart-body chart-body--small">
+                    <canvas id="weeklyOutputChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Inventory Value Doughnut Chart -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Inventory Value (₱)</h3>
+                </header>
+                <div class="chart-body chart-body--small">
+                    <canvas id="inventoryValueChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Personal Jobs Bar Chart
+        const personalJobsCtx = document.getElementById('personalJobsChart');
+        if (personalJobsCtx) {
+            new Chart(personalJobsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Hydraulic Pump', 'Metal Fab', 'Hose Fab'],
+                    datasets: [{
+                        label: 'Jobs',
+                        data: [4, 3, 1],
+                        backgroundColor: '#0f2940',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { color: '#e5e7eb' }, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        // Weekly Output Line Chart
+        const weeklyOutputCtx = document.getElementById('weeklyOutputChart');
+        if (weeklyOutputCtx) {
+            new Chart(weeklyOutputCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Tasks Completed',
+                        data: [2, 4, 3, 6],
+                        borderColor: '#fbbf24',
+                        backgroundColor: '#fbbf24',
+                        tension: 0.35,
+                        pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Inventory Value Doughnut Chart
+        const inventoryCtx = document.getElementById('inventoryValueChart');
+        if (inventoryCtx) {
+            new Chart(inventoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Parts', 'Materials', 'Tools', 'Consumables'],
+                    datasets: [{
+                        data: [30, 25, 25, 20],
+                        backgroundColor: ['#0f2940', '#fbbf24', '#2563eb', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    </script>
+}

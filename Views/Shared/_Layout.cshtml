@@ -1,0 +1,99 @@
+﻿@* Views/Shared/_Layout.cshtml *@
+@using System.Security.Claims
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Moonmax Marketing</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- App shell styles -->
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+@{
+    var role = User.Identity.IsAuthenticated 
+        ? User.FindFirstValue(ClaimTypes.Role) 
+        : "User"; // default to employee
+}
+
+@if (ViewData["AppShell"] as bool? == true)
+{
+    <div class="app">
+        <!-- Sidebar -->
+        @if (role == "Admin")
+        {
+            @await Html.PartialAsync("_Sidebar")  <!-- Admin sidebar -->
+        }
+        else
+        {
+            @await Html.PartialAsync("_EmployeeSidebar")  <!-- Employee sidebar -->
+        }
+
+        <div class="app-main">
+            <!-- Topbar -->
+            @await Html.PartialAsync("_Topbar")
+
+            <!-- Main Body -->
+            <main class="content">
+                @RenderBody()
+            </main>
+
+            <!-- Footer -->
+            @await Html.PartialAsync("_Footer")
+        </div>
+    </div>
+}
+else
+{
+    @RenderBody()  <!-- pages like Login without app shell -->
+}
+
+<!-- Scripts: jQuery -> Bootstrap -> jQuery Validate -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.13/dist/jquery.validate.unobtrusive.min.js"></script>
+
+<script>
+    // User dropdown toggle for topbar
+    document.addEventListener("DOMContentLoaded", function () {
+        const userMenuBtn = document.getElementById("userMenuBtn");
+        const userDropdown = document.querySelector(".user-dropdown");
+        const userMenu = document.getElementById("userMenu");
+
+        if (!userMenuBtn || !userDropdown || !userMenu) return;
+
+        userMenuBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle("open");
+            const isOpen = userDropdown.classList.contains("open");
+            userMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        document.addEventListener("click", function () {
+            if (userDropdown.classList.contains("open")) {
+                userDropdown.classList.remove("open");
+                userMenuBtn.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        userMenu.addEventListener("click", function (e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+
+@RenderSection("Scripts", required: false)
+</body>
+</html>

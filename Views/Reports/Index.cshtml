@@ -1,0 +1,309 @@
+﻿@{
+    ViewData["Title"] = "Reports & Analytics";
+    ViewData["Nav"] = "Reports";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
+}
+
+<div class="page page-reports">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Reports &amp; Analytics</h1>
+            <p class="dash-sub">View business insights and performance metrics</p>
+        </div>
+    </header>
+
+    <!-- KPI CARDS (no "vs last period" text) -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Revenue</div>
+                <div class="kpi-main">₱1,449,500</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Avg. Job Value</div>
+                <div class="kpi-main">₱18,500</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Jobs</div>
+                <div class="kpi-main">316</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Completion Rate</div>
+                <div class="kpi-main">92%</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- MAIN REPORT GRID -->
+    <section class="reports-grid">
+
+        <!-- ROW 1: LINE CHART + PIE CHART -->
+        <div class="reports-row reports-row--top">
+            <article class="mm-card chart-card chart-card--wide">
+                <div class="chart-card-header">
+                    <h2>Monthly Sales Trend</h2>
+                    <p>Revenue trend over the last 6 months.</p>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </article>
+
+            <article class="mm-card chart-card">
+                <div class="chart-card-header">
+                    <h2>Service Type Distribution</h2>
+                    <p>Share of jobs by service type.</p>
+                </div>
+                <div class="chart-card-body chart-card-body--pie">
+                    <canvas id="serviceTypeChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <!-- ROW 2: BAR CHARTS -->
+        <div class="reports-row">
+            <article class="mm-card chart-card">
+                <div class="chart-card-header">
+                    <h2>Top Clients by Revenue</h2>
+                    <p>Highest revenue customers this period.</p>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="topClientsChart"></canvas>
+                </div>
+            </article>
+
+            <article class="mm-card chart-card">
+                <div class="chart-card-header">
+                    <h2>Inventory Turnover Rate</h2>
+                    <p>How quickly stock is moving per category.</p>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="turnoverChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <!-- ROW 3: SUMMARY TABLE + KEY HIGHLIGHTS -->
+        <div class="reports-row reports-row--summary">
+
+            <!-- LEFT: Monthly Performance Summary -->
+            <article class="mm-card">
+                <div class="chart-card-header">
+                    <h2>Monthly Performance Summary</h2>
+                    <p>Key performance metrics by month.</p>
+                </div>
+
+                <div class="summary-table-wrap">
+                    <table class="mm-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Total Sales</th>
+                                <th>Jobs Completed</th>
+                                <th>Avg. Job Value</th>
+                                <th>Growth</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>May 2025</td>
+                                <td>₱185,000</td>
+                                <td>42</td>
+                                <td>₱4,405</td>
+                                <td class="growth growth--up">+9.1%</td>
+                            </tr>
+                            <tr>
+                                <td>Jun 2025</td>
+                                <td>₱215,000</td>
+                                <td>48</td>
+                                <td>₱4,479</td>
+                                <td class="growth growth--up">+16.2%</td>
+                            </tr>
+                            <tr>
+                                <td>Jul 2025</td>
+                                <td>₱245,000</td>
+                                <td>52</td>
+                                <td>₱4,712</td>
+                                <td class="growth growth--up">+14.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Aug 2025</td>
+                                <td>₱268,000</td>
+                                <td>58</td>
+                                <td>₱4,621</td>
+                                <td class="growth growth--up">+9.4%</td>
+                            </tr>
+                            <tr>
+                                <td>Sep 2025</td>
+                                <td>₱252,000</td>
+                                <td>54</td>
+                                <td>₱4,667</td>
+                                <td class="growth growth--down">-6.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Oct 2025</td>
+                                <td>₱284,500</td>
+                                <td>62</td>
+                                <td>₱4,589</td>
+                                <td class="growth growth--up">+12.9%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <!-- RIGHT: Key Highlights -->
+            <article class="mm-card insights-card">
+                <div class="chart-card-header">
+                    <h2>Key Highlights</h2>
+                    <p>Quick snapshot of this period’s performance.</p>
+                </div>
+
+                <ul class="insights-list">
+                    <li>
+                        <span class="insights-label">Best Month</span>
+                        <span class="insights-value">Oct 2025 (₱284,500)</span>
+                    </li>
+                    <li>
+                        <span class="insights-label">Strongest Growth</span>
+                        <span class="insights-value insights-up">+16.2% (Jun 2025)</span>
+                    </li>
+                    <li>
+                        <span class="insights-label">Weakest Month</span>
+                        <span class="insights-value insights-down">Sep 2025 (–6.0%)</span>
+                    </li>
+                    <li>
+                        <span class="insights-label">Top Client by Revenue</span>
+                        <span class="insights-value">Tech Industries – ₱450,000</span>
+                    </li>
+                    <li>
+                        <span class="insights-label">Most Requested Service</span>
+                        <span class="insights-value">Hydraulic Repair (35%)</span>
+                    </li>
+                </ul>
+            </article>
+
+        </div>
+
+    </section>
+</div>
+
+@section Scripts {
+    <!-- Chart.js for UI charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Monthly Sales Trend (Line)
+        const salesTrendCtx = document.getElementById('salesTrendChart');
+        if (salesTrendCtx) {
+            new Chart(salesTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    datasets: [{
+                        label: 'Sales (₱)',
+                        data: [165000, 215000, 240000, 260000, 250000, 285000],
+                        tension: 0.35,
+                        borderWidth: 3,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        // Service Type Distribution (Pie)
+        const serviceTypeCtx = document.getElementById('serviceTypeChart');
+        if (serviceTypeCtx) {
+            new Chart(serviceTypeCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hydraulic Repair', 'Turbo Repair', 'Metal Fabrication', 'Hydraulic Hose'],
+                    datasets: [{
+                        data: [35, 28, 22, 15]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Top Clients by Revenue (Horizontal Bar)
+        const topClientsCtx = document.getElementById('topClientsChart');
+        if (topClientsCtx) {
+            new Chart(topClientsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tech Industries', 'ABC Manufacturing', 'XYZ Corporation', 'Global Logistics', 'Metro Construction'],
+                    datasets: [{
+                        data: [450000, 300000, 150000, 120000, 90000]
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Inventory Turnover Rate (Bar)
+        const turnoverCtx = document.getElementById('turnoverChart');
+        if (turnoverCtx) {
+            new Chart(turnoverCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Hoses', 'Fittings', 'Turbo Parts', 'Metal Parts', 'Tools'],
+                    datasets: [{
+                        data: [85, 72, 68, 55, 43]
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+    </script>
+}

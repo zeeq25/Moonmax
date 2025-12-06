@@ -1,0 +1,292 @@
+﻿@{
+    ViewData["Title"] = "Inventory Stock Alerts";
+    ViewData["Nav"] = "Inventory";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/inventory.css" asp-append-version="true" />
+}
+
+<div class="page page-inventory">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Inventory Management</h1>
+            <p class="dash-sub">Monitor critical and low-stock items</p>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-box-archive"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Items</div>
+                <div class="kpi-main">1,247</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Low Stock Items</div>
+                <div class="kpi-main">23</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Value</div>
+                <div class="kpi-main">₱2.4M</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Categories</div>
+                <div class="kpi-main">12</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- TABS -->
+    <section class="inv-tabs-bar">
+        <div class="inv-tabs">
+            <!-- Products tab (link back to Index) -->
+            <a asp-controller="Inventory"
+               asp-action="Index"
+               class="inv-tab">
+                Products
+            </a>
+
+            <!-- Active Stock Alerts tab -->
+            <a asp-controller="Inventory"
+               asp-action="Stockalert"
+               class="inv-tab inv-tab--active">
+                Stock Alerts
+            </a>
+        </div>
+    </section>
+
+    <!-- SEARCH + FILTER / EXPORT -->
+    <section class="inv-filter-bar">
+        <div class="inv-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="inv-search-input"
+                   type="text"
+                   placeholder="Search low stock items by name, code, or category..." />
+        </div>
+
+        <div class="inv-filter-actions">
+            <button class="btn-chip">
+                <i class="fa-solid fa-filter"></i>
+                <span>Filter</span>
+            </button>
+            <button class="btn-chip">
+                <i class="fa-solid fa-download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="inv-table-wrap">
+        <div class="mm-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>On Hand</th>
+                        <th>Reorder Level</th>
+                        <th>Supplier</th>
+                        <th>Unit Price</th>
+                        <th>Status</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- CRITICAL / LOW -->
+                    <tr>
+                        <td>HH-001</td>
+                        <td>Hydraulic Hose 1/2"</td>
+                        <td><span class="chip chip-cat">Hoses</span></td>
+                        <td>45 meters</td>
+                        <td>50 meters</td>
+                        <td>Parker Hannifin</td>
+                        <td>₱450</td>
+                        <td><span class="badge status-low">Low Stock</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>TR-201</td>
+                        <td>Turbo Bearing Kit</td>
+                        <td><span class="chip chip-cat">Turbo Parts</span></td>
+                        <td>12 kit</td>
+                        <td>15 kit</td>
+                        <td>Garrett</td>
+                        <td>₱4,500</td>
+                        <td><span class="badge status-low">Low Stock</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>TR-202</td>
+                        <td>Turbo Seal Kit</td>
+                        <td><span class="chip chip-cat">Turbo Parts</span></td>
+                        <td>8 kit</td>
+                        <td>10 kit</td>
+                        <td>Garrett</td>
+                        <td>₱2,800</td>
+                        <td><span class="badge status-low">Low Stock</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- WARNING (NEAR REORDER) -->
+                    <tr>
+                        <td>FT-101</td>
+                        <td>JIC Fitting #6</td>
+                        <td><span class="chip chip-cat">Fittings</span></td>
+                        <td>120 pieces</td>
+                        <td>100 pieces</td>
+                        <td>Eaton</td>
+                        <td>₱85</td>
+                        <td><span class="badge status-warn">Warning</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>FT-102</td>
+                        <td>NPT Fitting 1/4"</td>
+                        <td><span class="chip chip-cat">Fittings</span></td>
+                        <td>95 pieces</td>
+                        <td>80 pieces</td>
+                        <td>Eaton</td>
+                        <td>₱65</td>
+                        <td><span class="badge status-warn">Warning</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>MP-301</td>
+                        <td>Steel Plate 1/4" x 4ft</td>
+                        <td><span class="chip chip-cat">Metal Parts</span></td>
+                        <td>24 sheets</td>
+                        <td>20 sheets</td>
+                        <td>Metal Depot</td>
+                        <td>₱3,200</td>
+                        <td><span class="badge status-warn">Warning</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>MP-302</td>
+                        <td>Steel Rod 1" x 6m</td>
+                        <td><span class="chip chip-cat">Metal Parts</span></td>
+                        <td>18 pieces</td>
+                        <td>15 pieces</td>
+                        <td>Metal Depot</td>
+                        <td>₱1,850</td>
+                        <td><span class="badge status-warn">Warning</span></td>
+                        <td class="inv-actions">
+                            <button type="button"
+                                    class="inv-btn-icon"
+                                    title="Reorder">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.inv-search-input');
+            const rows = document.querySelectorAll('.mm-table tbody tr');
+
+            function applyStockAlertSearch() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+
+                    // 0 Code, 1 Name, 2 Category, 5 Supplier
+                    const code = cells[0]?.innerText.toLowerCase() || '';
+                    const name = cells[1]?.innerText.toLowerCase() || '';
+                    const category = cells[2]?.innerText.toLowerCase() || '';
+                    const supplier = cells[5]?.innerText.toLowerCase() || '';
+
+                    const combined = `${code} ${name} ${category} ${supplier}`;
+
+                    if (term === '' || combined.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyStockAlertSearch);
+            }
+
+            applyStockAlertSearch();
+        });
+    </script>
+}

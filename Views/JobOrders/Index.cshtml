@@ -1,0 +1,155 @@
+﻿@model Moonmax.ViewModels.JobOrdersIndexViewModel
+
+@{
+    ViewData["Title"] = "Job Orders & Repair Requests";
+    ViewData["Nav"] = "JobOrders";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
+}   
+
+<div class="page page-jobs">
+    <!-- HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Job Orders & Repair Requests</h1>
+            <p class="dash-sub">Manage repair jobs and service requests</p>
+        </div>
+        <div class="dash-actions">
+            <a asp-controller="JobOrders" asp-action="Create" class="btn-pill btn-primary-mm">
+                <span class="btn-ico">+</span>
+                <span>Create Job Order</span>
+            </a>
+            <button type="button" class="btn-pill btn-outline-mm">
+                <i class="fa-solid fa-sliders btn-ico"></i>
+                <span>Advance Filter</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-regular fa-clock"></i></div>
+            <div><div class="kpi-title">Pending Jobs</div><div class="kpi-main">@Model.PendingJobs</div></div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-rotate-right"></i></div>
+            <div><div class="kpi-title">In Progress</div><div class="kpi-main">@Model.InProgressJobs</div></div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-check"></i></div>
+            <div><div class="kpi-title">Completed</div><div class="kpi-main">@Model.CompletedJobs</div></div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
+            <div><div class="kpi-title">Total Revenue</div><div class="kpi-main">₱@Model.TotalRevenue.ToString("N0")</div></div>
+        </article>
+    </section>
+
+    <!-- SEARCH + TABS ROW -->
+    <section class="jo-top-row">
+        <div class="jo-search">
+            <span class="jo-search-ico"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" class="jo-search-input" placeholder="Search by job ID, client, or service type..." />
+        </div>
+        <div class="jo-filter-group">
+            <button class="jo-tab jo-tab--active" data-filter="all">All Jobs</button>
+            <button class="jo-tab" data-filter="pending">Pending</button>
+            <button class="jo-tab" data-filter="in-progress">In Progress</button>
+            <button class="jo-tab" data-filter="completed">Completed</button>
+        </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="jo-table-wrap">
+        <table class="jo-table">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Client</th>
+                    <th>Service Type</th>
+                    <th>Technician</th>
+                    <th>Created</th>
+                    <th>Due Date</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th class="jo-col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var jo in Model.JobOrders)
+                {
+                    <tr data-status="@jo.Status.Replace(" ", "-").ToLower()" data-technician-id="@jo.TechnicianID">
+                        <td>@jo.JobID</td>
+                        <td>@jo.Client</td>
+                        <td>@jo.ServiceType</td>
+                        <td>@jo.Technician</td>
+                        <td>@(jo.Created.ToString("yyyy-MM-dd") ?? "")</td>
+                        <td>@(jo.DueDate?.ToString("yyyy-MM-dd") ?? "")</td>
+                        <td>₱@jo.Cost.ToString("N0")</td>
+                        <td><span class="status status-@(jo.Status.Replace(" ", "-").ToLower())">@jo.Status</span></td>
+
+                        <td class="jo-col-actions">
+                            <div class="jo-actions">
+                                <!-- View Job Order -->
+                                <a class="icon-btn-table btn-view" asp-action="View" asp-route-id="@jo.JobID" title="View Job Order">
+                                    <i class="fa-regular fa-eye"></i>
+                                </a>
+
+                                <!-- Edit Job Order -->
+                                <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </a>
+
+                                <!-- Add Parts -->
+                                <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
+                                    <i class="fa-solid fa-plus"></i>
+                                </a>
+                            </div>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = document.querySelectorAll('.jo-table tbody tr');
+            const tabs = document.querySelectorAll('.jo-tab');
+            const searchInput = document.querySelector('.jo-search-input');
+            let currentFilter = 'all';
+
+            function applyFilters() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+                rows.forEach(row => {
+                    const status = row.dataset.status;
+                    const matchesStatus = currentFilter === 'all' || status === currentFilter;
+                    const cells = row.querySelectorAll('td');
+                    const combinedText = Array.from(cells).slice(0, 4).map(c => c.innerText.toLowerCase()).join(' ');
+                    row.style.display = (matchesStatus && (term === '' || combinedText.includes(term))) ? '' : 'none';
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(t => t.classList.remove('jo-tab--active'));
+                    this.classList.add('jo-tab--active');
+                    currentFilter = this.dataset.filter;
+                    applyFilters();
+                });
+            });
+
+            if (searchInput) searchInput.addEventListener('input', applyFilters);
+            applyFilters();
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

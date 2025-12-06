@@ -1,0 +1,485 @@
+﻿:root {
+    --mm-bg: #f5f7fb;
+    --mm-card: #ffffff;
+    --mm-border: #e5e9f3;
+    --mm-title: #141927;
+    --mm-text: #4a5669;
+    --mm-muted: #98a2b3;
+    --mm-yellow: #f6c20a;
+    --mm-green: #22c55e;
+    --mm-blue: #0b628f; /* header blue */
+    --mm-dark: #0e2a3d;
+    --mm-red: #dc2626;
+}
+
+/* GLOBAL PAGE BG */
+.main-body {
+    background: var(--mm-bg);
+}
+
+/* PAGE WRAPPER */
+.page.page-inventory {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: 100%;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.dash-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mm-title);
+    margin: 0 0 4px;
+}
+
+.dash-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--mm-muted);
+}
+
+.dash-header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.header-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* =====================================================
+   KPI CARD STYLES
+===================================================== */
+
+.dash-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dash-card {
+    background: var(--mm-card);
+    border-radius: 16px;
+    border: 1px solid var(--mm-border);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--mm-dark);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .kpi-icon i,
+    .kpi-icon svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+.kpi-title {
+    font-size: 13px;
+    color: var(--mm-muted);
+}
+
+.kpi-main {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--mm-title);
+}
+
+/* =====================================================
+   TABS BAR
+===================================================== */
+
+.inv-tabs-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 6px 0 14px;
+    gap: 12px;
+}
+
+.inv-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.inv-tab {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.inv-tab--active {
+    background: var(--mm-dark);
+    color: #ffffff;
+    border-color: var(--mm-dark);
+}
+
+/* old badge style kept in case you reuse it somewhere else */
+.inv-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* =====================================================
+   SEARCH + FILTER BAR
+===================================================== */
+
+.inv-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.inv-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    border: 1px solid var(--mm-border);
+    flex: 1;
+    min-width: 260px;
+    max-width: 420px; /* similar to Job Orders */
+}
+
+    .inv-search i {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+.inv-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    flex: 1;
+    font-size: 14px;
+}
+
+.inv-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-chip {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+    .btn-chip i {
+        font-size: 13px;
+    }
+
+/* EXPORT button = dark blue */
+.inv-filter-actions .btn-chip:last-child {
+    background: #0e2a3d;
+    border-color: #0e2a3d;
+    color: #ffffff;
+}
+
+    .inv-filter-actions .btn-chip:last-child i {
+        color: #ffffff;
+    }
+
+/* =====================================================
+   TABLES
+===================================================== */
+
+.inv-table-wrap {
+    margin-top: 4px;
+}
+
+/* card wrapper – NO rounded corners */
+.mm-card {
+    background: var(--mm-card);
+    border-radius: 0;
+    border: 1px solid var(--mm-border);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.03);
+    overflow: hidden;
+}
+
+.mm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+    /* colored header like Job Orders */
+    .mm-table thead {
+        background: var(--mm-blue);
+    }
+
+    .mm-table th,
+    .mm-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0; /* thicker line */
+    }
+
+    .mm-table th {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+        border-bottom: 2px solid #074261;
+    }
+
+    .mm-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+/* CATEGORY – plain black text, no pill */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.chip-cat {
+    background: transparent !important;
+    color: #111827;
+}
+
+/* STATUS – colored text only */
+.badge {
+    padding: 0;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+}
+
+.status-low {
+    color: #dc2626; /* red */
+}
+
+.status-ok {
+    color: #059669; /* green */
+}
+
+.status-warn {
+    color: #eab308; /* yellow */
+}
+
+/* =====================================================
+   ACTIONS COLUMN (Stock Alerts)
+===================================================== */
+
+.col-actions {
+    text-align: right;
+    width: 80px;
+}
+
+.inv-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Reorder icon button – yellow square like Job Orders edit */
+.inv-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #fbbf24;
+    background: #fbbf24;
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+    .inv-btn-icon i {
+        font-size: 16px;
+        color: #0b1324;
+    }
+
+    .inv-btn-icon:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+        background: #f59e0b;
+        border-color: #f59e0b;
+    }
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 992px) {
+    .dash-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dash-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .inv-search {
+        max-width: 100%;
+    }
+}
+
+/* FORM CARD */
+.inv-form {
+    padding: 2rem;
+    display: grid;
+    gap: 1.3rem;
+}
+
+.inv-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inv-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inv-input {
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+    background: #fff;
+}
+
+    .inv-input:focus {
+        border-color: #0078ff;
+        box-shadow: 0 0 0 3px rgba(0, 120, 255, 0.15);
+    }
+
+.inv-form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* SUCCESS TOAST */
+.toast-mm {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    padding: 14px 18px;
+    border-radius: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all 0.4s ease;
+    z-index: 9999;
+}
+
+    .toast-mm.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-mm i {
+        font-size: 18px;
+    }
+
+.badge.status-low {
+    color: orangered; /* Font color */
+    font-weight: bold; /* Optional: make it stand out */
+}
+.badge.status-ok {
+    color: lawngreen; /* Font color */
+    font-weight: bold; /* Optional: make it stand out */
+}
+
+
+/* Enhance stock status badges without padding */
+.badge.status-low,
+.badge.status-ok {
+    font-size: 0.8rem;
+    font-weight: 400;
+    
+    color: white;
+    background-color: transparent; /* remove default badge color */
+}
+
+/* Specific colors */
+.badge.status-low {
+    color: #dc3545; /* red text for low stock */
+}
+
+.badge.status-ok {
+    color: #28a745; /* green text for in stock */
+}
+

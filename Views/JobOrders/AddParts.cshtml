@@ -1,0 +1,99 @@
+﻿@model Moonmax.ViewModels.AddPartsViewModel
+
+@{
+    ViewData["Title"] = "Add Parts";
+    ViewData["Nav"] = "JobOrders";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+}
+
+<div class="page page-add-parts">
+    <!-- HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Add Parts</h1>
+            <p class="dash-sub">Job #@Model.JobID - @Model.JobClient (@Model.ServiceType)</p>
+        </div>
+        <div class="dash-actions">
+            <a asp-action="Index" class="btn-pill btn-secondary-mm">
+                <i class="fa-solid fa-arrow-left btn-ico"></i>
+                Back to Job Orders
+            </a>
+        </div>
+    </header>
+
+    <!-- FORM TO ADD PART -->
+    <section class="add-part-form mt-3 mb-5">
+        <form asp-action="AddParts" method="post">
+            <input type="hidden" asp-for="JobID" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Select Part</label>
+                    <select asp-for="InventoryID" class="form-select" asp-items="Model.InventoryItems">
+                        <option value="">-- Select Part --</option>
+                    </select>
+                    <span asp-validation-for="InventoryID" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Quantity</label>
+                    <input asp-for="Quantity" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Add Part</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- TABLE OF ADDED PARTS -->
+    <section class="added-parts-table">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Part Name</th>
+                    <th>Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total Cost</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Parts != null && Model.Parts.Any())
+                {
+                    foreach (var part in Model.Parts)
+                    {
+                        <tr>
+                            <td>@part.PartName</td>
+                            <td>@part.Quantity</td>
+                            <td>₱@part.UnitCost.ToString("N2")</td>
+                            <td>₱@part.TotalCost.ToString("N2")</td>
+                            <td>
+                                <a asp-action="RemovePart" asp-route-id="@part.PartID" class="btn btn-sm btn-danger">
+                                    <i class="fa-solid fa-trash"></i> Remove
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center">No parts added yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

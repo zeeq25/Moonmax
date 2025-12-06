@@ -1,0 +1,30 @@
+﻿:root {
+    --footer-bg: #ffffff;
+    --footer-border: #e3e9f3;
+    --footer-text: #7c8a9c;
+}
+
+/* Footer wrapper */
+.mm-footer {
+    height: 48px;
+    background: var(--footer-bg);
+    border-top: 1px solid var(--footer-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 22px;
+    font-size: 13px;
+    color: var(--footer-text);
+    margin-top: auto;
+}
+
+/* Left side */
+.mm-footer-left {
+    opacity: 0.9;
+}
+
+/* Right side (tagline) */
+.mm-footer-right {
+    opacity: 0.9;
+    text-align: right;
+}

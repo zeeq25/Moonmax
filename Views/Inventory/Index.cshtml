@@ -1,0 +1,194 @@
+﻿@model List<Moonmax.ViewModels.InventoryListingVM>
+
+
+@{
+    ViewData["Title"] = "Inventory Management";
+    ViewData["Nav"] = "Inventory";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/inventory.css" asp-append-version="true" />   
+}
+
+<div class="page page-inventory">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Inventory Management</h1>
+            <p class="dash-sub">Manage your parts, hoses, fittings, and supplies</p>
+        </div>
+
+        <div class="dash-header-actions">
+            <a asp-controller="Inventory"
+               asp-action="Create"
+               class="btn-pill btn-primary-mm header-cta">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Item</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-box-archive"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Items</div>
+                <div class="kpi-main">@Model.Count</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Low Stock Items</div>
+                <div class="kpi-main">@Model.Count(i => i.QuantityInStock <= 10)</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Value</div>
+                <div class="kpi-main">₱@Model.Sum(i => i.UnitCost * i.QuantityInStock)</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Categories</div>
+                <div class="kpi-main">@Model.Select(i => i.Category).Distinct().Count()</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- TABS -->
+    <section class="inv-tabs-bar">
+        <div class="inv-tabs">
+            <a asp-controller="Inventory"
+               asp-action="Index"
+               class="inv-tab inv-tab--active">
+                Products
+            </a>
+
+            <a asp-controller="Inventory"
+               asp-action="Stockalert"
+               class="inv-tab">
+                Stock Alerts
+            </a>
+        </div>
+    </section>
+
+    <!-- SEARCH + FILTER / EXPORT -->
+    <section class="inv-filter-bar">
+        <div class="inv-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="inv-search-input"
+                   type="text"
+                   placeholder="Search by item name, code, or category..." />
+        </div>
+
+        <div class="inv-filter-actions">
+            <button class="btn-chip">
+                <i class="fa-solid fa-filter"></i>
+                <span>Filter</span>
+            </button>
+            <button class="btn-chip">
+                <i class="fa-solid fa-download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- TABLE: ALL PRODUCTS -->
+    <section class="inv-table-wrap">
+        <div class="mm-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Supplier</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.InventoryID</td>
+                            <td>@item.PartName</td>
+                            <td><span class="chip chip-cat">@item.Category</span></td>
+                            <td>@item.QuantityInStock</td>
+                            <td>₱@item.UnitCost</td>
+                            <td>@item.SupplierName</td>
+
+                            <td>
+                                @if (item.QuantityInStock <= 10)
+                                {
+                                    <span class="badge status-low">Low Stock</span>
+                                }
+                                else
+                                {
+                                    <span class="badge status-ok">In Stock</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.inv-search-input');
+            const rows = document.querySelectorAll('.mm-table tbody tr');
+
+            function applyInventorySearch() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+
+                    const code = cells[0]?.innerText.toLowerCase() || '';
+                    const name = cells[1]?.innerText.toLowerCase() || '';
+                    const category = cells[2]?.innerText.toLowerCase() || '';
+                    const supplier = cells[5]?.innerText.toLowerCase() || '';
+
+                    const combined = `${code} ${name} ${category} ${supplier}`;
+
+                    row.style.display = term === '' || combined.includes(term) ? '' : 'none';
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyInventorySearch);
+            }
+
+            applyInventorySearch();
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+

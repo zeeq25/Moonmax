@@ -1,0 +1,149 @@
+﻿:root {
+    --sb-bg: #072a3a; /* Sidebar deep blue */
+    --sb-bg-2: #062534; /* Footer darker blue */
+    --ink: #dbe7f3; /* Primary text on dark */
+    --muted: #9db3c6; /* Secondary text */
+    --pill: #f6c20a; /* Moonmax Yellow */
+    --hover: rgba(255,255,255,.06);
+    --line: rgba(255,255,255,.08);
+    --radius: 14px;
+}
+
+/* --------------------------- */
+/* MAIN SIDEBAR CONTAINER      */
+/* --------------------------- */
+.mm-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 240px;
+    background: var(--sb-bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    border-inline-end: 1px solid var(--line);
+    z-index: 20;
+}
+
+/* --------------------------- */
+/* BRAND HEADER (TOP)          */
+/* --------------------------- */
+.mm-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.mm-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--pill);
+    color: #0b1324;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+}
+
+.mm-meta {
+    line-height: 1.1;
+}
+
+.mm-name {
+    font-weight: 700;
+    letter-spacing: .5px;
+    font-size: 15px;
+}
+
+.mm-sub {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* --------------------------- */
+/* NAVIGATION LINKS            */
+/* --------------------------- */
+.mm-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 10px;
+    gap: 6px;
+}
+
+/* Base link styling */
+.mm-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 12px;
+    transition: 0.18s ease;
+}
+
+    /* Hover effect */
+    .mm-link:hover {
+        background: var(--hover);
+    }
+
+/* --------------------------- */
+/* SVG ICONS — flat, no 3D    */
+/* --------------------------- */
+.mm-ico {
+    width: 22px;
+    height: 22px;
+    fill: var(--ink);
+    opacity: 0.85;
+    transition: 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Hover makes icon slightly brighter */
+.mm-link:hover .mm-ico {
+    opacity: 1;
+}
+
+/* --------------------------- */
+/* ACTIVE MENU ITEM (yellow pill) */
+/* --------------------------- */
+.mm-link.active {
+    background: var(--pill);
+    color: #0b1324;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(246, 194, 10, .3);
+}
+
+    .mm-link.active .mm-ico {
+        fill: #0b1324;
+        opacity: 1;
+    }
+
+/* --------------------------- */
+/* FOOTER                      */
+/* --------------------------- */
+.mm-footer {
+    margin-top: auto;
+    padding: 12px 14px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    background: var(--sb-bg-2);
+    font-size: 12px;
+}
+
+/* --------------------------- */
+/* LAYOUT SHIFT FOR MAIN BODY */
+/* --------------------------- */
+.layout {
+    display: flex;
+}
+
+.main {
+    margin-left: 240px;
+    min-height: 100vh;
+    background: #f5f7fb;
+    padding: 20px;
+}

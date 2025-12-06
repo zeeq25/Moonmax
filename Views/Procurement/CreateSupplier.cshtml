@@ -1,0 +1,85 @@
+﻿@model Moonmax.ViewModels.CreateSupplierViewModel
+
+@{
+    ViewData["Title"] = "Add Supplier";
+    ViewData["Nav"] = "Procurement";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/procurement.css" asp-append-version="true" />
+}
+
+<h1>Add Supplier</h1>
+
+<form asp-action="CreateSupplier" asp-controller="Procurement" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a asp-action="Suppliers" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Supplier Name -->
+    <div class="form-group mb-2">
+        <label asp-for="SupplierName"></label>
+        <input asp-for="SupplierName" class="form-control" placeholder="Enter supplier name" />
+        <span asp-validation-for="SupplierName" class="text-danger"></span>
+    </div>
+
+    <!-- Contact Number -->
+    <div class="form-group mb-2">
+        <label asp-for="ContactNumber"></label>
+        <input asp-for="ContactNumber" class="form-control" placeholder="Enter contact number" />
+        <span asp-validation-for="ContactNumber" class="text-danger"></span>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group mb-2">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" placeholder="Enter email address" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <!-- Product Line -->
+    <div class="form-group mb-2">
+        <label asp-for="ProductLine"></label>
+        <input asp-for="ProductLine" class="form-control" placeholder="Enter product line" />
+        <span asp-validation-for="ProductLine" class="text-danger"></span>
+    </div>
+
+    <!-- Payment Terms -->
+    <div class="form-group mb-2">
+        <label asp-for="PaymentTerms"></label>
+        <select asp-for="PaymentTerms" class="form-control">
+            <option value="Cash On Delivery">COD</option>
+            <option value="PDC(15 Days)">PDC-15</option>
+            <option value="PDC(30 Days)">PDC-30</option>
+            <option value="PDC(60 Days)">PDC-60</option>
+        </select>
+        <span asp-validation-for="PaymentTerms" class="text-danger"></span>
+    </div>
+
+    <!-- Status -->
+    <div class="form-group mb-2">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="mt-3 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Supplier
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

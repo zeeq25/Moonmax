@@ -1,0 +1,209 @@
+﻿@model IEnumerable<Moonmax.Models.PurchaseOrders>
+
+@{
+    ViewData["Title"] = "Procurement & Supplier Management";
+    ViewData["Nav"] = "Procurement";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/procurement.css" asp-append-version="true" />
+
+    <style>
+        .btn-receive:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    </style>
+}
+
+<div class="page page-proc">
+
+    <!-- HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Procurement &amp; Supplier Management</h1>
+            <p class="dash-sub">Manage suppliers and purchase orders.</p>
+        </div>
+
+        <div class="dash-actions">
+            <a asp-controller="Procurement" asp-action="CreatePurchaseOrder"
+               class="btn-pill btn-primary-mm">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create Purchase Order</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-building-user"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Active Suppliers</div>
+                <div class="kpi-main">@Model.SelectMany(po => po.Supplier != null ? new[] { po.Supplier } : Array.Empty<Moonmax.Models.Supplier>()).Distinct().Count()</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-regular fa-clipboard"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Pending POs</div>
+                <div class="kpi-main">@Model.Count(po => po.Status.ToLower() == "pending")</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-truck-moving"></i>
+            </div>
+            <div>
+                <div class="kpi-title">In Transit</div>
+                <div class="kpi-main">@Model.Count(po => po.Status.ToLower() == "intransit")</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Total PO Value</div>
+                <div class="kpi-main">₱@Model.Sum(po => po.Items.Sum(i => i.Quantity * i.UnitPrice))</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- SEARCH + TABS -->
+    <section class="proc-toolbar">
+        <div class="proc-toolbar-row">
+            <div class="proc-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text"
+                       class="proc-search-input"
+                       placeholder="Search purchase orders..." />
+            </div>
+
+            <div class="proc-tabs-row">
+                <a asp-controller="Procurement" asp-action="Index"
+                   class="proc-tab proc-tab--active">Purchase Orders</a>
+                <a asp-controller="Procurement" asp-action="Suppliers"
+                   class="proc-tab">Suppliers</a>
+                <a asp-controller="Procurement" asp-action="Products"
+                   class="proc-tab">Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="proc-table-wrap">
+        <div class="mm-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Date Created</th>
+                        <th>Expected Delivery</th>
+                        <th>Status</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var po in Model)
+                    {
+                        <tr>
+                            <td>@po.PurchaseOrderID</td>
+                            <td>@po.Supplier?.SupplierName</td>
+                            <td>
+                                @string.Join(", ", po.Items.Select(i => $"{i.ProductName} ({i.Quantity})"))
+                            </td>
+                            <td>₱@po.Items.Sum(i => i.Quantity * i.UnitPrice)</td>
+                            <td>@po.DateCreated.ToString("yyyy-MM-dd")</td>
+                            <td>@po.ExpectedDelivery.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <span class="badge @(po.Status.ToLower() == "pending" ? "status-pending" :
+                                                                                           po.Status.ToLower() == "delivered" ? "status-delivered" :
+                                                                                           "status-intransit")">@po.Status</span>
+                        </td>
+                        <td class="col-actions">
+                            <div class="proc-actions">
+
+                                    <!-- View button -->
+                                    <a asp-controller="Procurement"
+                                       asp-action="Details"
+                                       asp-route-id="@po.PurchaseOrderID"
+                                       class="icon-btn-table btn-view"
+                                       style="text-decoration:none;"
+                                       title="View">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+
+                                    <!-- Receive button -->
+                                    <form asp-action="Receive"
+                                          asp-controller="Procurement"
+                                          method="post"
+                                          style="display:inline">
+                                        <input type="hidden" name="id" value="@po.PurchaseOrderID" />
+                                        <button type="submit" class="icon-btn-table btn-receive"
+                                                title="Receive"
+                                                @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+
+                               
+
+                                    <!-- Cancel button -->
+                                    <form asp-action="Cancel"
+                                          asp-controller="Procurement"
+                                          method="post"
+                                          style="display:inline">
+                                        <input type="hidden" name="id" value="@po.PurchaseOrderID" />
+                                        <button type="submit" class="icon-btn-table btn-cancel" title="Cancel">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                    </tr>
+                                        }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.proc-search-input');
+            const rows = document.querySelectorAll('.mm-table tbody tr');
+
+            if (!searchInput) return;
+
+            function applySearch() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = term === '' || text.includes(term)
+                        ? ''
+                        : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', applySearch);
+        });
+    </script>
+}

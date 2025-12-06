@@ -1,0 +1,322 @@
+﻿@{
+    ViewData["Title"] = "Sales & Billing";
+    ViewData["Nav"] = "Sales";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sales.css" asp-append-version="true" />
+}
+
+<div class="page page-sales">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Sales &amp; Billing</h1>
+            <p class="dash-sub">Manage customer transactions and invoices</p>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Sales (Oct)</div>
+                <div class="kpi-main">₱284,500</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-money-bill-1-wave"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Paid Invoices</div>
+                <div class="kpi-main">₱92,000</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Pending PDCs</div>
+                <div class="kpi-main">₱20,500</div>
+            </div>
+        </article>
+
+        <article class="kpi dash-card">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-user-group"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Active Customers</div>
+                <div class="kpi-main">48</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- TABS -->
+    <section class="inv-tabs-bar">
+        <div class="inv-tabs">
+            <a asp-controller="Sales"
+               asp-action="Index"
+               class="inv-tab inv-tab--active">
+                Transactions
+            </a>
+
+            <a asp-controller="Sales"
+               asp-action="Customerlist"
+               class="inv-tab">
+                Customer List
+            </a>
+        </div>
+    </section>
+
+    <!-- SEARCH + FILTER / EXPORT -->
+    <section class="inv-filter-bar">
+        <div class="inv-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="inv-search-input"
+                   type="text"
+                   placeholder="Search by invoice, customer, or job ID..." />
+        </div>
+
+        <div class="inv-filter-actions">
+            <button class="btn-chip">
+                <i class="fa-solid fa-filter"></i>
+                <span>Filter</span>
+            </button>
+            <button class="btn-chip">
+                <i class="fa-solid fa-download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- TABLE: TRANSACTIONS -->
+    <section class="inv-table-wrap">
+        <div class="mm-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Client</th>
+                        <th>Job ID</th>
+                        <th>Amount</th>
+                        <th>Payment Type</th>
+                        <th>Date Issued</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>INV-2849</td>
+                        <td>ABC Manufacturing</td>
+                        <td>JO-2849</td>
+                        <td>₱25,000</td>
+                        <td>Cash</td>
+                        <td>2025-10-28</td>
+                        <td>-</td>
+                        <td><span class="status status-ok">Paid</span></td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-view"
+                                        title="View invoice">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-receive"
+                                        title="Receive payment">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-cancel"
+                                        title="Cancel invoice">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-delete"
+                                        title="Delete invoice">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>INV-2850</td>
+                        <td>XYZ Corporation</td>
+                        <td>JO-2850</td>
+                        <td>₱8,500</td>
+                        <td>60-Day PDC</td>
+                        <td>2025-10-29</td>
+                        <td>2025-12-28</td>
+                        <td><span class="status status-warn">Pending</span></td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-view"
+                                        title="View invoice">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-receive"
+                                        title="Receive payment">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-cancel"
+                                        title="Cancel invoice">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-delete"
+                                        title="Delete invoice">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>INV-2851</td>
+                        <td>Tech Industries</td>
+                        <td>JO-2851</td>
+                        <td>₱15,000</td>
+                        <td>Cash</td>
+                        <td>2025-10-30</td>
+                        <td>-</td>
+                        <td><span class="status status-ok">Paid</span></td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-view"
+                                        title="View invoice">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-receive"
+                                        title="Receive payment">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-cancel"
+                                        title="Cancel invoice">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-delete"
+                                        title="Delete invoice">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>INV-2852</td>
+                        <td>Global Logistics</td>
+                        <td>JO-2852</td>
+                        <td>₱12,000</td>
+                        <td>60-Day PDC</td>
+                        <td>2025-10-30</td>
+                        <td>2025-12-29</td>
+                        <td><span class="status status-warn">Pending</span></td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-view"
+                                        title="View invoice">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-receive"
+                                        title="Receive payment">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-cancel"
+                                        title="Cancel invoice">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-delete"
+                                        title="Delete invoice">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>INV-2848</td>
+                        <td>Metro Construction</td>
+                        <td>JO-2848</td>
+                        <td>₱32,000</td>
+                        <td>Cash</td>
+                        <td>2025-10-27</td>
+                        <td>-</td>
+                        <td><span class="status status-ok">Paid</span></td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-view"
+                                        title="View invoice">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-receive"
+                                        title="Receive payment">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-cancel"
+                                        title="Cancel invoice">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button"
+                                        class="icon-btn-table btn-delete"
+                                        title="Delete invoice">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.page-sales .inv-search-input');
+            const table = document.querySelector('.page-sales .mm-table');
+
+            if (!searchInput || !table) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+
+            searchInput.addEventListener('input', function () {
+                const query = this.value.trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,447 @@
+﻿:root {
+    --mm-bg: #f5f7fb;
+    --mm-card: #ffffff;
+    --mm-border: #e5e9f3;
+    --mm-title: #141927;
+    --mm-text: #4a5669;
+    --mm-muted: #98a2b3;
+    --mm-yellow: #f6c20a;
+    --mm-green: #22c55e;
+    --mm-blue: #0b628f; /* header blue */
+    --mm-dark: #0e2a3d;
+    --mm-red: #dc2626;
+}
+
+/* GLOBAL PAGE BG */
+.main-body {
+    background: var(--mm-bg);
+}
+
+/* PAGE WRAPPER */
+.page.page-sales {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: 100%;
+}
+
+/* =====================================================
+   PRIMARY PILL BUTTON (Add Item, Add Customer Company)
+===================================================== */
+
+.btn-primary-mm {
+    border: none;
+    border-radius: 999px;
+    padding: 9px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    /* yellow style like sample */
+    background: linear-gradient(180deg, #fecf3a, #f6c20a);
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* gap between + and text */
+
+    box-shadow: 0 12px 28px rgba(215, 167, 30, 0.45);
+    text-decoration: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+    .btn-primary-mm i {
+        font-size: 14px;
+        color: inherit;
+    }
+
+    .btn-primary-mm:hover {
+        filter: brightness(1.04);
+        transform: translateY(-1px);
+        box-shadow: 0 16px 36px rgba(215, 167, 30, 0.6);
+    }
+
+/* optional: if you use header actions with the button */
+.dash-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.dash-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mm-title);
+    margin: 0 0 4px;
+}
+
+.dash-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--mm-muted);
+}
+
+/* =====================================================
+   KPI CARDS
+===================================================== */
+
+.dash-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dash-card {
+    background: var(--mm-card);
+    border-radius: 16px;
+    border: 1px solid var(--mm-border);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--mm-dark);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .kpi-icon i,
+    .kpi-icon svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+.kpi-title {
+    font-size: 13px;
+    color: var(--mm-muted);
+}
+
+.kpi-main {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--mm-title);
+}
+
+/* =====================================================
+   TABS BAR
+===================================================== */
+
+.inv-tabs-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 6px 0 14px;
+    gap: 12px;
+}
+
+.inv-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.inv-tab {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.inv-tab--active {
+    background: var(--mm-dark);
+    color: #ffffff;
+    border-color: var(--mm-dark);
+}
+
+/* =====================================================
+   SEARCH + FILTER BAR
+===================================================== */
+
+.inv-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.inv-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    border: 1px solid var(--mm-border);
+    flex: 1;
+    min-width: 260px;
+    max-width: 420px;
+}
+
+    .inv-search i {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+.inv-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    flex: 1;
+    font-size: 14px;
+}
+
+.inv-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-chip {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+    .btn-chip i {
+        font-size: 13px;
+    }
+
+/* EXPORT dark blue like other modules */
+.inv-filter-actions .btn-chip:last-child {
+    background: #0e2a3d;
+    border-color: #0e2a3d;
+    color: #ffffff;
+}
+
+    .inv-filter-actions .btn-chip:last-child i {
+        color: #ffffff;
+    }
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.inv-table-wrap {
+    margin-top: 4px;
+}
+
+/* NO rounded edge for card wrapper */
+.mm-card {
+    background: var(--mm-card);
+    border-radius: 0;
+    border: 1px solid var(--mm-border);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.03);
+    overflow: hidden;
+}
+
+.mm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+    /* blue header */
+    .mm-table thead {
+        background: var(--mm-blue);
+    }
+
+    .mm-table th,
+    .mm-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0; /* thicker separation lines */
+    }
+
+    .mm-table th {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+        border-bottom: 2px solid #074261;
+    }
+
+    .mm-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+/* PAYMENT TYPE – plain text only */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.chip-cat {
+    background: transparent !important;
+    color: #111827;
+}
+
+/* =====================================================
+   STATUS – colored text only
+===================================================== */
+
+.status {
+    font-size: 13px;
+    font-weight: 700;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+.status-ok {
+    color: #059669; /* Paid */
+}
+
+.status-warn {
+    color: #eab308; /* Pending = yellow */
+}
+
+/* =====================================================
+   ACTIONS COLUMN
+===================================================== */
+
+.col-actions {
+    text-align: center;
+    width: 140px;
+}
+
+.inv-actions {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.sales-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* base icon button */
+.icon-btn-table {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+/* View – white */
+.btn-view {
+    background: #ffffff;
+    border-color: #e5e9f3;
+    color: #0f172a;
+}
+
+/* Receive – green */
+.btn-receive {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #ffffff;
+}
+
+/* Cancel – orange */
+.btn-cancel {
+    background: #f97316;
+    border-color: #f97316;
+    color: #ffffff;
+}
+
+/* Delete – red */
+.btn-delete {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+}
+
+.icon-btn-table i {
+    pointer-events: none;
+}
+
+/* Hover effect */
+.icon-btn-table:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+.btn-receive:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.btn-cancel:hover {
+    background: #ea580c;
+    border-color: #ea580c;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 992px) {
+    .dash-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dash-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .inv-search {
+        max-width: 100%;
+    }
+}

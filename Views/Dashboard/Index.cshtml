@@ -1,0 +1,230 @@
+﻿@model Moonmax.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Nav"] = "Dashboard";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="page page-dashboard">
+
+    <!-- PAGE HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Dashboard Overview</h1>
+            <p class="dash-sub">Welcome back! Here's what's happening today.</p>
+        </div>
+    </header>
+
+    <!-- KPI CARDS ======================================================= -->
+    <section class="dash-kpis">
+        <!-- Active Repairs -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-regular fa-calendar-check"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Active Repairs</div>
+                <div class="kpi-main">@Model.ActiveRepairs</div>
+            </div>
+        </article>
+
+        <!-- Completed Jobs -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Completed Jobs (Month)</div>
+                <div class="kpi-main">@Model.CompletedJobsMonth</div>
+            </div>
+        </article>
+
+        <!-- Inventory Stock -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Inventory Stock</div>
+                <div class="kpi-main">@Model.TotalInventoryStock</div>
+            </div>
+        </article>
+
+        <!-- Total Sales -->
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Sales (This Month)</div>
+                <div class="kpi-main">₱@Model.MonthlySales.ToString("N0")</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- MAIN GRID: ACTIVITY + SUMMARY + COMPANY EST ===================== -->
+    <section class="dash-main-grid">
+
+        <!-- Recent Activity -->
+        <article class="panel-card activity-card">
+            <header class="panel-card-header">
+                <h2>Recent Activity</h2>
+            </header>
+
+            <ul class="activity-list">
+                @if (Model.RecentActivity != null && Model.RecentActivity.Any())
+                {
+                    foreach (var activity in Model.RecentActivity)
+                    {
+                        <li class="activity-item">
+                            <div class="activity-icon icon-green">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </div>
+                            <div class="activity-body">
+                                <div class="activity-title">@activity</div>
+                                <div class="activity-meta">System Log</div>
+                            </div>
+                            <div class="activity-time">Just now</div>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="activity-item">
+                        <div class="activity-icon icon-blue">
+                            <i class="fa-solid fa-info-circle"></i>
+                        </div>
+                        <div class="activity-body">
+                            <div class="activity-title">No recent activity</div>
+                            <div class="activity-meta">System</div>
+                        </div>
+                        <div class="activity-time">—</div>
+                    </li>
+                }
+            </ul>
+        </article>
+
+        <!-- Today's Summary (Still static unless you want dynamic) -->
+        <article class="panel-card summary-card">
+            <header class="panel-card-header panel-card-header--blue">
+                <h2>Today’s Summary</h2>
+            </header>
+
+            <div class="summary-row">
+                <span class="summary-label">New Work Orders</span>
+                <span class="summary-value">@Model.NewWorkOrders</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Completed Jobs</span>
+                <span class="summary-value">@Model.CompletedJobsToday</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Invoices Sent</span>
+                <span class="summary-value">@Model.InvoicesSent</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Pending Payments</span>
+                <span class="summary-value">₱@Model.PendingPayments.ToString("N0")</span>
+            </div>
+
+        </article>
+
+        <!-- Company Est -->
+        <article class="company-card">
+            <div class="company-inner">
+                <div class="company-label">COMPANY EST.</div>
+                <div class="company-date">October 1, 2015</div>
+                <div class="company-meta">10+ years of excellence</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- BOTTOM SECTION: CHARTS + QUICK LINKS ============================ -->
+    <section class="dash-chart-wrap">
+
+        <!-- TOP ROW: WORK ORDERS + QUICK LINKS -->
+        <div class="dash-chart-row dash-chart-row--top">
+
+            <!-- Work Orders Chart -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Work Orders by Service</h3>
+                </header>
+                <div class="chart-body">
+                    <canvas id="workOrdersChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Quick Links -->
+            <article class="chart-card quick-card">
+                <header class="chart-header">
+                    <h3>Quick Links</h3>
+                </header>
+                <div class="quick-body">
+                    <ul class="quick-links">
+                        <li>
+                            <a asp-controller="JobOrders" asp-action="Create" class="quick-link-btn">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>Create Job Order</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="PurchaseOrder" asp-action="Create" class="quick-link-btn">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <span>New Purchase Order</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Suppliers" asp-action="Create" class="quick-link-btn">
+                                <i class="fa-solid fa-truck-field"></i>
+                                <span>Add Supplier</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Clients" asp-action="Create" class="quick-link-btn">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span>Add Client</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </article>
+        </div>
+
+        <!-- BOTTOM ROW: WEEKLY OUTPUT + INVENTORY VALUE -->
+        <div class="dash-chart-row dash-chart-row--bottom">
+
+            <!-- Weekly Output -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Weekly Output Trend</h3>
+                </header>
+                <div class="chart-body chart-body--small">
+                    <canvas id="weeklyOutputChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Inventory Value -->
+            <article class="chart-card">
+                <header class="chart-header">
+                    <h3>Inventory Value (₱)</h3>
+                </header>
+                <div class="chart-body chart-body--small">
+                    <canvas id="inventoryValueChart"></canvas>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Charts remain placeholder unless you want them dynamic -->
+}

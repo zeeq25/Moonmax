@@ -1,0 +1,56 @@
+﻿@{
+    Layout = null;
+    var appName = "Moonmax Marketing";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@appName — Login</title>
+
+    <link rel="icon" href="~/brand/moonmax_logo.png" />
+
+    <!-- Auth styles -->
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <section class="auth-card">
+            <!-- LEFT SIDE (blue panel) -->
+            <div class="auth-left">
+                <div class="auth-left-inner">
+                    <img src="~/brand/moonmax_logo.png"
+                         alt="Moonmax Logo"
+                         class="logo-hero" />
+
+                    <h1 class="left-title">Moonmax Marketing</h1>
+
+                    <p class="left-system">
+                        Sales and Inventory System for Moonmax
+                    </p>
+
+                    <p class="left-sub">
+                        Machine Shop &amp; Hydraulic Hose Services
+                    </p>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE (form area) -->
+            <div class="auth-right">
+                @RenderBody()
+            </div>
+        </section>
+    </main>
+
+    <footer class="page-foot">
+        © @DateTime.Now.Year Moonmax Marketing. All rights reserved.
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

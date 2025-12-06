@@ -1,0 +1,379 @@
+﻿:root {
+    --sb-bg: #103047;
+    --sb-bg-2: #0e2a3d;
+    --sb-text: #e8f1f7;
+    --sb-muted: #9fb4c3;
+    --line: #e5e7eb;
+    --card: #ffffff;
+    --content-bg: #eff3f8;
+    --topbar: #0e2a3d;
+    --sb-accent-yellow: #F5C34D;
+}
+
+/* ===== APP WRAPPER ===== */
+.app {
+    min-height: 100vh;
+    display: flex;
+    background: var(--content-bg);
+}
+
+/* base reset */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, var(--sb-bg), var(--sb-bg-2));
+    color: var(--sb-text);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    transition: width 0.18s ease, transform 0.2s ease;
+    z-index: 1030;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+    /* scrollbar */
+    .sidebar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,.22);
+        border-radius: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+/* ===== SIDEBAR HEADER ===== */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+    .sidebar-header .logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        object-fit: contain;
+    }
+
+    .sidebar-header .brand {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.15;
+        max-width: 160px;
+    }
+
+        .sidebar-header .brand-title,
+        .sidebar-header .brand h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        .sidebar-header .brand-sub,
+        .sidebar-header .brand p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: var(--sb-muted);
+            white-space: normal;
+        }
+
+/* ===== NAV MENU ===== */
+.menu {
+    padding: 10px 8px 20px;
+}
+
+/* base menu item */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--sb-text);
+    text-decoration: none;
+    padding: 12px 14px;
+    margin: 4px 8px;
+    border-radius: 14px;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* icon wrapper */
+.menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 2px;
+}
+
+    .menu-icon i {
+        font-size: 18px;
+        color: var(--sb-text);
+    }
+
+/* hover state */
+.menu-item:hover {
+    background: rgba(245,195,77,.15);
+    color: #fff;
+}
+
+/* ACTIVE */
+.menu-item.active {
+    background: var(--sb-accent-yellow);
+    color: #0d2030;
+    font-weight: 700;
+}
+
+    .menu-item.active .menu-icon i {
+        color: #0d2030;
+    }
+
+/* ===== COLLAPSED SIDEBAR ===== */
+.app.is-collapsed .sidebar {
+    width: 72px;
+}
+
+    /* hide brand + text when collapsed, keep icons */
+    .app.is-collapsed .sidebar .brand {
+        display: none;
+    }
+
+    .app.is-collapsed .sidebar .menu-item span:last-child {
+        display: none;
+    }
+
+.app.is-collapsed .menu-item {
+    justify-content: center;
+}
+
+/* ===== MAIN AREA WRAPPER ===== */
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+    height: 56px;
+    background: var(--topbar);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* left: hamburger, right: user */
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+}
+
+/* left side of topbar (hamburger, logo if any) */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-container {
+    display: flex;
+    align-items: center;
+}
+
+/* buttons */
+.icon-btn,
+.avatar-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+}
+
+    .icon-btn:hover,
+    .avatar-btn:hover {
+        background: rgba(255,255,255,.08);
+    }
+
+/* ===== HAMBURGER BUTTON ===== */
+.hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+.hb-bar {
+    width: 18px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 999px;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+/* simple animation when drawer is open (mobile) */
+.app.is-open .hamburger-btn .hb-bar:nth-child(1) {
+    transform: translateY(4px) rotate(45deg);
+}
+
+.app.is-open .hamburger-btn .hb-bar:nth-child(2) {
+    opacity: 0;
+}
+
+.app.is-open .hamburger-btn .hb-bar:nth-child(3) {
+    transform: translateY(-4px) rotate(-45deg);
+}
+
+/* hide hamburger on big screens if you want */
+@media (min-width: 993px) {
+    .hamburger-btn {
+        display: none;
+    }
+}
+
+/* ===== USER DROPDOWN ===== */
+.user-dropdown {
+    position: relative;
+}
+
+    .user-dropdown .menu {
+        position: absolute;
+        right: 0;
+        top: 44px;
+        min-width: 220px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 28px rgba(2,6,23,.20);
+        padding: 8px;
+        display: none;
+        z-index: 2000;
+    }
+
+    .user-dropdown.open .menu {
+        display: block;
+    }
+
+.menu-header .name {
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.role-pill {
+    margin-top: 6px;
+    font-size: 12px;
+    background: #e6f2ff;
+    color: #0d2a3a;
+    border: 1px solid #cfe6ff;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.menu-sep {
+    height: 1px;
+    background: var(--line);
+    margin: 8px 0;
+}
+
+.user-dropdown .menu .menu-item {
+    width: 100%;
+    gap: 10px;
+    border: none;
+    background: transparent;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: inherit;
+}
+
+    .user-dropdown .menu .menu-item:hover {
+        background: #f3f4f6;
+    }
+
+/* ===== CONTENT WRAPPER ===== */
+.content {
+    padding: 20px;
+    min-height: calc(100vh - 56px);
+}
+
+/* ===== FOOTER ===== */
+.app-footer {
+    background: var(--topbar);
+    color: #fff;
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    flex-shrink: 0;
+}
+
+    .app-footer span {
+        opacity: .85;
+    }
+
+/* ===== MOBILE SIDEBAR (DRAWER) ===== */
+@media (max-width: 992px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        width: 260px;
+        z-index: 2000;
+        box-shadow: 4px 0 16px rgba(0,0,0,.35);
+    }
+
+    .app.is-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .app.is-open::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        z-index: 1500;
+    }
+}
+
+/* Topbar / user dropdown tweaks for very small screens */
+@media (max-width: 576px) {
+    .user-dropdown .menu {
+        right: 8px;
+        min-width: 210px;
+    }
+}
+
+@media (max-width: 360px) {
+    .sidebar-header .brand {
+        max-width: 140px;
+    }
+}

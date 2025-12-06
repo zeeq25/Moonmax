@@ -1,0 +1,63 @@
+﻿@using Moonmax.Models
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+
+@{
+    // Get logged-in user's email
+    var email = User.Identity.IsAuthenticated
+        ? User.FindFirstValue(ClaimTypes.Name)
+        : null;
+
+    // Get DbContext
+    var db = Context.RequestServices.GetRequiredService<Moonmax.Data.AppDbContext>();
+
+    var currentUser = email != null ? db.Users.FirstOrDefault(u => u.Email == email) : null;
+    var displayName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "User";
+
+    // Use Role column from Users table
+    var displayRole = currentUser?.Role ?? "User";
+}
+
+<div class="topbar">
+    <!-- LEFT: HAMBURGER (mobile) -->
+    <div class="topbar-left">
+        <button class="icon-btn hamburger-btn"
+                id="btnSidebarToggle"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false">
+            <span class="hb-bar"></span>
+            <span class="hb-bar"></span>
+            <span class="hb-bar"></span>
+        </button>
+    </div>
+
+    <!-- RIGHT: USER DROPDOWN -->
+    <div class="user-container">
+        <div class="user-dropdown">
+            <button class="avatar-btn" id="userMenuBtn" aria-haspopup="true" aria-expanded="false">
+                <i class="fa-regular fa-user"></i>
+            </button>
+
+            <div class="menu" id="userMenu" role="menu" aria-labelledby="userMenuBtn">
+                <div class="menu-header">
+                    <div class="name">
+                        <i class="fa-regular fa-user"></i> @displayName
+                    </div>
+                    <div class="role-pill">
+                        <i class="fa-solid fa-award"></i> @displayRole
+                    </div>
+                </div>
+
+                <div class="menu-sep"></div>
+
+                <form asp-controller="Account" asp-action="Logout" method="get">
+                    <button type="submit" class="menu-item">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Sign out</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

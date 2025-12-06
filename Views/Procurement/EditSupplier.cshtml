@@ -1,0 +1,67 @@
+﻿@model Moonmax.ViewModels.EditSupplierViewModel
+
+@{
+    ViewData["Title"] = "Edit Supplier";
+    ViewData["Nav"] = "Procurement";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/procurement.css" asp-append-version="true" />
+}
+
+<h1>Edit Supplier</h1>
+
+<form asp-action="EditSupplier" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="SupplierID" />
+
+    <div class="form-group">
+        <label asp-for="SupplierName"></label>
+        <input asp-for="SupplierName" class="form-control" />
+        <span asp-validation-for="SupplierName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ContactNumber"></label>
+        <input asp-for="ContactNumber" class="form-control" />
+        <span asp-validation-for="ContactNumber" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProductLine"></label>
+        <input asp-for="ProductLine" class="form-control" />
+        <span asp-validation-for="ProductLine" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PaymentTerms"></label>
+        <select asp-for="PaymentTerms" class="form-control">
+            <option value="COD">COD</option>
+            <option value="PDC-15">PDC - 15 Days</option>
+            <option value="PDC-30">PDC - 30 Days</option>
+            <option value="PDC-60">PDC - 60 Days</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,202 @@
+﻿@{
+    ViewData["Title"] = "Supplier Product List";
+    ViewData["Nav"] = "Procurement";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/procurement.css" asp-append-version="true" />
+}
+
+<div class="page page-proc">
+
+    <!-- HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Supplier Product List</h1>
+            <p class="dash-sub">Manage materials and items provided by each supplier.</p>
+        </div>
+
+        <div class="dash-actions">
+            <a asp-controller="Products" asp-action="Create"
+               class="btn-pill btn-primary-mm">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Product</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-building-user"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Active Suppliers</div>
+                <div class="kpi-main">12</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-regular fa-clipboard"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Pending POs</div>
+                <div class="kpi-main">1</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-truck-moving"></i>
+            </div>
+            <div>
+                <div class="kpi-title">In Transit</div>
+                <div class="kpi-main">1</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div>
+                <div class="kpi-title">Total PO Value</div>
+                <div class="kpi-main">₱243,000</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- SEARCH + TABS -->
+    <section class="proc-toolbar">
+        <div class="proc-toolbar-row">
+            <div class="proc-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="proc-search-input"
+                       placeholder="Search product name, supplier, or category..." />
+            </div>
+
+            <div class="proc-tabs-row">
+                <a asp-controller="Procurement" asp-action="Index"
+                   class="proc-tab">Purchase Orders</a>
+                <a asp-controller="Procurement" asp-action="Suppliers"
+                   class="proc-tab">Suppliers</a>
+                <a asp-controller="Procurement" asp-action="Products"
+                   class="proc-tab proc-tab--active">Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="proc-table-wrap">
+        <div class="mm-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Supplier</th>
+                        <th>Category</th>
+                        <th>Unit</th>
+                        <th>Default Cost</th>
+                        <th>Status</th>
+                        <th class="proc-col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Hydraulic Hose 1/2"</td>
+                        <td>Parker Hannifin</td>
+                        <td>Hoses</td>
+                        <td>Meters</td>
+                        <td>₱480</td>
+                        <td><span class="badge status-active">Active</span></td>
+                        <td class="proc-col-actions">
+                            <div class="proc-actions">
+                                <button class="icon-btn-table btn-view" title="View">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button class="icon-btn-table btn-edit" title="Edit">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </button>
+                                <button class="icon-btn-table btn-delete" title="Delete">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Turbo Seal Kit</td>
+                        <td>Garrett</td>
+                        <td>Turbo Parts</td>
+                        <td>Set</td>
+                        <td>₱1,250</td>
+                        <td><span class="badge status-active">Active</span></td>
+                        <td class="proc-col-actions">
+                            <div class="proc-actions">
+                                <button class="icon-btn-table btn-view" title="View">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button class="icon-btn-table btn-edit" title="Edit">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </button>
+                                <button class="icon-btn-table btn-delete" title="Delete">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Steel Plate 1/4"</td>
+                        <td>Metal Depot</td>
+                        <td>Steel Materials</td>
+                        <td>Sheets</td>
+                        <td>₱2,200</td>
+                        <td><span class="badge status-inactive">Inactive</span></td>
+                        <td class="proc-col-actions">
+                            <div class="proc-actions">
+                                <button class="icon-btn-table btn-view" title="View">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button class="icon-btn-table btn-edit" title="Edit">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </button>
+                                <button class="icon-btn-table btn-delete" title="Delete">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.proc-search-input');
+            const rows = document.querySelectorAll('.mm-table tbody tr');
+
+            if (!searchInput) return;
+
+            function applySearch() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = term === '' || text.includes(term)
+                        ? ''
+                        : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', applySearch);
+        });
+    </script>
+}

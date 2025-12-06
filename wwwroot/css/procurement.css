@@ -1,0 +1,419 @@
+﻿:root {
+    --mm-bg: #f5f7fb;
+    --mm-card: #ffffff;
+    --mm-border: #e5e9f3;
+    --mm-title: #141927;
+    --mm-text: #4a5669;
+    --mm-muted: #98a2b3;
+    --mm-yellow: #f6c20a;
+    --mm-blue: #0b628f; /* header blue */
+    --mm-dark: #0e2a3d;
+    --mm-green: #22c55e;
+    --mm-red: #ef4444;
+    --mm-orange: #f97316;
+}
+
+/* ======================================================
+   PAGE LAYOUT
+====================================================== */
+
+.main-body {
+    background: var(--mm-bg);
+}
+
+.page.page-proc {
+    background: transparent;
+    padding: 0;
+    max-width: 100%;
+}
+
+/* ======================================================
+   HEADER
+====================================================== */
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 16px;
+}
+
+.dash-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mm-title);
+    margin: 0 0 4px;
+}
+
+.dash-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--mm-muted);
+}
+
+.dash-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* ======================================================
+   KPI CARDS (same look as other modules)
+====================================================== */
+
+.dash-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dash-card {
+    background: var(--mm-card);
+    border-radius: 16px;
+    border: 1px solid var(--mm-border);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--mm-dark);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .kpi-icon i,
+    .kpi-icon svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+.kpi-title {
+    font-size: 13px;
+    color: var(--mm-muted);
+}
+
+.kpi-main {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--mm-title);
+}
+
+/* ======================================================
+   GLOBAL BUTTONS (header CTA, etc.)
+====================================================== */
+
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-primary-mm {
+    background: var(--mm-yellow);
+    color: #0b1324;
+    border-color: var(--mm-yellow);
+    box-shadow: 0 6px 12px rgba(246, 194, 10, 0.25);
+}
+
+/* ======================================================
+   TOOLBAR – SEARCH + TABS
+====================================================== */
+
+.proc-toolbar {
+    margin: 14px 0 12px;
+}
+
+.proc-toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* search */
+
+.proc-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    border: 1px solid var(--mm-border);
+    flex: 1;
+    max-width: 420px; /* same width style as other modules */
+}
+
+    .proc-search i {
+        font-size: 14px;
+        color: #64748b;
+    }
+
+.proc-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    flex: 1;
+    font-size: 14px;
+}
+
+/* tabs */
+
+.proc-tabs-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.proc-tab {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 6px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #4b5563;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.proc-tab--active {
+    background: var(--mm-dark);
+    color: #ffffff;
+    border-color: var(--mm-dark);
+}
+
+/* responsive toolbar */
+
+@media (max-width: 768px) {
+    .proc-toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .proc-tabs-row {
+        justify-content: center;
+    }
+
+    .proc-tab {
+        flex: 1 1 calc(33.33% - 10px);
+        text-align: center;
+    }
+}
+
+/* ======================================================
+   TABLE WRAPPER + TABLE
+====================================================== */
+
+.proc-table-wrap {
+    margin-top: 4px;
+}
+
+.mm-card {
+    background: var(--mm-card);
+    border-radius: 0;
+    border: 1px solid var(--mm-border);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.03);
+    overflow: hidden;
+}
+
+.mm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+    .mm-table thead {
+        background: var(--mm-blue);
+    }
+
+    .mm-table th,
+    .mm-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0; /* slightly thicker line */
+    }
+
+    .mm-table th {
+        font-size: 13px;
+        color: #ffffff;
+        font-weight: 600;
+        border-bottom: 2px solid #074261;
+    }
+
+    .mm-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+/* ======================================================
+   STATUS – COLORED TEXT ONLY (NO PILLS)
+====================================================== */
+
+.badge {
+    padding: 0;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+}
+
+/* purchase orders */
+.status-pending {
+    color: #f97316; /* orange text */
+}
+
+.status-delivered {
+    color: #16a34a; /* green text */
+}
+
+.status-intransit {
+    color: #2563eb; /* blue text */
+}
+
+/* products / suppliers */
+.status-active {
+    color: #16a34a;
+}
+
+.status-inactive {
+    color: #ea580c;
+}
+
+/* ======================================================
+   ACTIONS COLUMN (buttons)
+====================================================== */
+
+.col-actions {
+    text-align: center;
+    width: 150px;
+}
+
+.proc-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* base icon button (same as Job Orders) */
+.icon-btn-table {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+/* view – white */
+.btn-view {
+    background: #ffffff;
+    border-color: #e5e9f3;
+    color: #0f172a;
+}
+
+/* receive – green */
+.btn-receive {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #ffffff;
+}
+
+/* cancel – ORANGE */
+.btn-cancel {
+    background: #f97316;
+    border-color: #f97316;
+    color: #ffffff;
+}
+
+    .btn-cancel:hover {
+        background: #ea580c;
+        border-color: #ea580c;
+    }
+
+/* edit – amber (used in Products/Suppliers) */
+.btn-edit {
+    background: #fbbf24;
+    border-color: #fbbf24;
+    color: #0b1324;
+}
+
+/* delete – red */
+.btn-delete {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+}
+
+/* hover effect for all icon buttons */
+.icon-btn-table:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+/* stronger hover for delete to keep it clear */
+.btn-delete:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* ======================================================
+   RESPONSIVE – KPIs
+====================================================== */
+
+@media (max-width: 992px) {
+    .dash-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dash-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .proc-search {
+        max-width: 100%;
+    }
+}
+
+/* ======================================================
+   ACTIVATE BUTTON (Products/Suppliers)
+====================================================== */
+
+.btn-activate {
+    background-color: #198754; /* green */
+    color: white;
+}
+
+    .btn-activate:hover {
+        opacity: 0.8;
+    }
+
+

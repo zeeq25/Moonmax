@@ -1,0 +1,80 @@
+﻿@{
+    // Use the same key you set in each page: ViewData["Nav"]
+    var current = ViewData["Nav"] as string;
+}
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <img src="~/brand/moonmax_logo.png" class="logo" alt="Moonmax Marketing logo" />
+        <div class="brand">
+            <h3>Moonmax</h3>
+            <p>Machine Shop &amp; Hydraulic Hose Service Centers</p>
+        </div>
+    </div>
+
+    <nav class="menu">
+        <!-- DASHBOARD -->
+        <a class="menu-item @(current == "Dashboard" ? "active" : "")"
+           asp-controller="Dashboard" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-gauge-high"></i>
+            </span>
+            <span>Dashboard</span>
+        </a>
+
+        <!-- JOB ORDERS -->
+        <a class="menu-item @(current == "JobOrders" ? "active" : "")"
+           asp-controller="JobOrders" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-regular fa-clipboard"></i>
+            </span>
+            <span>Job Orders</span>
+        </a>
+
+        <!-- INVENTORY -->
+        <a class="menu-item @(current == "Inventory" ? "active" : "")"
+           asp-controller="Inventory" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-box-open"></i>
+            </span>
+            <span>Inventory</span>
+        </a>
+
+        <!-- PROCUREMENT -->
+        <a class="menu-item @(current == "Procurement" ? "active" : "")"
+           asp-controller="Procurement" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-cart-flatbed"></i>
+            </span>
+            <span>Procurement</span>
+        </a>
+
+        <!-- SALES -->
+        <a class="menu-item @(current == "Sales" ? "active" : "")"
+           asp-controller="Sales" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </span>
+            <span>Sales &amp; Billing</span>
+        </a>
+
+        <!-- REPORTS -->
+        <a class="menu-item @(current == "Reports" ? "active" : "")"
+           asp-controller="Reports" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-chart-column"></i>
+            </span>
+            <span>Reports</span>
+        </a>
+
+        <!-- USERS -->
+        <a class="menu-item @(current == "Users" ? "active" : "")"
+           asp-controller="Users" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-users"></i>
+            </span>
+            <span>User Management</span>
+        </a>
+
+    </nav>
+</div>

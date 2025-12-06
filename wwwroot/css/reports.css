@@ -1,0 +1,307 @@
+﻿:root {
+    --mm-bg: #f5f7fb;
+    --mm-card: #ffffff;
+    --mm-border: #e5e9f3;
+    --mm-title: #141927;
+    --mm-text: #4a5669;
+    --mm-muted: #98a2b3;
+    --mm-yellow: #f6c20a;
+    --mm-blue: #0b628f; /* same header blue used in other modules */
+    --mm-dark: #0e2a3d;
+    --mm-green: #22c55e;
+    --mm-red: #dc2626;
+}
+
+/* GLOBAL PAGE BG */
+.main-body {
+    background: var(--mm-bg);
+}
+
+/* PAGE WRAPPER */
+.page.page-reports {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: 100%;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.dash-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mm-title);
+    margin: 0 0 4px;
+}
+
+.dash-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--mm-muted);
+}
+
+/* =====================================================
+   KPI CARDS – SAME DESIGN AS OTHER MODULES
+===================================================== */
+
+.dash-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dash-card {
+    background: var(--mm-card);
+    border-radius: 16px; /* rounded like other pages */
+    border: 1px solid var(--mm-border);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05); /* same soft shadow */
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--mm-dark);
+    border-radius: 12px; /* rounded icon box */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .kpi-icon i,
+    .kpi-icon svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+
+.kpi-title {
+    font-size: 13px;
+    color: var(--mm-muted);
+}
+
+.kpi-main {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--mm-title);
+}
+
+/* =====================================================
+   MAIN REPORT GRID
+===================================================== */
+
+.reports-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.reports-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* first row: wide line chart + normal pie card */
+.reports-row--top {
+    grid-template-columns: 2.1fr 1.1fr;
+}
+
+/* summary row: wider table card */
+.reports-row--summary {
+    grid-template-columns: 2fr 1.3fr;
+}
+
+/* generic card wrapper (for charts + summary + insights) */
+.mm-card {
+    background: var(--mm-card);
+    border-radius: 0; /* reports cards are square */
+    border: 1px solid var(--mm-border);
+    box-shadow: 0 8px 22px rgba(15,23,42,0.04);
+    padding: 16px 18px;
+}
+
+/* =====================================================
+   CHART CARDS
+===================================================== */
+
+.chart-card-header {
+    border-bottom: 1px solid #e5e9f3;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+    .chart-card-header h2 {
+        margin: 0 0 3px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--mm-title);
+    }
+
+    .chart-card-header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--mm-muted);
+    }
+
+.chart-card-body {
+    width: 100%;
+    height: 260px;
+}
+
+    .chart-card-body canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+.chart-card-body--pie {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =====================================================
+   SUMMARY TABLE – blue header, thicker lines, zebra rows
+===================================================== */
+
+.summary-table-wrap {
+    margin-top: 4px;
+}
+
+.mm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+    /* colored header bar like other modules */
+    .mm-table thead {
+        background: var(--mm-blue);
+    }
+
+    .mm-table th,
+    .mm-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0; /* thicker separation line */
+    }
+
+    .mm-table th {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+        border-bottom: 2px solid #074261;
+    }
+
+    /* zebra rows */
+    .mm-table tbody tr:nth-child(even) {
+        background: #f9fafb;
+    }
+
+    .mm-table tbody tr:hover {
+        background: #e5edf7;
+    }
+
+/* growth colors */
+.growth {
+    font-weight: 600;
+}
+
+.growth--up {
+    color: var(--mm-green);
+}
+
+.growth--down {
+    color: var(--mm-red);
+}
+
+/* =====================================================
+   KEY HIGHLIGHTS CARD
+===================================================== */
+
+.insights-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.insights-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .insights-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 14px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .insights-list li:last-child {
+            border-bottom: none;
+        }
+
+.insights-label {
+    color: var(--mm-muted);
+}
+
+.insights-value {
+    font-weight: 600;
+    color: var(--mm-title);
+    text-align: right;
+}
+
+.insights-up {
+    color: var(--mm-green);
+}
+
+.insights-down {
+    color: var(--mm-red);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1200px) {
+    .dash-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reports-row,
+    .reports-row--top,
+    .reports-row--summary {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card-body {
+        height: 220px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-kpis {
+        grid-template-columns: 1fr;
+    }
+}
