@@ -28,5 +28,9 @@ namespace Moonmax.Data
         //PURCHASE ORDERS
         public DbSet<PurchaseOrders> PurchaseOrders { get; set; } // ✅ add this
         public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; } // ✅ add this
+
+        //SALES
+        public DbSet<Invoice> Invoices { get; set; }
+        
     }
 }

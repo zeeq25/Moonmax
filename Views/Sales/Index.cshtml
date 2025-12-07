@@ -1,4 +1,6 @@
-﻿@{
+﻿@model Moonmax.ViewModels.SalesIndexViewModel
+
+@{
     ViewData["Title"] = "Sales & Billing";
     ViewData["Nav"] = "Sales";
     ViewData["AppShell"] = true;
@@ -7,6 +9,7 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/sales.css" asp-append-version="true" />
+
 }
 
 <div class="page page-sales">
@@ -22,42 +25,31 @@
     <!-- KPI CARDS -->
     <section class="dash-kpis">
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-receipt"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Total Sales (Oct)</div>
                 <div class="kpi-main">₱284,500</div>
             </div>
         </article>
-
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-money-bill-1-wave"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-money-bill-1-wave"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Paid Invoices</div>
                 <div class="kpi-main">₱92,000</div>
             </div>
         </article>
-
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Pending PDCs</div>
                 <div class="kpi-main">₱20,500</div>
             </div>
         </article>
-
-        <article class="kpi dash-card">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-user-group"></i>
-            </div>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-user-group"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Active Customers</div>
-                <div class="kpi-main">48</div>
+                <div class="kpi-main">10</div>
             </div>
         </article>
     </section>
@@ -65,17 +57,8 @@
     <!-- TABS -->
     <section class="inv-tabs-bar">
         <div class="inv-tabs">
-            <a asp-controller="Sales"
-               asp-action="Index"
-               class="inv-tab inv-tab--active">
-                Transactions
-            </a>
-
-            <a asp-controller="Sales"
-               asp-action="Customerlist"
-               class="inv-tab">
-                Customer List
-            </a>
+            <a asp-controller="Sales" asp-action="Index" class="inv-tab inv-tab--active">Transactions</a>
+            <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab">Customer List</a>
         </div>
     </section>
 
@@ -83,20 +66,11 @@
     <section class="inv-filter-bar">
         <div class="inv-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input class="inv-search-input"
-                   type="text"
-                   placeholder="Search by invoice, customer, or job ID..." />
+            <input class="inv-search-input" type="text" placeholder="Search by invoice, customer, or job ID..." />
         </div>
-
         <div class="inv-filter-actions">
-            <button class="btn-chip">
-                <i class="fa-solid fa-filter"></i>
-                <span>Filter</span>
-            </button>
-            <button class="btn-chip">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
+            <button class="btn-chip"><i class="fa-solid fa-filter"></i><span>Filter</span></button>
+            <button class="btn-chip"><i class="fa-solid fa-download"></i><span>Export</span></button>
         </div>
     </section>
 
@@ -118,203 +92,108 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>INV-2849</td>
-                        <td>ABC Manufacturing</td>
-                        <td>JO-2849</td>
-                        <td>₱25,000</td>
-                        <td>Cash</td>
-                        <td>2025-10-28</td>
-                        <td>-</td>
-                        <td><span class="status status-ok">Paid</span></td>
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        <tr>
+                            <td>@invoice.InvoiceNumber</td>
+                            <td>@invoice.ClientName</td>
+                            <td>@invoice.JobID</td>
+                            <td>@invoice.Amount.ToString("C")</td>
+                            <td>@invoice.PaymentType</td>
+                            <td>@invoice.DateIssued.ToString("yyyy-MM-dd")</td>
+                            <td>@(invoice.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>
+                                <span class="status @(invoice.Status.ToLower() == "pending" ? "status-pending" :
+                                                                                             invoice.Status.ToLower() == "paid" ? "status-paid" :
+                                                                                             "status-warn")">
+                                @invoice.Status
+                            </span>
+                        </td>
                         <td class="inv-actions">
                             <div class="sales-actions">
-                                <button type="button"
-                                        class="icon-btn-table btn-view"
-                                        title="View invoice">
+                                <a asp-action="ViewInvoice" asp-route-id="@invoice.InvoiceID" class="icon-btn-table btn-view" title="View invoice">
                                     <i class="fa-regular fa-eye"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-receive"
-                                        title="Receive payment">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-cancel"
-                                        title="Cancel invoice">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-delete"
-                                        title="Delete invoice">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                                </a>
 
-                    <tr>
-                        <td>INV-2850</td>
-                        <td>XYZ Corporation</td>
-                        <td>JO-2850</td>
-                        <td>₱8,500</td>
-                        <td>60-Day PDC</td>
-                        <td>2025-10-29</td>
-                        <td>2025-12-28</td>
-                        <td><span class="status status-warn">Pending</span></td>
-                        <td class="inv-actions">
-                            <div class="sales-actions">
-                                <button type="button"
-                                        class="icon-btn-table btn-view"
-                                        title="View invoice">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-receive"
-                                        title="Receive payment">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-cancel"
-                                        title="Cancel invoice">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-delete"
-                                        title="Delete invoice">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                                    <!-- Receive Payment button -->
+                                    <form asp-action="ReceivePayment" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
+                                        <button type="submit" class="icon-btn-table btn-receive"
+                                                title="Receive payment"
+                                                @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
 
-                    <tr>
-                        <td>INV-2851</td>
-                        <td>Tech Industries</td>
-                        <td>JO-2851</td>
-                        <td>₱15,000</td>
-                        <td>Cash</td>
-                        <td>2025-10-30</td>
-                        <td>-</td>
-                        <td><span class="status status-ok">Paid</span></td>
-                        <td class="inv-actions">
-                            <div class="sales-actions">
-                                <button type="button"
-                                        class="icon-btn-table btn-view"
-                                        title="View invoice">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-receive"
-                                        title="Receive payment">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-cancel"
-                                        title="Cancel invoice">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-delete"
-                                        title="Delete invoice">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                                    <form asp-action="CancelInvoice" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
+                                        <button type="submit" class="icon-btn-table btn-cancel" title="Cancel invoice">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                                        }
 
-                    <tr>
-                        <td>INV-2852</td>
-                        <td>Global Logistics</td>
-                        <td>JO-2852</td>
-                        <td>₱12,000</td>
-                        <td>60-Day PDC</td>
-                        <td>2025-10-30</td>
-                        <td>2025-12-29</td>
-                        <td><span class="status status-warn">Pending</span></td>
-                        <td class="inv-actions">
-                            <div class="sales-actions">
-                                <button type="button"
-                                        class="icon-btn-table btn-view"
-                                        title="View invoice">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-receive"
-                                        title="Receive payment">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-cancel"
-                                        title="Cancel invoice">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-delete"
-                                        title="Delete invoice">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>INV-2848</td>
-                        <td>Metro Construction</td>
-                        <td>JO-2848</td>
-                        <td>₱32,000</td>
-                        <td>Cash</td>
-                        <td>2025-10-27</td>
-                        <td>-</td>
-                        <td><span class="status status-ok">Paid</span></td>
-                        <td class="inv-actions">
-                            <div class="sales-actions">
-                                <button type="button"
-                                        class="icon-btn-table btn-view"
-                                        title="View invoice">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-receive"
-                                        title="Receive payment">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-cancel"
-                                        title="Cancel invoice">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <button type="button"
-                                        class="icon-btn-table btn-delete"
-                                        title="Delete invoice">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    @foreach (var job in Model.InProgressJobs)
+                    {
+                        <tr>
+                            <td>-</td>
+                            <td>@job.Client</td>
+                            <td>@job.JobID</td>
+                            <td>@job.Cost.ToString("C")</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span class="status status-warn">In Progress</span></td>
+                            <td class="inv-actions">
+                                <a asp-action="CreateInvoice" asp-route-jobId="@job.JobID" class="icon-btn-table btn-create" title="Create Invoice">
+                                    <i class="fa-solid fa-plus"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
     </section>
-
 </div>
 
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // SEARCH
             const searchInput = document.querySelector('.page-sales .inv-search-input');
             const table = document.querySelector('.page-sales .mm-table');
+            if (searchInput && table) {
+                const rows = table.querySelectorAll('tbody tr');
+                searchInput.addEventListener('input', function () {
+                    const query = this.value.trim().toLowerCase();
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(query) ? '' : 'none';
+                    });
+                });
+            }
 
-            if (!searchInput || !table) return;
+            // DISABLE RECEIVE PAYMENT BUTTONS & UPDATE STATUS
+            document.querySelectorAll('.btn-receive').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    // Prevent instant reload (form will still submit)
+                    setTimeout(() => {
+                        // Disable this receive button
+                        button.disabled = true;
 
-            const rows = table.querySelectorAll('tbody tr');
+                        // Disable cancel button in the same row
+                        const cancelBtn = button.closest('tr').querySelector('.btn-cancel');
+                        if (cancelBtn) cancelBtn.disabled = true;
 
-            searchInput.addEventListener('input', function () {
-                const query = this.value.trim().toLowerCase();
-
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(query) ? '' : 'none';
+                        // Update status cell to Paid
+                        const statusEl = button.closest('tr').querySelector('.status');
+                        if (statusEl) {
+                            statusEl.textContent = 'Paid';
+                            statusEl.className = 'status status-paid';
+                        }
+                    }, 10); // tiny delay to allow form submission
                 });
             });
         });

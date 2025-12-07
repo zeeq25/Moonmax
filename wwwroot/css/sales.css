@@ -319,7 +319,7 @@
 .status {
     font-size: 13px;
     font-weight: 700;
-    background: transparent !important;
+    
     border: none !important;
     padding: 0 !important;
     border-radius: 0 !important;
@@ -445,3 +445,68 @@
         max-width: 100%;
     }
 }
+
+/* Remove underline from action buttons in the table */
+.icon-btn-table {
+    text-decoration: none; /* removes underline */
+    display: inline-flex; /* ensures icons are aligned properly */
+    justify-content: center;
+    align-items: center;
+}
+
+    /* Disabled buttons */
+    .icon-btn-table.disabled {
+        pointer-events: none; /* prevent clicks */
+        opacity: 0.5; /* gray out */
+        cursor: not-allowed;
+    }
+
+
+/* =====================================================
+   STATUS – text color only
+===================================================== */
+.status {
+    font-size: 13px;
+    font-weight: 700;
+    background: transparent !important; /* ensure no background */
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* Paid – green text */
+.status-paid {
+    color: var(--mm-green); /* green text only */
+}
+
+/* Pending – yellow text */
+.status-pending {
+    color: var(--mm-yellow); /* yellow text only */
+}
+
+/* Warning / in-progress – orange text */
+.status-warn {
+    color: #f97316; /* orange text only */
+}
+
+
+/* Disabled receive button style */
+.btn-receive:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+.status-ok {
+    color: var(--mm-green); /* Outstanding = 0 */
+}
+
+.status-low {
+    color: var(--mm-red); /* Outstanding > 0 */
+}
+

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Moonmax.Data;
 
@@ -11,9 +12,11 @@ using Moonmax.Data;
 namespace Moonmax.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251207002325_AddClientContactFields")]
+    partial class AddClientContactFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,11 +48,6 @@ namespace Moonmax.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PaymentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("ClientID");
 
@@ -92,53 +90,6 @@ namespace Moonmax.Migrations
                     b.HasIndex("SupplierID");
 
                     b.ToTable("Inventories");
-                });
-
-            modelBuilder.Entity("Moonmax.Models.Invoice", b =>
-                {
-                    b.Property<int>("InvoiceID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InvoiceID"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ClientID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DateIssued")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InvoiceNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("JobID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PaymentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("InvoiceID");
-
-                    b.HasIndex("ClientID");
-
-                    b.HasIndex("JobID");
-
-                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("Moonmax.Models.JobOrder", b =>
@@ -435,25 +386,6 @@ namespace Moonmax.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("Moonmax.Models.Invoice", b =>
-                {
-                    b.HasOne("Moonmax.Models.Client", "Client")
-                        .WithMany()
-                        .HasForeignKey("ClientID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Moonmax.Models.JobOrder", "JobOrder")
-                        .WithMany()
-                        .HasForeignKey("JobID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Client");
-
-                    b.Navigation("JobOrder");
-                });
-
             modelBuilder.Entity("Moonmax.Models.JobOrder", b =>
                 {
                     b.HasOne("Moonmax.Models.Client", "Client")
@@ -497,7 +429,7 @@ namespace Moonmax.Migrations
                         .IsRequired();
 
                     b.HasOne("Moonmax.Models.JobOrder", "JobOrder")
-                        .WithMany("JobParts")
+                        .WithMany()
                         .HasForeignKey("JobID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -532,11 +464,6 @@ namespace Moonmax.Migrations
             modelBuilder.Entity("Moonmax.Models.Client", b =>
                 {
                     b.Navigation("JobOrders");
-                });
-
-            modelBuilder.Entity("Moonmax.Models.JobOrder", b =>
-                {
-                    b.Navigation("JobParts");
                 });
 
             modelBuilder.Entity("Moonmax.Models.PurchaseOrders", b =>

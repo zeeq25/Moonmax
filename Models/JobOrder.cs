@@ -19,7 +19,7 @@ namespace Moonmax.Models
 
         [Required]
         public string ServiceType { get; set; }
-
+        
         public DateTime CreatedAt { get; set; }
 
         public DateTime? DueDate { get; set; }
@@ -29,5 +29,10 @@ namespace Moonmax.Models
 
         [Required]
         public string Status { get; set; }
+
+        public ICollection<JobPart> JobParts { get; set; }
+
     }
+
+
 }

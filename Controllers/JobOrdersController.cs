@@ -18,6 +18,8 @@ namespace Moonmax.Controllers
             _db = db;
         }
 
+
+
         // INDEX
         public async Task<IActionResult> Index()
         {
@@ -26,6 +28,10 @@ namespace Moonmax.Controllers
                 .Include(j => j.Technician)
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
+
+            
+           
+
 
             var vm = new JobOrdersIndexViewModel
             {
@@ -180,6 +186,14 @@ namespace Moonmax.Controllers
 
             _db.JobParts.Add(part);
             await _db.SaveChangesAsync();
+
+            // ✅ Update JobOrder status to "In Progress"
+            var jobOrder = await _db.JobOrders.FindAsync(vm.JobID);
+            if (jobOrder != null && jobOrder.Status == "Pending")
+            {
+                jobOrder.Status = "In Progress";
+                await _db.SaveChangesAsync();
+            }
 
             TempData["Success"] = "Part added successfully!";
             return RedirectToAction(nameof(AddParts), new { id = vm.JobID });

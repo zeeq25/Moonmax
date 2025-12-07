@@ -1,4 +1,6 @@
-﻿@{
+﻿@model IEnumerable<Moonmax.ViewModels.CustomerViewModel>
+
+@{
     ViewData["Title"] = "Customer List";
     ViewData["Nav"] = "Sales";
     ViewData["AppShell"] = true;
@@ -18,7 +20,6 @@
             <p class="dash-sub">Manage customer transactions and invoices</p>
         </div>
 
-        <!-- 🔹 ADD CUSTOMER COMPANY BUTTON -->
         <div class="dash-actions">
             <a asp-action="CreateCustomer"
                class="btn-pill btn-primary-mm">
@@ -31,42 +32,31 @@
     <!-- KPI CARDS -->
     <section class="dash-kpis">
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-receipt"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Total Sales (Oct)</div>
                 <div class="kpi-main">₱284,500</div>
             </div>
         </article>
-
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-money-bill-1-wave"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-money-bill-1-wave"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Paid Invoices</div>
                 <div class="kpi-main">₱92,000</div>
             </div>
         </article>
-
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Pending PDCs</div>
                 <div class="kpi-main">₱20,500</div>
             </div>
         </article>
-
         <article class="dash-card kpi">
-            <div class="kpi-icon">
-                <i class="fa-solid fa-user-group"></i>
-            </div>
+            <div class="kpi-icon"><i class="fa-solid fa-user-group"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Active Customers</div>
-                <div class="kpi-main">48</div>
+                <div class="kpi-main">@Model.Count()</div>
             </div>
         </article>
     </section>
@@ -74,18 +64,8 @@
     <!-- TABS -->
     <section class="inv-tabs-bar">
         <div class="inv-tabs">
-            <a asp-controller="Sales"
-               asp-action="Index"
-               class="inv-tab">
-                Transactions
-            </a>
-
-            <!-- Active Customer List tab -->
-            <a asp-controller="Sales"
-               asp-action="Customerlist"
-               class="inv-tab inv-tab--active">
-                Customer List
-            </a>
+            <a asp-controller="Sales" asp-action="Index" class="inv-tab">Transactions</a>
+            <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab inv-tab--active">Customer List</a>
         </div>
     </section>
 
@@ -93,20 +73,12 @@
     <section class="inv-filter-bar">
         <div class="inv-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input class="inv-search-input"
-                   type="text"
-                   placeholder="Search by customer name, email, or phone..." />
+            <input class="inv-search-input" type="text" placeholder="Search by customer name, email, phone, or payment type..." />
         </div>
 
         <div class="inv-filter-actions">
-            <button class="btn-chip">
-                <i class="fa-solid fa-filter"></i>
-                <span>Filter</span>
-            </button>
-            <button class="btn-chip">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
+            <button class="btn-chip"><i class="fa-solid fa-filter"></i><span>Filter</span></button>
+            <button class="btn-chip"><i class="fa-solid fa-download"></i><span>Export</span></button>
         </div>
     </section>
 
@@ -117,54 +89,31 @@
                 <thead>
                     <tr>
                         <th>Customer Name</th>
-                        <th>Contact Person</th>
                         <th>Email</th>
                         <th>Phone</th>
+                        <th>Payment Type</th>
                         <th>Total Transactions</th>
                         <th>Total Revenue</th>
                         <th>Outstanding</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>ABC Manufacturing</td>
-                        <td>John Doe</td>
-                        <td>john@abcmfg.com</td>
-                        <td>+63 917 123 4567</td>
-                        <td>12</td>
-                        <td>₱285,000</td>
-                        <td><span class="badge status-ok">₱0</span></td>
-                    </tr>
-
-                    <tr>
-                        <td>XYZ Corporation</td>
-                        <td>Jane Smith</td>
-                        <td>jane@xyzcorp.com</td>
-                        <td>+63 918 234 5678</td>
-                        <td>8</td>
-                        <td>₱142,000</td>
-                        <td><span class="badge status-low">₱8,500</span></td>
-                    </tr>
-
-                    <tr>
-                        <td>Tech Industries</td>
-                        <td>Bob Chen</td>
-                        <td>bob@techindustries.com</td>
-                        <td>+63 919 345 6789</td>
-                        <td>15</td>
-                        <td>₱425,000</td>
-                        <td><span class="badge status-ok">₱0</span></td>
-                    </tr>
-
-                    <tr>
-                        <td>Global Logistics</td>
-                        <td>Sarah Lee</td>
-                        <td>sarah@globallog.com</td>
-                        <td>+63 920 456 7890</td>
-                        <td>6</td>
-                        <td>₱98,000</td>
-                        <td><span class="badge status-low">₱12,000</span></td>
-                    </tr>
+                    @foreach (var client in Model)
+                    {
+                        <tr>
+                            <td>@client.Name</td>
+                            <td>@client.Email</td>
+                            <td>@client.Phone</td>
+                            <td>@client.PaymentType</td>
+                            <td>@client.TotalTransactions</td>
+                            <td>@client.TotalRevenue.ToString("C")</td>
+                            <td>
+                                <span class="badge @(client.Outstanding == 0 ? "status-ok" : "status-low")">
+                                    @client.Outstanding.ToString("C")
+                                </span>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>

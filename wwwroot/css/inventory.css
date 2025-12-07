@@ -454,32 +454,31 @@
         font-size: 18px;
     }
 
-.badge.status-low {
-    color: orangered; /* Font color */
-    font-weight: bold; /* Optional: make it stand out */
-}
-.badge.status-ok {
-    color: lawngreen; /* Font color */
-    font-weight: bold; /* Optional: make it stand out */
-}
 
 
-/* Enhance stock status badges without padding */
-.badge.status-low,
-.badge.status-ok {
-    font-size: 0.8rem;
-    font-weight: 400;
-    
-    color: white;
-    background-color: transparent; /* remove default badge color */
+
+
+
+
+
+
+/* STATUS – match Sales Module styles */
+.badge {
+    font-size: 13px; /* same as Sales Module */
+    font-weight: 700; /* bold like Sales Module */
+    background: transparent; /* no badge background */
+    border-radius: 0;
+    padding: 0;
 }
 
-/* Specific colors */
-.badge.status-low {
-    color: #dc3545; /* red text for low stock */
-}
+    /* Low Stock – red text */
+    .badge.status-low {
+        color: #dc2626; /* matches Sales Module "status-low" / outstanding */
+    }
 
-.badge.status-ok {
-    color: #28a745; /* green text for in stock */
-}
+    /* In Stock – green text */
+    .badge.status-ok {
+        color: #059669; /* matches Sales Module "status-ok" / paid */
+    }
+
 

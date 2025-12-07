@@ -9,7 +9,7 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
-}   
+}
 
 <div class="page page-jobs">
     <!-- HEADER -->
@@ -75,7 +75,7 @@
                     <th>Technician</th>
                     <th>Created</th>
                     <th>Due Date</th>
-                    <th>Cost</th>
+                    <th>Job Cost</th>
                     <th>Status</th>
                     <th class="jo-col-actions">Actions</th>
                 </tr>
@@ -92,26 +92,36 @@
                         <td>@(jo.DueDate?.ToString("yyyy-MM-dd") ?? "")</td>
                         <td>₱@jo.Cost.ToString("N0")</td>
                         <td><span class="status status-@(jo.Status.Replace(" ", "-").ToLower())">@jo.Status</span></td>
-
                         <td class="jo-col-actions">
                             <div class="jo-actions">
-                                <!-- View Job Order -->
-                                <a class="icon-btn-table btn-view" asp-action="View" asp-route-id="@jo.JobID" title="View Job Order">
-                                    <i class="fa-regular fa-eye"></i>
-                                </a>
-
-                                <!-- Edit Job Order -->
-                                <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
-                                    <i class="fa-regular fa-pen-to-square"></i>
-                                </a>
-
-                                <!-- Add Parts -->
-                                <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
-                                    <i class="fa-solid fa-plus"></i>
-                                </a>
+                                @if (jo.Status == "Completed")
+                                {
+                                    <!-- Disabled buttons -->
+                                    <button class="icon-btn-table btn-view" disabled title="Completed Job">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+                                    <button class="icon-btn-table btn-edit" disabled title="Completed Job">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="icon-btn-table btn-add-parts" disabled title="Completed Job">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <!-- Active buttons -->
+                                    <a class="icon-btn-table btn-view" asp-action="View" asp-route-id="@jo.JobID" title="View Job Order">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                    <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </a>
+                                }
                             </div>
                         </td>
-
                     </tr>
                 }
             </tbody>
