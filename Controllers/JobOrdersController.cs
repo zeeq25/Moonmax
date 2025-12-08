@@ -308,6 +308,42 @@ namespace Moonmax.Controllers
         }
 
 
+        [HttpGet]
+        public IActionResult ViewJob(int id)
+        {
+            var job = _db.JobOrders
+                .Include(j => j.Client)
+                .Include(j => j.Technician)
+                .Include(j => j.JobParts)
+                    .ThenInclude(p => p.Inventory) // Assuming Inventory has PartName & UnitCost
+                .Where(j => j.JobID == id)
+                .AsEnumerable() // move to in-memory
+                .Select(j => new JobOrderDetailsViewModel
+                {
+                    JobID = j.JobID,
+                    Client = j.ClientID == null ? $"Walk-In ({j.ContactNumber})" : j.Client!.Name,
+                    ServiceType = j.ServiceType,
+                    Technician = j.Technician?.Name ?? "",
+                    Created = j.CreatedAt,                // <-- use CreatedAt
+                    DueDate = j.DueDate,
+                    Cost = j.Cost,
+                    Status = j.Status,
+                    Parts = j.JobParts.Select(p => new JobOrderPartViewModel
+                    {
+                        PartName = p.Inventory.PartName,
+                        Quantity = p.Quantity,
+                        UnitCost = p.UnitCost
+                    }).ToList()
+                })
+                .FirstOrDefault();
+
+            if (job == null) return NotFound();
+
+            return PartialView("_JobOrderDetailsModal", job);
+        }
+
+
+
 
     }
 }

@@ -143,5 +143,30 @@
                 }
             }
         });
+
+                // AUTO-FILL UNIT PRICE
+        document.getElementById('po-items').addEventListener('input', async (e) => {
+            if (e.target && e.target.name.includes("ProductName")) {
+                const productName = e.target.value;
+
+                // Find UnitPrice input beside this ProductName
+                const parent = e.target.closest('.po-item');
+                const priceInput = parent.querySelector('input[name*="UnitPrice"]');
+
+                if (productName.trim() === "") {
+                    priceInput.value = "";
+                    return;
+                }
+
+                // Fetch price from controller
+                const resp = await fetch(`/Procurement/GetUnitPrice?productName=${encodeURIComponent(productName)}`);
+                const data = await resp.json();
+
+                if (data.price > 0) {
+                    priceInput.value = data.price;
+                }
+            }
+        });
+
     </script>
 }

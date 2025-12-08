@@ -236,30 +236,62 @@ namespace Moonmax.Controllers
             // Update PO status to "Delivered"
             po.Status = "Delivered";
 
-            // Loop through each item in the PO
+            // Get logged-in user ID
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int parsedUserId = int.Parse(userId);
+
             foreach (var item in po.Items)
             {
-                // Find inventory by PartName
-                var inventoryItem = await _db.Inventories
+                Inventory inventoryItem = await _db.Inventories
                     .FirstOrDefaultAsync(i => i.PartName == item.ProductName);
+
+                int previousQty = 0;
+                int newQty = item.Quantity;
 
                 if (inventoryItem != null)
                 {
-                    // Increment existing stock
+                    // Capture previous quantity
+                    previousQty = inventoryItem.QuantityInStock;
+
+                    // Update inventory
                     inventoryItem.QuantityInStock += item.Quantity;
+
+                    // Set new quantity
+                    newQty = inventoryItem.QuantityInStock;
                 }
                 else
                 {
-                    // Add new inventory record if it doesn't exist
-                    var newInventory = new Inventory
+                    // New inventory record
+                    inventoryItem = new Inventory
                     {
                         PartName = item.ProductName,
                         QuantityInStock = item.Quantity,
                         UnitCost = item.UnitPrice,
                         Category = item.Category
                     };
-                    _db.Inventories.Add(newInventory);
+                    _db.Inventories.Add(inventoryItem);
+
+                    previousQty = 0;
+                    newQty = item.Quantity;
                 }
+
+                // Save changes for Inventory first to get the InventoryID
+                await _db.SaveChangesAsync();
+
+                // CREATE STOCK MOVEMENT RECORD (IN)
+                var movement = new StockMovement
+                {
+                    InventoryID = inventoryItem.InventoryID,
+                    MovementType = "IN",
+                    Quantity = item.Quantity,
+                    PreviousQuantity = previousQty,
+                    NewQuantity = newQty,
+                    PurchaseOrderID = po.PurchaseOrderID,
+                    UserID = parsedUserId,
+                    MovementDate = DateTime.Now
+                };
+
+                _db.StockMovement.Add(movement);
             }
 
             await _db.SaveChangesAsync();
@@ -267,6 +299,25 @@ namespace Moonmax.Controllers
             TempData["Success"] = $"Purchase Order #{po.PurchaseOrderID} received successfully!";
             return RedirectToAction(nameof(Index));
         }
+
+
+
+        //AUTO-FILL UNIT PRICE
+        [HttpGet]
+        public IActionResult GetUnitPrice(string productName)
+        {
+            if (string.IsNullOrWhiteSpace(productName))
+                return Json(new { price = 0 });
+
+            var item = _db.Inventories
+                .FirstOrDefault(i => i.PartName == productName);
+
+            if (item == null)
+                return Json(new { price = 0 });
+
+            return Json(new { price = item.UnitCost });
+        }
+
 
     }
 }

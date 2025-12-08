@@ -186,9 +186,34 @@ namespace Moonmax.Controllers
 
                     if (inventoryItem != null)
                     {
+
+                        int previousQty = inventoryItem.QuantityInStock;
+
                         inventoryItem.QuantityInStock -= part.Quantity;
                         if (inventoryItem.QuantityInStock < 0)
                             inventoryItem.QuantityInStock = 0;
+
+                        int newQty = inventoryItem.QuantityInStock;
+
+                        // Get logged in user ID
+                        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        int parsedUserId = int.Parse(userId);
+
+                        // CREATE STOCK MOVEMENT RECORD (OUT)
+                        var movement = new StockMovement
+                        {
+                            InventoryID = inventoryItem.InventoryID,
+                            MovementType = "OUT",
+                            Quantity = part.Quantity,
+                            PreviousQuantity = previousQty,
+                            NewQuantity = newQty,
+                            JobOrderID = invoice.JobID,
+                            UserID = parsedUserId,
+                            MovementDate = DateTime.Now
+                        };
+
+                        _context.StockMovement.Add(movement);
+
                     }
                 }
 
