@@ -18,9 +18,10 @@
     <form asp-action="Create" method="post">
         <div class="mb-3">
             <label class="form-label">Client Type</label>
-            <select asp-for="ClientID" class="form-select" asp-items="Model.Clients">
-                <option value="">-- Walk-In --</option>
+            <select asp-for="ClientID" id="ClientID" class="form-select" asp-items="Model.Clients">
+                <option value="">-- Choose Clients --</option>
             </select>
+
         </div>
 
         <div class="mb-3">
@@ -71,4 +72,26 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            $('#ClientID').change(function () {
+                var clientId = $(this).val();
+
+                if (clientId) {
+                    $.ajax({
+                        url: '@Url.Action("GetClientContact", "JobOrders")',
+                        type: 'GET',
+                        data: { clientId: clientId },
+                        success: function (data) {
+                            $('#ContactNumber').val(data.contactNumber);
+                        }
+                    });
+                } else {
+                    $('#ContactNumber').val(''); // clear if Walk-In
+                }
+            });
+        });
+    </script>
 }
+

@@ -305,3 +305,18 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Remove underline for KPI links */
+.dash-card.kpi.dash-card--link {
+    text-decoration: none; /* removes underline */
+}
+
+/* KPI labels mimic header font style */
+.dash-card.kpi .kpi-title {
+    font-family: inherit; /* inherit from parent or set to same as .dash-title */
+    font-weight: 700; /* same as header weight */
+    font-size: 1.4rem; /* match your header scale, adjust if needed */
+    line-height: 1.2; /* similar spacing as header */
+    color: #141927; /* same color as .dash-title, adjust if needed */
+}

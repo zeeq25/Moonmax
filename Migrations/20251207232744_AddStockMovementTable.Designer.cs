@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Moonmax.Data;
 
@@ -11,9 +12,11 @@ using Moonmax.Data;
 namespace Moonmax.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251207232744_AddStockMovementTable")]
+    partial class AddStockMovementTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,9 +79,6 @@ namespace Moonmax.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("QuantityInStock")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReorderLevel")
                         .HasColumnType("int");
 
                     b.Property<int>("SupplierID")

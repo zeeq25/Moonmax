@@ -31,6 +31,9 @@ namespace Moonmax.Data
 
         //SALES
         public DbSet<Invoice> Invoices { get; set; }
+
+        //STOCK MOVEMENT
+        public DbSet<StockMovement> StockMovement { get; set; }
         
     }
 }

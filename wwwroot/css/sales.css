@@ -510,3 +510,20 @@
     color: var(--mm-red); /* Outstanding > 0 */
 }
 
+/*Create Invoice button*/
+.btn-create {
+    background-color: #007bff; /* Bootstrap blue, or change to any blue */
+    color: #ffffff; /* White icon/text */
+    border: none; /* Remove border if any */
+    padding: 6px 10px; /* Adjust size if needed */
+    border-radius: 4px; /* Rounded corners */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* Remove underline */
+}
+
+    .btn-create:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+        color: #ffffff;
+    }

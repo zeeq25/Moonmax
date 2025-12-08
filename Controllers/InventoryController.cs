@@ -76,6 +76,7 @@ namespace Moonmax.Controllers
                 PartName = vm.PartName,
                 UnitCost = vm.UnitCost,
                 QuantityInStock = vm.QuantityInStock,
+                ReorderLevel = vm.ReorderLevel,
                 SupplierID = vm.SupplierID,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
@@ -104,6 +105,7 @@ namespace Moonmax.Controllers
                 PartName = inventory.PartName,
                 UnitCost = inventory.UnitCost,
                 QuantityInStock = inventory.QuantityInStock,
+                ReorderLevel = inventory.ReorderLevel,
                 SupplierID = inventory.SupplierID,
                 Suppliers = GetSuppliersSelectList(),
                 Categories = GetCategoriesSelectList()
@@ -133,6 +135,7 @@ namespace Moonmax.Controllers
             inventory.PartName = vm.PartName;
             inventory.UnitCost = vm.UnitCost;
             inventory.QuantityInStock = vm.QuantityInStock;
+            inventory.ReorderLevel = vm.ReorderLevel;
             inventory.SupplierID = vm.SupplierID;
             inventory.UpdatedAt = DateTime.Now;
 
@@ -188,5 +191,31 @@ namespace Moonmax.Controllers
                 Text = c
             }).ToList();
         }
+
+        // ---------------------------
+        // STOCK ALERTS
+        // ---------------------------
+        public async Task<IActionResult> Stockalert()
+        {
+            var lowStockItems = await _db.Inventories
+                .Where(i => i.QuantityInStock <= i.ReorderLevel)
+                .Include(i => i.Supplier)
+                .OrderBy(i => i.PartName)
+                .Select(i => new InventoryListingVM
+                {
+                    InventoryID = i.InventoryID,
+                    PartName = i.PartName,
+                    Category = i.Category,
+                    QuantityInStock = i.QuantityInStock,
+                    UnitCost = i.UnitCost,
+                    SupplierName = i.Supplier.SupplierName,
+                    ReorderLevel = i.ReorderLevel
+                })
+                .ToListAsync();
+
+            return View(lowStockItems);
+        }
+
+
     }
 }

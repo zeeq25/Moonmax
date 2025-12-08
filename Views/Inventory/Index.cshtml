@@ -125,6 +125,7 @@
                         <th>Unit Price</th>
                         <th>Supplier</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,6 +148,17 @@
                                 {
                                     <span class="badge status-ok">In Stock</span>
                                 }
+                            </td>
+
+                            <td class="inv-actions">
+                                <!-- NEW -->
+                                <a asp-controller="Inventory"
+                                   asp-action="Edit"
+                                   asp-route-id="@item.InventoryID"
+                                   class="inv-btn-icon"
+                                   title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
                             </td>
                         </tr>
                     }

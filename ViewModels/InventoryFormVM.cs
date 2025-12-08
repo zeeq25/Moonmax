@@ -30,5 +30,10 @@ namespace Moonmax.ViewModels
         [Display(Name = "Supplier")]
         public int SupplierID { get; set; }
         public List<SelectListItem> Suppliers { get; set; } = new List<SelectListItem>();
+
+        [Required]
+        public int ReorderLevel { get; set; }
+      
+
     }
 }
