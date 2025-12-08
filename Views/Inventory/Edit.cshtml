@@ -1,0 +1,80 @@
+﻿@model Moonmax.ViewModels.InventoryFormVM
+
+@{
+    ViewData["Title"] = "Edit Inventory Item";
+    ViewData["Nav"] = "Inventory";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/inventory.css" asp-append-version="true" />
+}
+
+<div class="page page-inventory">
+
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Edit Inventory Item</h1>
+            <p class="dash-sub">Update item details</p>
+        </div>
+        <div class="dash-header-actions">
+            <a asp-action="Index" class="btn-pill btn-secondary-mm header-cta">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to List</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="mm-card mm-card-form">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="InventoryID" />
+
+            <div class="form-group">
+                <label asp-for="PartName"></label>
+                <input asp-for="PartName" class="form-control" />
+                <span asp-validation-for="PartName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Category"></label>
+                <select asp-for="Category" asp-items="Model.Categories" class="form-control"></select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="QuantityInStock"></label>
+                <input asp-for="QuantityInStock" class="form-control" />
+                <span asp-validation-for="QuantityInStock" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UnitCost"></label>
+                <input asp-for="UnitCost" class="form-control" />
+                <span asp-validation-for="UnitCost" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SupplierID"></label>
+                <select asp-for="SupplierID" asp-items="Model.Suppliers" class="form-control"></select>
+                <span asp-validation-for="SupplierID" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ReorderLevel"></label>
+                <input asp-for="ReorderLevel" class="form-control" />
+                <span asp-validation-for="ReorderLevel" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn-pill btn-primary-mm">
+                <i class="fa-solid fa-save"></i> Update Item
+            </button>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -273,6 +273,39 @@ namespace Moonmax.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        
+        // GET: JobOrders/GetClientContact/5
+        [HttpGet]
+        public async Task<JsonResult> GetClientContact(int clientId)
+        {
+            var client = await _db.Client.FindAsync(clientId);
+            if (client != null)
+            {
+                return Json(new { contactNumber = client.ContactNumber });
+            }
+            return Json(new { contactNumber = "" });
+        }
+
+
+        // GET: JobOrders/RemovePart/5
+        [HttpGet]
+        public async Task<IActionResult> RemovePart(int id)
+        {
+            // Find the part
+            var part = await _db.JobParts.FindAsync(id);
+            if (part == null)
+                return NotFound();
+
+            // Get JobID to redirect back
+            int jobId = part.JobID;
+
+            // Remove the part
+            _db.JobParts.Remove(part);
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Part removed successfully!";
+            return RedirectToAction("AddParts", new { id = jobId });
+        }
 
 
 

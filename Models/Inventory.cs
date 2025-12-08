@@ -24,6 +24,9 @@ namespace Moonmax.Models
         [Required]
         public int QuantityInStock { get; set; }
 
+        public int ReorderLevel { get; set; } = 10; // default threshold
+
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
 

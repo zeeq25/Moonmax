@@ -8,5 +8,12 @@
         public decimal UnitCost { get; set; }
         public int QuantityInStock { get; set; }
         public string SupplierName { get; set; }
+
+
+        public int ReorderLevel { get; set; }
+
+
     }
+
 }
+

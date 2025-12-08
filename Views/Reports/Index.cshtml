@@ -19,37 +19,34 @@
         </div>
     </header>
 
-    <!-- KPI CARDS (no "vs last period" text) -->
+    <!-- KPI CARDS -->
     <section class="dash-kpis">
-        <article class="dash-card kpi">
+        <a asp-controller="Reports" asp-action="SalesReport" class="dash-card kpi dash-card--link">
             <div class="kpi-icon">
                 <i class="fa-solid fa-peso-sign"></i>
             </div>
             <div class="kpi-content">
-                <div class="kpi-title">Total Revenue</div>
-                <div class="kpi-main">₱1,449,500</div>
+                <div class="kpi-title" style="font-size: 1.2rem;">Sales Report</div>
             </div>
-        </article>
+        </a>
 
-        <article class="dash-card kpi">
+        <a asp-controller="Reports" asp-action="InventoryReport" class="dash-card kpi dash-card--link">
             <div class="kpi-icon">
-                <i class="fa-solid fa-chart-line"></i>
+                <i class="fa-solid fa-box-archive"></i>
             </div>
             <div class="kpi-content">
-                <div class="kpi-title">Avg. Job Value</div>
-                <div class="kpi-main">₱18,500</div>
+                <div class="kpi-title" style="font-size: 1.2rem;">Inventory Reports</div>
             </div>
-        </article>
+        </a>
 
-        <article class="dash-card kpi">
+        <a asp-controller="Reports" asp-action="JobOrderReport" class="dash-card kpi dash-card--link">
             <div class="kpi-icon">
                 <i class="fa-solid fa-briefcase"></i>
             </div>
             <div class="kpi-content">
-                <div class="kpi-title">Total Jobs</div>
-                <div class="kpi-main">316</div>
+                <div class="kpi-title" style="font-size: 1.2rem;">Job Order Reports</div>
             </div>
-        </article>
+        </a>
 
         <article class="dash-card kpi">
             <div class="kpi-icon">
@@ -62,9 +59,9 @@
         </article>
     </section>
 
+
     <!-- MAIN REPORT GRID -->
     <section class="reports-grid">
-
         <!-- ROW 1: LINE CHART + PIE CHART -->
         <div class="reports-row reports-row--top">
             <article class="mm-card chart-card chart-card--wide">
@@ -113,7 +110,6 @@
 
         <!-- ROW 3: SUMMARY TABLE + KEY HIGHLIGHTS -->
         <div class="reports-row reports-row--summary">
-
             <!-- LEFT: Monthly Performance Summary -->
             <article class="mm-card">
                 <div class="chart-card-header">
@@ -236,12 +232,8 @@
                     }]
                 },
                 options: {
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: false } }
                 }
             });
         }
@@ -253,15 +245,9 @@
                 type: 'pie',
                 data: {
                     labels: ['Hydraulic Repair', 'Turbo Repair', 'Metal Fabrication', 'Hydraulic Hose'],
-                    datasets: [{
-                        data: [35, 28, 22, 15]
-                    }]
+                    datasets: [{ data: [35, 28, 22, 15] }]
                 },
-                options: {
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
+                options: { plugins: { legend: { position: 'bottom' } } }
             });
         }
 
@@ -272,16 +258,12 @@
                 type: 'bar',
                 data: {
                     labels: ['Tech Industries', 'ABC Manufacturing', 'XYZ Corporation', 'Global Logistics', 'Metro Construction'],
-                    datasets: [{
-                        data: [450000, 300000, 150000, 120000, 90000]
-                    }]
+                    datasets: [{ data: [450000, 300000, 150000, 120000, 90000] }]
                 },
                 options: {
                     indexAxis: 'y',
                     plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true }
-                    }
+                    scales: { x: { beginAtZero: true } }
                 }
             });
         }
@@ -293,16 +275,9 @@
                 type: 'bar',
                 data: {
                     labels: ['Hoses', 'Fittings', 'Turbo Parts', 'Metal Parts', 'Tools'],
-                    datasets: [{
-                        data: [85, 72, 68, 55, 43]
-                    }]
+                    datasets: [{ data: [85, 72, 68, 55, 43] }]
                 },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         }
     </script>
