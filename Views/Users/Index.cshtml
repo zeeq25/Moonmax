@@ -1,6 +1,7 @@
 ﻿@using Moonmax.ViewModels
 @model Moonmax.ViewModels.UsersIndexViewModel
 
+
 @{
     ViewData["Title"] = "Users Management";
     ViewData["Nav"] = "Users";
@@ -82,14 +83,6 @@
                     </button>
                 </header>
 
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert alert-success">@TempData["Success"]</div>
-                }
-                @if (TempData["Error"] != null)
-                {
-                    <div class="alert alert-danger">@TempData["Error"]</div>
-                }
 
                 <div class="table-responsive">
                     <table class="table table-striped table-custom">
@@ -165,6 +158,72 @@
             </article>
         </div>
     </section>
+
+
+    <!-- TECHNICIANS TABLE PANEL -->
+    <div class="col-12 col-lg-8 mt-5">
+        <article class="panel-card activity-card">
+            <header class="panel-card-header d-flex justify-content-between align-items-center">
+                <h2>All Technicians</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTechnicianModal">
+                    Add New Technician
+                </button>
+            </header>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-custom">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Assigned Jobs</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tech in Model.Technicians)
+                        {
+                            <tr>
+                                <td>@tech.TechnicianID</td>
+                                <td>@tech.Name</td>
+                                <td>@tech.JobOrders.Count()</td>
+                                <td>
+                                    <a asp-action="EditTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-primary">Edit</a>
+                                    <a asp-action="DeleteTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </div>
+
+    <!-- CREATE TECHNICIAN MODAL -->
+    <div class="modal fade" id="addTechnicianModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form asp-action="CreateTechnician" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Technician</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Technician Name</label>
+                            <input asp-for="CreateTechnicianModel.Name" class="form-control" />
+                            <span asp-validation-for="CreateTechnicianModel.Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Create Technician</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- CREATE USER MODAL -->
     <div class="modal fade" id="addUserModal" tabindex="-1">

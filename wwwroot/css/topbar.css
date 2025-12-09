@@ -133,3 +133,21 @@
     font-size: 11px;
     color: #c0cde0;
 }
+
+
+.topbar-alert-container {
+    position: fixed;
+    top: 70px; /* adjust based on your topbar height */
+    width: 100%;
+    z-index: 1050; /* above content but below modals */
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* lets clicks pass through if needed */
+}
+
+    .topbar-alert-container .alert {
+        width: auto;
+        min-width: 300px;
+        max-width: 600px;
+        pointer-events: auto; /* make alerts clickable */
+    }

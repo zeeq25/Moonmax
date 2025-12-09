@@ -20,11 +20,14 @@ namespace Moonmax.Controllers
         public async Task<IActionResult> Index()
         {
             var users = await _context.Users.ToListAsync();
+            var technicians = await _context.Technician.ToListAsync();
 
             var vm = new UsersIndexViewModel
             {
                 Users = users,
-                CreateModel = new CreateUserViewModel() // for modal binding
+                Technicians = technicians,
+                CreateModel = new CreateUserViewModel(), // for modal binding
+                
             };
 
             return View(vm);
@@ -133,5 +136,31 @@ namespace Moonmax.Controllers
             TempData["Success"] = "User deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
+
+
+
+        //CREATE TECHNICIAN
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateTechnician([Bind(Prefix = "CreateTechnicianModel")] CreateTechnicianViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Failed to add technician. Check your input.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var tech = new Technicians
+            {
+                Name = vm.Name
+            };
+
+            _context.Technician.Add(tech);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Technician added successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }
