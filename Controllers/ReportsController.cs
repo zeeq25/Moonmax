@@ -25,7 +25,9 @@ namespace Moonmax.Controllers
         public IActionResult SalesReport()
         {
             // KPIs
-            var totalRevenue = _context.Invoices.Sum(i => i.Amount);
+            var totalRevenue = _context.Invoices
+                .Where(i => i.Status == "Paid")
+                .Sum(i => i.Amount);
             var totalJobs = _context.JobOrders.Count();
             var avgJobValue = totalJobs > 0 ? _context.JobOrders.Average(j => j.Cost) : 0;
 

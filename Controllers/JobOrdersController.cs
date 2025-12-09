@@ -68,7 +68,14 @@ namespace Moonmax.Controllers
 
                 Clients = _db.Client
                     .Select(c => new SelectListItem { Value = c.ClientID.ToString(), Text = c.Name })
-                    .ToList()
+                    .ToList(),
+
+                StatusList = new List<SelectListItem>
+                {
+                            new SelectListItem { Value = "Pending", Text = "Pending" }
+                }
+
+
             };
 
             return View(vm);
@@ -101,7 +108,7 @@ namespace Moonmax.Controllers
                 CreatedAt = System.DateTime.Now,
                 DueDate = vm.DueDate,
                 Cost = vm.Cost,
-                Status = vm.Status
+                Status = "Pending" // <-- force Pending
             };
 
             _db.JobOrders.Add(jobOrder);
@@ -232,12 +239,18 @@ namespace Moonmax.Controllers
                 .ToList();
 
             // Populate Status dropdown
-            vm.StatusList = new List<SelectListItem>
-    {
-        new SelectListItem { Value = "Pending", Text = "Pending" },
-        new SelectListItem { Value = "In Progress", Text = "In Progress" },
-        new SelectListItem { Value = "Completed", Text = "Completed" }
-    };
+            vm.StatusList = new List<SelectListItem>();
+
+            if (jobOrder.Status != "Completed")
+            {
+                vm.StatusList.Add(new SelectListItem { Value = "Pending", Text = "Pending" });
+                vm.StatusList.Add(new SelectListItem { Value = "In Progress", Text = "In Progress" });
+            }
+            else
+            {
+                vm.StatusList.Add(new SelectListItem { Value = "Completed", Text = "Completed", Disabled = true });
+            }
+
 
             return View(vm);
         }

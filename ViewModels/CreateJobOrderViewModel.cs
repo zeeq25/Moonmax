@@ -26,5 +26,8 @@ namespace Moonmax.ViewModels
 
         public List<SelectListItem> Technicians { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Clients { get; set; } = new List<SelectListItem>();
+
+        // Add this for status dropdown
+        public List<SelectListItem> StatusList { get; set; } = new();
     }
 }

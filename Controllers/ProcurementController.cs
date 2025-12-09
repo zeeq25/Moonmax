@@ -225,60 +225,57 @@ namespace Moonmax.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Receive(int id)
         {
-            // Get the purchase order and its items
             var po = await _db.PurchaseOrders
                 .Include(p => p.Items)
                 .FirstOrDefaultAsync(p => p.PurchaseOrderID == id);
 
-            if (po == null)
-                return NotFound();
+            if (po == null) return NotFound();
 
-            // Update PO status to "Delivered"
+            if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int parsedUserId))
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
             po.Status = "Delivered";
-
-            // Get logged-in user ID
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            int parsedUserId = int.Parse(userId);
 
             foreach (var item in po.Items)
             {
-                Inventory inventoryItem = await _db.Inventories
-                    .FirstOrDefaultAsync(i => i.PartName == item.ProductName);
+                if (string.IsNullOrWhiteSpace(item.ProductName)) continue;
+
+                var inventoryItem = await _db.Inventories
+                    .FirstOrDefaultAsync(i => i.PartName.Trim().ToLower() == item.ProductName.Trim().ToLower());
 
                 int previousQty = 0;
                 int newQty = item.Quantity;
 
                 if (inventoryItem != null)
                 {
-                    // Capture previous quantity
                     previousQty = inventoryItem.QuantityInStock;
-
-                    // Update inventory
                     inventoryItem.QuantityInStock += item.Quantity;
-
-                    // Set new quantity
                     newQty = inventoryItem.QuantityInStock;
                 }
                 else
                 {
-                    // New inventory record
                     inventoryItem = new Inventory
                     {
-                        PartName = item.ProductName,
+                        PartName = item.ProductName.Trim(),
                         QuantityInStock = item.Quantity,
                         UnitCost = item.UnitPrice,
-                        Category = item.Category
+                        Category = item.Category,
+                        SupplierID = po.SupplierID,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
                     };
                     _db.Inventories.Add(inventoryItem);
+
+                    // Save immediately so InventoryID is generated for StockMovement
+                    await _db.SaveChangesAsync();
 
                     previousQty = 0;
                     newQty = item.Quantity;
                 }
 
-                // Save changes for Inventory first to get the InventoryID
-                await _db.SaveChangesAsync();
-
-                // CREATE STOCK MOVEMENT RECORD (IN)
                 var movement = new StockMovement
                 {
                     InventoryID = inventoryItem.InventoryID,
@@ -290,7 +287,6 @@ namespace Moonmax.Controllers
                     UserID = parsedUserId,
                     MovementDate = DateTime.Now
                 };
-
                 _db.StockMovement.Add(movement);
             }
 
@@ -299,6 +295,7 @@ namespace Moonmax.Controllers
             TempData["Success"] = $"Purchase Order #{po.PurchaseOrderID} received successfully!";
             return RedirectToAction(nameof(Index));
         }
+
 
 
 
