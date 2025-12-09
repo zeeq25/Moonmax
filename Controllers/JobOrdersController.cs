@@ -21,24 +21,57 @@ namespace Moonmax.Controllers
 
 
         // INDEX
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10, string searchTerm = "", string statusFilter = "all")
         {
-            var jobOrders = await _db.JobOrders
+            // Base query
+            var query = _db.JobOrders
                 .Include(j => j.Client)
                 .Include(j => j.Technician)
+                .AsQueryable();
+
+            // Apply search
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim().ToLower();
+                query = query.Where(j =>
+                    j.JobID.ToString().Contains(searchTerm) ||
+                    (j.Client != null && j.Client.Name.ToLower().Contains(searchTerm)) ||
+                    j.ServiceType.ToLower().Contains(searchTerm));
+            }
+
+            // Apply status filter
+            if (statusFilter != "all")
+            {
+                var statusMap = new Dictionary<string, string>
+        {
+            { "pending", "Pending" },
+            { "in-progress", "In Progress" },
+            { "completed", "Completed" }
+        };
+                if (statusMap.ContainsKey(statusFilter))
+                {
+                    var statusValue = statusMap[statusFilter];
+                    query = query.Where(j => j.Status == statusValue);
+                }
+            }
+
+            // Count total items for pagination
+            var totalItems = await query.CountAsync();
+
+            // Get paginated data
+            var jobOrders = await query
                 .OrderByDescending(j => j.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            
-           
-
-
+            // Map to ViewModel
             var vm = new JobOrdersIndexViewModel
             {
-                PendingJobs = jobOrders.Count(j => j.Status == "Pending"),
-                InProgressJobs = jobOrders.Count(j => j.Status == "In Progress"),
-                CompletedJobs = jobOrders.Count(j => j.Status == "Completed"),
-                TotalRevenue = jobOrders.Sum(j => j.Cost),
+                PendingJobs = await _db.JobOrders.CountAsync(j => j.Status == "Pending"),
+                InProgressJobs = await _db.JobOrders.CountAsync(j => j.Status == "In Progress"),
+                CompletedJobs = await _db.JobOrders.CountAsync(j => j.Status == "Completed"),
+                TotalRevenue = await _db.JobOrders.SumAsync(j => j.Cost),
                 JobOrders = jobOrders.Select(j => new JobOrderListingVM
                 {
                     JobID = j.JobID,
@@ -50,11 +83,15 @@ namespace Moonmax.Controllers
                     Cost = j.Cost,
                     Status = j.Status,
                     TechnicianID = j.TechnicianID
-                }).ToList()
+                }).ToList(),
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalItems = totalItems
             };
 
             return View(vm);
         }
+
 
         // CREATE - GET
         [HttpGet]

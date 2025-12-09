@@ -23,6 +23,7 @@
 
     <!-- KPI CARDS ======================================================= -->
     <section class="dash-kpis">
+
         <!-- Active Repairs -->
         <article class="dash-card kpi">
             <div class="kpi-icon">
@@ -66,6 +67,7 @@
                 <div class="kpi-main">₱@Model.MonthlySales.ToString("N0")</div>
             </div>
         </article>
+
     </section>
 
     <!-- MAIN GRID: ACTIVITY + SUMMARY + COMPANY EST ===================== -->
@@ -110,7 +112,7 @@
             </ul>
         </article>
 
-        <!-- Today's Summary (Still static unless you want dynamic) -->
+        <!-- Today's Summary -->
         <article class="panel-card summary-card">
             <header class="panel-card-header panel-card-header--blue">
                 <h2>Today’s Summary</h2>
@@ -145,10 +147,10 @@
         </article>
     </section>
 
-    <!-- BOTTOM SECTION: CHARTS + QUICK LINKS ============================ -->
+    <!-- CHART GRID ====================================================== -->
     <section class="dash-chart-wrap">
 
-        <!-- TOP ROW: WORK ORDERS + QUICK LINKS -->
+        <!-- Work Orders + Quick Links -->
         <div class="dash-chart-row dash-chart-row--top">
 
             <!-- Work Orders Chart -->
@@ -175,19 +177,19 @@
                             </a>
                         </li>
                         <li>
-                            <a asp-controller="PurchaseOrder" asp-action="Create" class="quick-link-btn">
+                            <a asp-controller="Procurement" asp-action="CreatePurchaseOrder" class="quick-link-btn">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                                 <span>New Purchase Order</span>
                             </a>
                         </li>
                         <li>
-                            <a asp-controller="Suppliers" asp-action="Create" class="quick-link-btn">
+                            <a asp-controller="Procurement" asp-action="CreateSupplier" class="quick-link-btn">
                                 <i class="fa-solid fa-truck-field"></i>
                                 <span>Add Supplier</span>
                             </a>
                         </li>
                         <li>
-                            <a asp-controller="Clients" asp-action="Create" class="quick-link-btn">
+                            <a asp-controller="Sales" asp-action="CreateCustomer" class="quick-link-btn">
                                 <i class="fa-solid fa-user-plus"></i>
                                 <span>Add Client</span>
                             </a>
@@ -197,7 +199,7 @@
             </article>
         </div>
 
-        <!-- BOTTOM ROW: WEEKLY OUTPUT + INVENTORY VALUE -->
+        <!-- Weekly Output + Inventory Value -->
         <div class="dash-chart-row dash-chart-row--bottom">
 
             <!-- Weekly Output -->
@@ -225,6 +227,58 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Work Orders Chart
+        const workOrdersCtx = document.getElementById('workOrdersChart').getContext('2d');
+        const workOrdersChart = new Chart(workOrdersCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WorkOrderServices)),
+                datasets: [{
+                    label: 'Job Orders',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WorkOrderCounts)),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
 
-    <!-- Charts remain placeholder unless you want them dynamic -->
+        // Weekly Output Chart
+        const weeklyCtx = document.getElementById('weeklyOutputChart').getContext('2d');
+        const weeklyChart = new Chart(weeklyCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeeklyLabels)),
+                datasets: [{
+                    label: 'Completed Jobs',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeeklyOutput)),
+                    fill: true,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        // Inventory Value Chart
+        const inventoryCtx = document.getElementById('inventoryValueChart').getContext('2d');
+        const inventoryChart = new Chart(inventoryCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InventoryItems)),
+                datasets: [{
+                    label: 'Stock Quantity',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InventoryValues)),
+                    backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    </script>
 }
+

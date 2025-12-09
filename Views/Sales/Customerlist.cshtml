@@ -95,6 +95,7 @@
                         <th>Total Transactions</th>
                         <th>Total Revenue</th>
                         <th>Outstanding</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,6 +113,15 @@
                                     @client.Outstanding.ToString("C")
                                 </span>
                             </td>
+
+                            <td>
+                                <a asp-action="EditCustomer"
+                                   asp-route-id="@client.ClientID"
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fa-solid fa-pen"></i> Edit
+                                </a>
+                            </td>
+
                         </tr>
                     }
                 </tbody>

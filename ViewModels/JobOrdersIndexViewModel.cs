@@ -22,6 +22,11 @@ namespace Moonmax.ViewModels
         public int InProgressJobs { get; set; }
         public int CompletedJobs { get; set; }
         public decimal TotalRevenue { get; set; }
+
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
         public List<JobOrderListingVM> JobOrders { get; set; } = new List<JobOrderListingVM>();
     }
 }

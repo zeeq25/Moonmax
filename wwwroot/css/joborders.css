@@ -410,3 +410,89 @@ button[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Pagination container */
+.pagination-nav {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+/* Pagination list */
+.pagination {
+    display: inline-flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    /* Individual page items */
+    .pagination .page-item {
+        margin: 0 3px;
+    }
+
+    /* Page links */
+    .pagination .page-link {
+        display: block;
+        padding: 6px 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+        /* Hover effect */
+        .pagination .page-link:hover {
+            background-color: #f0f0f0;
+        }
+
+    /* Active page */
+    .pagination .page-item.active .page-link {
+        background-color: #007bff; /* match your primary color */
+        color: #fff;
+        border-color: #007bff;
+    }
+
+    /* Disabled page */
+    .pagination .page-item.disabled .page-link {
+        color: #999;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #ddd;
+    }
+
+/* Responsive: smaller screens */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        padding: 4px 8px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Make tables scrollable on small screens */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* smooth swipe for iOS */
+}
+
+    /* Optional: remove extra padding for mobile */
+    .table-responsive table {
+        min-width: 600px; /* ensures table stays readable, adjust if needed */
+    }
+
+    /* Optional: hide horizontal scrollbar for cleaner look */
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 3px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.05);
+    }
+
+

@@ -510,6 +510,13 @@
     color: var(--mm-red); /* Outstanding > 0 */
 }
 
+/*Cancel button disabled*/
+.icon-btn-table:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+
 /*Create Invoice button*/
 .btn-create {
     background-color: #007bff; /* Bootstrap blue, or change to any blue */

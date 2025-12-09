@@ -8,7 +8,7 @@ namespace Moonmax.ViewModels
         public int TotalUsers { get; set; }
         public int ActiveUsers { get; set; }
 
-        // JOB ORDERS (placeholders for now)
+        // JOB ORDERS 
         public int ActiveRepairs { get; set; }
         public int CompletedJobsMonth { get; set; }
 
@@ -26,6 +26,16 @@ namespace Moonmax.ViewModels
         public int CompletedJobsToday { get; set; }
         public int InvoicesSent { get; set; }
         public decimal PendingPayments { get; set; }
+
+        // CHARTS
+        public List<string> WorkOrderServices { get; set; } = new(); // Service names
+        public List<int> WorkOrderCounts { get; set; } = new();       // Counts per service
+
+        public List<string> WeeklyLabels { get; set; } = new();       // Days of week
+        public List<int> WeeklyOutput { get; set; } = new();          // Jobs completed
+
+        public List<string> InventoryItems { get; set; } = new();     // Inventory names
+        public List<int> InventoryValues { get; set; } = new();       // Inventory quantity/value
 
     }
 

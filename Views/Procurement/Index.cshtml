@@ -160,7 +160,7 @@
                                         </button>
                                     </form>
 
-                               
+
 
                                     <!-- Cancel button -->
                                     <form asp-action="Cancel"
@@ -168,10 +168,15 @@
                                           method="post"
                                           style="display:inline">
                                         <input type="hidden" name="id" value="@po.PurchaseOrderID" />
-                                        <button type="submit" class="icon-btn-table btn-cancel" title="Cancel">
+                                        <button type="submit"
+                                                class="icon-btn-table btn-cancel"
+                                                title="Cancel"
+                                                @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
                                             <i class="fa-regular fa-circle-xmark"></i>
                                         </button>
                                     </form>
+
+
 
                                 </div>
                             </td>

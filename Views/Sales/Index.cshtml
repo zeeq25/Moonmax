@@ -124,8 +124,11 @@
                                         </button>
                                     </form>
 
+                                    <!-- Cancel button disabled if Paid -->
                                     <form asp-action="CancelInvoice" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
-                                        <button type="submit" class="icon-btn-table btn-cancel" title="Cancel invoice">
+                                        <button type="submit" class="icon-btn-table btn-cancel"
+                                                title="Cancel invoice"
+                                                @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
                                             <i class="fa-solid fa-xmark"></i>
                                         </button>
                                     </form>

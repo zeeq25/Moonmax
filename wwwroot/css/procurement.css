@@ -416,4 +416,8 @@
         opacity: 0.8;
     }
 
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 

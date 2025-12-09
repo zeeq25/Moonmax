@@ -227,15 +227,52 @@ namespace Moonmax.Controllers
             return RedirectToAction("Index");
         }
 
+        // GET: Sales/EditCustomer/5
+        public async Task<IActionResult> EditCustomer(int id)
+        {
+            var client = await _context.Client.FindAsync(id);
+            if (client == null)
+                return NotFound();
+
+            var model = new CustomerFormViewModel
+            {
+                ClientID = client.ClientID,
+                Name = client.Name,
+                Email = client.Email,
+                Phone = client.ContactNumber,
+                PaymentType = client.PaymentType
+            };
+
+            ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
+
+            return View(model);
+        }
 
 
+        // POST: Sales/EditCustomer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCustomer(CustomerFormViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
+                return View(model);
+            }
 
+            var client = await _context.Client.FindAsync(model.ClientID);
+            if (client == null)
+                return NotFound();
 
+            client.Name = model.Name;
+            client.Email = model.Email;
+            client.ContactNumber = model.Phone;
+            client.PaymentType = model.PaymentType;
 
+            await _context.SaveChangesAsync();
 
-
-
-
+            return RedirectToAction("CustomerList");
+        }
 
     }
 }
