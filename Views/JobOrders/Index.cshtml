@@ -9,33 +9,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
-
-    <style>
-        /* Make tables horizontally scrollable on small screens */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* smooth swipe on iOS */
-        }
-
-            .table-responsive table {
-                min-width: 800px; /* adjust depending on your columns */
-            }
-
-            /* Optional scrollbar styling */
-            .table-responsive::-webkit-scrollbar {
-                height: 6px;
-            }
-
-            .table-responsive::-webkit-scrollbar-thumb {
-                background: rgba(0,0,0,0.2);
-                border-radius: 3px;
-            }
-
-            .table-responsive::-webkit-scrollbar-track {
-                background: rgba(0,0,0,0.05);
-            }
-    </style>
 }
 
 <div class="page page-jobs">
@@ -92,93 +65,73 @@
     </section>
 
     <!-- TABLE -->
-    <section class="jo-table-wrap">
-        <div class="table-responsive">
-            <table class="jo-table">
-                <thead>
-                    <tr>
-                        <th>Job ID</th>
-                        <th>Client</th>
-                        <th>Service Type</th>
-                        <th>Technician</th>
-                        <th>Created</th>
-                        <th>Job Completion Date</th>
-                        <th>Job Cost</th>
-                        <th>Status</th>
-                        <th class="jo-col-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var jo in Model.JobOrders)
-                    {
-                        <tr data-status="@jo.Status.Replace(" ", "-").ToLower()" data-technician-id="@jo.TechnicianID">
-                            <td>@jo.JobID</td>
-                            <td>@jo.Client</td>
-                            <td>@jo.ServiceType</td>
-                            <td>@jo.Technician</td>
-                            <td>@(jo.Created.ToString("yyyy-MM-dd"))</td>
-                            <td>@(jo.DueDate?.ToString("yyyy-MM-dd") ?? "")</td>
-                            <td>₱@jo.Cost.ToString("N0")</td>
-                            <td><span class="status status-@(jo.Status.Replace(" ", "-").ToLower())">@jo.Status</span></td>
-                            <td class="jo-col-actions">
-                                <div class="jo-actions">
-                                    <button class="icon-btn-table btn-view" data-id="@jo.JobID" title="View Job Order">
-                                        <i class="fa-regular fa-eye"></i>
+    <div class="table-responsive">
+        <table class="jo-table" id="jobOrdersTable">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Client</th>
+                    <th>Service Type</th>
+                    <th>Technician</th>
+                    <th>Created</th>
+                    <th>Job Completion Date</th>
+                    <th>Job Cost</th>
+                    <th>Status</th>
+                    <th class="jo-col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var jo in Model.JobOrders)
+                {
+                    <tr data-status="@jo.Status.Replace(" ", "-").ToLower()" data-technician-id="@jo.TechnicianID">
+                        <td>@jo.JobID</td>
+                        <td>@jo.Client</td>
+                        <td>@jo.ServiceType</td>
+                        <td>@jo.Technician</td>
+                        <td>@(jo.Created.ToString("yyyy-MM-dd"))</td>
+                        <td>@(jo.DueDate?.ToString("yyyy-MM-dd") ?? "")</td>
+                        <td>₱@jo.Cost.ToString("N0")</td>
+                        <td><span class="status status-@(jo.Status.Replace(" ", "-").ToLower())">@jo.Status</span></td>
+                        <td class="jo-col-actions">
+                            <div class="jo-actions">
+                                <button class="icon-btn-table btn-view" data-id="@jo.JobID" title="View Job Order">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                @if (jo.Status == "Completed")
+                                {
+                                    <button class="icon-btn-table btn-edit" disabled title="Completed Job">
+                                        <i class="fa-regular fa-pen-to-square"></i>
                                     </button>
-                                    @if (jo.Status == "Completed")
-                                    {
-                                        <button class="icon-btn-table btn-edit" disabled title="Completed Job">
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </button>
-                                        <button class="icon-btn-table btn-add-parts" disabled title="Completed Job">
-                                            <i class="fa-solid fa-plus"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </a>
-                                        <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
-                                            <i class="fa-solid fa-plus"></i>
-                                        </a>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                                    <button class="icon-btn-table btn-add-parts" disabled title="Completed Job">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
-        <!-- PAGINATION -->
-        @if (Model.TotalPages > 1)
-        {
-            <nav class="pagination-nav">
-                <ul class="pagination">
-                    <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-pageSize="@Model.PageSize">
-                            <span>&laquo; Previous</span>
-                        </a>
-                    </li>
-
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                        </li>
-                    }
-
-                    <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-pageSize="@Model.PageSize">
-                            <span>Next &raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        }
-    </section>
 </div>
+
+<!-- Mini Pagination -->
+<div class="table-pagination">
+    <button class="pg-btn" onclick="changeJobOrdersPage(-1)">‹</button>
+    <span id="jobOrdersPageIndicator">Page 1</span>
+    <button class="pg-btn" onclick="changeJobOrdersPage(1)">›</button>
+</div>
+
 
 <!-- Modal container for Job Order Details -->
 <div class="modal fade" id="jobOrderModal" tabindex="-1" aria-hidden="true">
@@ -231,5 +184,45 @@
             });
         });
     </script>
+
+    <!--Pagination-->
+    <script>
+        const jobOrdersRowsPerPage = 10;
+        let jobOrdersCurrentPage = 1;
+
+        function renderJobOrdersPage() {
+            const table = document.getElementById("jobOrdersTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / jobOrdersRowsPerPage);
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (jobOrdersCurrentPage - 1) * jobOrdersRowsPerPage &&
+                    index < jobOrdersCurrentPage * jobOrdersRowsPerPage
+                        ? ""
+                        : "none";
+            });
+
+            document.getElementById("jobOrdersPageIndicator").textContent =
+                `Page ${jobOrdersCurrentPage} of ${totalPages}`;
+            document.querySelectorAll(".table-pagination .pg-btn")[0].disabled = jobOrdersCurrentPage === 1;
+            document.querySelectorAll(".table-pagination .pg-btn")[1].disabled = jobOrdersCurrentPage === totalPages;
+        }
+
+        function changeJobOrdersPage(step) {
+            const table = document.getElementById("jobOrdersTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / jobOrdersRowsPerPage);
+
+            jobOrdersCurrentPage += step;
+            if (jobOrdersCurrentPage < 1) jobOrdersCurrentPage = 1;
+            if (jobOrdersCurrentPage > totalPages) jobOrdersCurrentPage = totalPages;
+
+            renderJobOrdersPage();
+        }
+
+        renderJobOrdersPage();
+    </script>
+
     <partial name="_ValidationScriptsPartial" />
 }

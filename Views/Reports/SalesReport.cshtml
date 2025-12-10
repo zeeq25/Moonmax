@@ -1,16 +1,17 @@
 ﻿@using Moonmax.ViewModels
 
-
-
 @{
     ViewData["Title"] = "Sales Report";
     ViewData["Nav"] = "Reports";
     ViewData["AppShell"] = true;
 
-    // Cast ViewBag collections to dynamic lists for chart usage
-    var monthlyRevenue = ViewBag.MonthlyRevenue as List<MonthlyRevenueViewModel>;
-    var serviceRevenue = (List<ServiceRevenueViewModel>)ViewBag.ServiceRevenue;
-    var recentInvoices = (List<Invoice>)ViewBag.RecentInvoices;
+    var monthlyRevenue = ViewBag.MonthlyRevenue as List<MonthlyRevenueViewModel> ?? new List<MonthlyRevenueViewModel>();
+    var serviceRevenue = ViewBag.ServiceRevenue as List<ServiceRevenueViewModel> ?? new List<ServiceRevenueViewModel>();
+    var allInvoices = ViewBag.AllInvoices as List<Invoice> ?? new List<Invoice>();
+    var totalRevenue = ViewBag.TotalRevenue ?? 0;
+    var totalJobs = ViewBag.TotalJobs ?? 0;
+    var avgJobValue = ViewBag.AvgJobValue ?? 0;
+    var topClient = ViewBag.TopClient;
 }
 
 @section Styles {
@@ -18,128 +19,193 @@
     <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
 }
 
-<div class="page page-reports">
+<div class="page-reports">
 
     <!-- HEADER -->
-    <header class="dash-header" style="text-align: center; margin-bottom: 1rem;">
-        <h1 class="dash-title">Sales Report</h1>
-    </header>
-
-    <!-- BACK BUTTON BELOW HEADER -->
-    <div style="text-align: left; margin-bottom: 2rem;">
-        <a href="@Url.Action("Index", "Reports")" class="btn btn-warning">
-            <i class="fa-solid fa-arrow-left"></i> Back
-        </a>
+    <div class="header-bar">
+        <div class="header-left">
+            <a href="@Url.Action("Index", "Reports")" class="btn btn-warning">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="dash-title">Sales Report</h1>
+        </div>
     </div>
 
-
     <!-- KPI CARDS -->
-    <section class="dash-kpis">
-        <article class="dash-card kpi">
+    <section class="kpi-wrapper">
+        <article class="kpi">
             <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
-            <div class="kpi-content">
+            <div>
                 <div class="kpi-title">Total Revenue</div>
-                <div class="kpi-main">@String.Format("₱{0:N0}", ViewBag.TotalRevenue)</div>
+                <div class="kpi-main">₱@(String.Format("{0:N0}", totalRevenue))</div>
             </div>
         </article>
-        <article class="dash-card kpi">
+
+        <article class="kpi">
             <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <div class="kpi-content">
+            <div>
                 <div class="kpi-title">Total Jobs</div>
-                <div class="kpi-main">@ViewBag.TotalJobs</div>
+                <div class="kpi-main">@(totalJobs)</div>
             </div>
         </article>
-        <article class="dash-card kpi">
+
+        <article class="kpi">
             <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="kpi-content">
+            <div>
                 <div class="kpi-title">Avg. Job Value</div>
-                <div class="kpi-main">@String.Format("₱{0:N0}", ViewBag.AvgJobValue)</div>
+                <div class="kpi-main">₱@(String.Format("{0:N0}", avgJobValue))</div>
             </div>
         </article>
-        <article class="dash-card kpi">
+
+        <article class="kpi">
             <div class="kpi-icon"><i class="fa-solid fa-user"></i></div>
-            <div class="kpi-content">
+            <div>
                 <div class="kpi-title">Top Client</div>
-                <div class="kpi-main">@ViewBag.TopClient?.ClientName (@String.Format("₱{0:N0}", ViewBag.TopClient?.Revenue))</div>
+                <div class="kpi-main">
+                    @(
+                                        topClient != null
+                                        ? $"{topClient.ClientName ?? "N/A"} (₱{String.Format("{0:N0}", topClient.Revenue ?? 0)})"
+                                        : "N/A"
+                                        )
+                </div>
             </div>
         </article>
     </section>
 
-    <!-- CHARTS -->
-    <section class="reports-grid">
+    <!-- EXPORT BUTTONS -->
+    <div class="export-row">
+        <button class="btn btn-warning" onclick="exportTableToPDF('allInvoicesTable', 'SalesReport')">
+            Export as PDF
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+            Print Report
+        </button>
+    </div>
 
-        <div class="reports-row reports-row--top">
-            <article class="mm-card chart-card chart-card--wide">
-                <div class="chart-card-header">
-                    <h2>Monthly Sales Trend</h2>
-                </div>
-                <div class="chart-card-body">
-                    <canvas id="monthlySalesChart"></canvas>
-                </div>
-            </article>
-
-            <article class="mm-card chart-card">
-                <div class="chart-card-header">
-                    <h2>Sales by Service Type</h2>
-                </div>
-                <div class="chart-card-body chart-card-body--pie">
-                    <canvas id="serviceTypeChart"></canvas>
-                </div>
-            </article>
-        </div>
-
-
-        <!-- EXPORT BUTTONS -->
-        <div style="margin: 1rem 0;">
-            <button class="btn btn-warning" onclick="exportTableToPDF('recentInvoicesTable', 'SalesReport')">Export to PDF</button>
-            <button class="btn btn-secondary" onclick="window.print()">Print Report</button>
-        </div>
-
-
-        <!-- RECENT INVOICES TABLE -->
-        <div class="reports-row reports-row--summary">
-            <article class="mm-card">
-                <div class="chart-card-header">
-                    <h2>Recent Invoices</h2>
-                </div>
-                <div class="summary-table-wrap">
-                    <table class="mm-table" id="recentInvoicesTable">
-                        <thead>
+    <!-- INVOICES TABLE -->
+    <div class="table-section">
+        <div class="table-title">Invoices</div>
+        <article class="mm-card">
+            <div class="summary-table-wrap">
+                <table class="mm-table" id="allInvoicesTable">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Client</th>
+                            <th>Date Issued</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in allInvoices)
+                        {
                             <tr>
-                                <th>Invoice #</th>
-                                <th>Client</th>
-                                <th>Date Issued</th>
-                                <th>Amount</th>
-                                <th>Status</th>
+                                <td>@(inv.InvoiceNumber ?? "N/A")</td>
+                                <td>@(inv.Client?.Name ?? "N/A")</td>
+                                <td>@(inv.DateIssued != null ? inv.DateIssued.ToString("yyyy-MM-dd") : "N/A")</td>
+                                <td>₱@(String.Format("{0:N0}", inv.Amount))</td>
+                                <td>@(inv.Status ?? "N/A")</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var inv in recentInvoices)
-                            {
-                                <tr>
-                                    <td>@inv.InvoiceNumber</td>
-                                    <td>@inv.Client.Name</td>
-                                    <td>@inv.DateIssued.ToString("yyyy-MM-dd")</td>
-                                    <td>@String.Format("₱{0:N0}", inv.Amount)</td>
-                                    <td>@inv.Status</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-        </div>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </div>
 
+    <!-- PAGINATION -->
+    <div class="table-pagination">
+        <button class="pg-btn" onclick="changePage(-1)">‹</button>
+        <span id="pageIndicator">Page 1</span>
+        <button class="pg-btn" onclick="changePage(1)">›</button>
+    </div>
+
+    <!-- CHARTS GRID -->
+    <section class="chart-grid">
+        <article class="mm-card chart-card">
+            <div class="chart-card-header">
+                <h2>📊 Monthly Sales Trend</h2>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="monthlySalesChart"></canvas>
+            </div>
+        </article>
+
+        <article class="mm-card chart-card">
+            <div class="chart-card-header">
+                <h2>Sales by Service Type</h2>
+            </div>
+            <div class="chart-card-body chart-card-body--pie">
+                <canvas id="serviceTypeChart"></canvas>
+            </div>
+        </article>
     </section>
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
-        // Function to set high-res canvas
+        // PDF export function
+        function exportTableToPDF(tableID, filename = 'SalesReport') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const table = document.getElementById(tableID);
+
+            html2canvas(table, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = doc.getImageProperties(imgData);
+                const pdfWidth = doc.internal.pageSize.getWidth() - 40;
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                doc.addImage(imgData, 'PNG', 20, 20, pdfWidth, pdfHeight);
+                doc.save(filename + '.pdf');
+            });
+        }
+
+        // Pagination
+        const rowsPerPage = 10;
+        let currentPage = 1;
+
+        function renderTablePage() {
+            const table = document.getElementById("allInvoicesTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (currentPage - 1) * rowsPerPage &&
+                    index < currentPage * rowsPerPage
+                        ? ""
+                        : "none";
+            });
+
+            document.getElementById("pageIndicator").textContent =
+                `Page ${currentPage} of ${totalPages}`;
+            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
+            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
+        }
+
+        function changePage(step) {
+            const table = document.getElementById("allInvoicesTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            currentPage += step;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            renderTablePage();
+        }
+
+        renderTablePage();
+
+
+        // Charts (with empty-data check)
         function setHiResCanvas(canvas) {
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
@@ -152,9 +218,8 @@
 
         // Monthly Sales Chart
         const monthlyCanvas = document.getElementById('monthlySalesChart');
-        if (monthlyCanvas) {
+        if (monthlyCanvas && @monthlyRevenue.Count > 0) {
             const ctx = setHiResCanvas(monthlyCanvas);
-
             const gradient = ctx.createLinearGradient(0, 0, 0, monthlyCanvas.height);
             gradient.addColorStop(0, 'rgba(79,70,229,0.5)');
             gradient.addColorStop(1, 'rgba(79,70,229,0)');
@@ -176,36 +241,17 @@
                         pointBackgroundColor: '#4f46e5',
                         pointHoverBackgroundColor: '#10b981',
                         pointBorderWidth: 2,
-                        pointHoverBorderWidth: 2,
+                        pointHoverBorderWidth: 2
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    interaction: { mode: 'nearest', axis: 'x', intersect: false },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 500 },
-                            grid: { drawBorder: false, color: 'rgba(0,0,0,0.05)' }
-                        },
-                        x: {
-                            grid: { drawBorder: false, color: 'rgba(0,0,0,0.05)' }
-                        }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
         // Service Type Chart
         const serviceCanvas = document.getElementById('serviceTypeChart');
-        if (serviceCanvas) {
+        if (serviceCanvas && @serviceRevenue.Count > 0) {
             const ctx = setHiResCanvas(serviceCanvas);
-
             new Chart(ctx, {
                 type: 'pie',
                 data: {
@@ -218,39 +264,10 @@
                         borderColor: '#fff'
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: { callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ₱${context.formattedValue}`;
-                            }
-                        }}
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
-        // PDF export function
-        function exportTableToPDF(tableID, filename = 'SalesReport') {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4');
-            const table = document.getElementById(tableID);
 
-            html2canvas(table, { scale: 2 }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const imgProps = doc.getImageProperties(imgData);
-                const pdfWidth = doc.internal.pageSize.getWidth() - 40;
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                doc.addImage(imgData, 'PNG', 20, 20, pdfWidth, pdfHeight);
-                doc.save(filename + '.pdf');
-            });
-        }
     </script>
 }
-
-
-

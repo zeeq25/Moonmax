@@ -482,3 +482,44 @@
     }
 
 
+/* =========================================
+   MINI MODERN PAGINATION
+========================================= */
+.table-pagination {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+    .table-pagination #pageIndicator {
+        font-size: 14px;
+        color: var(--mm-title);
+    }
+
+.pg-btn {
+    background: var(--mm-blue);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+    .pg-btn:hover {
+        background: var(--mm-blue-dark);
+        transform: translateY(-1px);
+    }
+
+    .pg-btn:disabled {
+        background: #c9ced6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+
+
+

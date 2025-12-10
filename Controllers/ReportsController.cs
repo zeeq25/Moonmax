@@ -65,11 +65,10 @@ namespace Moonmax.Controllers
                 })
                 .ToList();
 
-            // Recent invoices
-            var recentInvoices = _context.Invoices
+            // Invoices
+            var allInvoices = _context.Invoices
                 .Include(i => i.Client)
                 .OrderByDescending(i => i.DateIssued)
-                .Take(10)
                 .ToList();
 
             // Pass to ViewBag (or ViewModel if you prefer strongly typed)
@@ -79,7 +78,7 @@ namespace Moonmax.Controllers
             ViewBag.TopClient = topClient;
             ViewBag.MonthlyRevenue = monthlyRevenue;
             ViewBag.ServiceRevenue = serviceRevenue;
-            ViewBag.RecentInvoices = recentInvoices;
+            ViewBag.AllInvoices = allInvoices;
 
             return View();
         }

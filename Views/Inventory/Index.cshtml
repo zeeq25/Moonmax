@@ -115,7 +115,7 @@
     <!-- TABLE: ALL PRODUCTS -->
     <section class="inv-table-wrap">
         <div class="mm-card">
-            <table class="mm-table">
+            <table class="mm-table" id="inventoryTable">
                 <thead>
                     <tr>
                         <th>Item Code</th>
@@ -167,9 +167,19 @@
         </div>
     </section>
 
+    <!-- PAGINATION -->
+    <div class="table-pagination">
+        <button class="pg-btn" onclick="changePage(-1)">‹</button>
+        <span id="pageIndicator">Page 1</span>
+        <button class="pg-btn" onclick="changePage(1)">›</button>
+    </div>
+
+
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.querySelector('.inv-search-input');
@@ -198,8 +208,48 @@
 
             applyInventorySearch();
         });
+
+        // Pagination
+        const rowsPerPage = 10;
+        let currentPage = 1;
+
+        function renderTablePage() {
+            const table = document.getElementById("inventoryTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (currentPage - 1) * rowsPerPage &&
+                    index < currentPage * rowsPerPage
+                        ? ""
+                        : "none";
+            });
+
+            document.getElementById("pageIndicator").textContent =
+                `Page ${currentPage} of ${totalPages}`;
+            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
+            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
+        }
+
+        function changePage(step) {
+            const table = document.getElementById("inventoryTable");
+            const rows = table.querySelectorAll("tbody tr");
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            currentPage += step;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            renderTablePage();
+        }
+
+        renderTablePage();
+
     </script>
-    <partial name="_ValidationScriptsPartial" />
+
+
+  
 }
 
 

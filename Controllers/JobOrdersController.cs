@@ -21,9 +21,8 @@ namespace Moonmax.Controllers
 
 
         // INDEX
-        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10, string searchTerm = "", string statusFilter = "all")
+        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "all")
         {
-            // Base query
             var query = _db.JobOrders
                 .Include(j => j.Client)
                 .Include(j => j.Technician)
@@ -44,7 +43,7 @@ namespace Moonmax.Controllers
             {
                 var statusMap = new Dictionary<string, string>
         {
-            { "pending", "Pending" },
+            { "pending","Pending" },
             { "in-progress", "In Progress" },
             { "completed", "Completed" }
         };
@@ -55,17 +54,10 @@ namespace Moonmax.Controllers
                 }
             }
 
-            // Count total items for pagination
-            var totalItems = await query.CountAsync();
-
-            // Get paginated data
             var jobOrders = await query
                 .OrderByDescending(j => j.CreatedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(); // <-- fetch ALL rows, no Skip/Take
 
-            // Map to ViewModel
             var vm = new JobOrdersIndexViewModel
             {
                 PendingJobs = await _db.JobOrders.CountAsync(j => j.Status == "Pending"),
@@ -83,14 +75,12 @@ namespace Moonmax.Controllers
                     Cost = j.Cost,
                     Status = j.Status,
                     TechnicianID = j.TechnicianID
-                }).ToList(),
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems
+                }).ToList()
             };
 
             return View(vm);
         }
+
 
 
         // CREATE - GET
@@ -220,6 +210,31 @@ namespace Moonmax.Controllers
             var inventoryItem = await _db.Inventories.FirstOrDefaultAsync(i => i.InventoryID == vm.InventoryID);
             if (inventoryItem == null) return BadRequest("Invalid inventory item.");
 
+            // ✅ Check stock
+            if (vm.Quantity > inventoryItem.QuantityInStock)  // Assuming your Inventory model has a Stock property
+            {
+                TempData["Error"] = $"Insufficient stock for {inventoryItem.PartName}. Available: {inventoryItem.QuantityInStock}.";
+
+                vm.InventoryItems = await _db.Inventories
+                    .Select(i => new SelectListItem { Value = i.InventoryID.ToString(), Text = i.PartName })
+                    .ToListAsync();
+
+                vm.Parts = await _db.JobParts
+                    .Include(p => p.Inventory)
+                    .Where(p => p.JobID == vm.JobID)
+                    .Select(p => new JobPartListingVM
+                    {
+                        PartID = p.PartID,
+                        PartName = p.Inventory.PartName,
+                        Quantity = p.Quantity,
+                        UnitCost = p.UnitCost,
+                        TotalCost = p.TotalCost
+                    }).ToListAsync();
+
+                return View(vm);
+            }
+
+            // ✅ Add Part
             var part = new JobPart
             {
                 JobID = vm.JobID,
