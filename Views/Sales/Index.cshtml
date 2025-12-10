@@ -111,9 +111,12 @@
                         </td>
                         <td class="inv-actions">
                             <div class="sales-actions">
-                                <a asp-action="ViewInvoice" asp-route-id="@invoice.InvoiceID" class="icon-btn-table btn-view" title="View invoice">
-                                    <i class="fa-regular fa-eye"></i>
-                                </a>
+                                <!-- View Invoice button -->
+                                <button type="button" class="icon-btn-table btn-view" title="View invoice"
+                                     data-invoice-id="@invoice.InvoiceID">
+                                        <i class="fa-regular fa-eye"></i>
+                                 </button>
+
 
                                     <!-- Receive Payment button -->
                                     <form asp-action="ReceivePayment" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
@@ -125,13 +128,13 @@
                                     </form>
 
                                     <!-- Cancel button disabled if Paid -->
-                                    <form asp-action="CancelInvoice" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
+                                   <!--<form asp-action="CancelInvoice" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
                                         <button type="submit" class="icon-btn-table btn-cancel"
                                                 title="Cancel invoice"
                                                 @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
                                             <i class="fa-solid fa-xmark"></i>
-                                        </button>
-                                    </form>
+                                        </button> 
+                                    </form> --> 
                                 </div>
                             </td>
                         </tr>
@@ -166,6 +169,17 @@
         <span id="pageIndicator">Page 1</span>
         <button class="pg-btn" onclick="changePage(1)">›</button>
     </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="invoiceModalBody">
+                <!-- Invoice content will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
 
 </div>
 
@@ -208,6 +222,40 @@
                 });
             });
         });
+
+        //Modal View Popup
+        document.addEventListener('DOMContentLoaded', function () {
+            // Modal
+            const modal = document.getElementById("invoiceModal");
+            const modalBody = document.getElementById("invoiceModalBody");
+            const closeBtn = modal.querySelector(".close");
+
+            // Open modal on View button click
+            document.querySelectorAll('.btn-view').forEach(button => {
+                button.addEventListener('click', function () {
+                    const invoiceId = this.dataset.invoiceId;
+                    // Fetch invoice HTML from server
+                    fetch(`/Sales/ViewInvoicePartial/${invoiceId}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            modalBody.innerHTML = html;
+                            modal.style.display = "block";
+                        });
+                });
+            });
+
+            // Close modal
+            closeBtn.onclick = function () {
+                modal.style.display = "none";
+            };
+
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+        });
+
 
         // Pagination
         const rowsPerPage = 10;

@@ -17,7 +17,77 @@ namespace Moonmax.Controllers
 
         public IActionResult Index()
         {
-            return View(); // You can show a summary page or redirect to SalesReport
+            // KPIs
+            var totalRevenue = _context.Invoices
+                .Where(i => i.Status == "Paid")
+                .Sum(i => i.Amount);
+
+            var totalJobs = _context.JobOrders.Count();
+            var avgJobValue = totalJobs > 0 ? _context.JobOrders.Average(j => j.Cost) : 0;
+
+            // Total Inventory Items (dynamic)
+            var totalInventoryItems = _context.Inventories.Sum(i => i.QuantityInStock);
+            // <-- Replace "Inventories" with your inventory table name
+
+            // Pass data to ViewBag
+            ViewBag.TotalRevenue = totalRevenue;
+            ViewBag.TotalJobs = totalJobs;
+            ViewBag.AvgJobValue = avgJobValue;
+            ViewBag.TotalInventoryItems = totalInventoryItems;
+
+            // Monthly sales trend (last 6 months)
+            var monthlySales = _context.Invoices
+                .Where(i => i.Status == "Paid")
+                .GroupBy(i => new { i.DateIssued.Year, i.DateIssued.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Revenue = g.Sum(i => i.Amount)
+                })
+                .OrderBy(g => g.Year)
+                .ThenBy(g => g.Month)
+                .AsEnumerable()  // Move to memory
+                .TakeLast(6)     // Safe now
+                .ToList();
+
+
+
+            ViewBag.Months = monthlySales.Select(m => $"{m.Month}/{m.Year}").ToList();
+            ViewBag.MonthlyRevenue = monthlySales.Select(m => m.Revenue).ToList();
+
+
+            // Service type distribution
+            var serviceRevenue = _context.JobOrders
+                .GroupBy(j => j.ServiceType)
+                .Select(g => new { ServiceType = g.Key, Revenue = g.Sum(j => j.Cost) })
+                .ToList();
+
+            ViewBag.ServiceTypes = serviceRevenue.Select(s => s.ServiceType).ToList();
+            ViewBag.ServiceRevenue = serviceRevenue.Select(s => s.Revenue).ToList();
+
+            // Top clients
+            var topClients = _context.Invoices
+                .Include(i => i.Client)
+                .GroupBy(i => i.Client.Name)
+                .Select(g => new { ClientName = g.Key, Revenue = g.Sum(i => i.Amount) })
+                .OrderByDescending(c => c.Revenue)
+                .Take(5)
+                .ToList();
+
+            ViewBag.TopClients = topClients.Select(c => c.ClientName).ToList();
+            ViewBag.TopClientsRevenue = topClients.Select(c => c.Revenue).ToList();
+
+            // Inventory turnover (example: counts per category)
+            var turnover = _context.Inventories
+                .GroupBy(i => i.Category)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .ToList();
+
+            ViewBag.TurnoverCategories = turnover.Select(t => t.Category).ToList();
+            ViewBag.TurnoverValues = turnover.Select(t => t.Count).ToList();
+
+            return View();
         }
 
 

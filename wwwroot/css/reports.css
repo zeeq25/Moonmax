@@ -91,7 +91,9 @@
 
 .kpi-title {
     font-size: 13px;
+    font-weight: 400;
     color: var(--mm-muted);
+    line-height: 1.2;
 }
 
 .kpi-main {
@@ -312,14 +314,7 @@
     text-decoration: none; /* removes underline */
 }
 
-/* KPI labels mimic header font style */
-.dash-card.kpi .kpi-title {
-    font-family: inherit; /* inherit from parent or set to same as .dash-title */
-    font-weight: 700; /* same as header weight */
-    font-size: 1.4rem; /* match your header scale, adjust if needed */
-    line-height: 1.2; /* similar spacing as header */
-    color: #141927; /* same color as .dash-title, adjust if needed */
-}
+
 
 /* =====================================================
    SECTION HEADERS
@@ -471,7 +466,7 @@
     font-weight: 700;
 }
 
-/* KPI Improvements */
+/* KPI Improvements 
 .kpi-wrapper {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -488,8 +483,10 @@
     background: #ffffff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.07);
 }
+*/
 
-.kpi-icon {
+
+/*.kpi-icon {
     font-size: 1.8rem;
     color: #4f46e5;
 }
@@ -502,9 +499,9 @@
 .kpi-main {
     font-size: 1.3rem;
     font-weight: bold;
-}
-
+} */
 /* Chart grid */
+
 .chart-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -578,4 +575,6 @@
         cursor: not-allowed;
         transform: none;
     }
+
+
 

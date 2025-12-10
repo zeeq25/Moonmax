@@ -19,35 +19,48 @@
         </div>
     </header>
 
-    <!-- OVERVIEW SECTION -->
+    <!-- KPIs -->
     <section class="section-block">
-        <h2 class="section-title">Overview</h2>
-
-        <div class="dash-kpis kpi-grid">
-            <a asp-controller="Reports" asp-action="SalesReport" class="dash-card kpi dash-card--link">
+        <div class="dash-kpis">
+            <!-- Total Revenue -->
+            <article class="dash-card kpi">
                 <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
-                <div class="kpi-content"><div class="kpi-title">Sales Report</div></div>
-            </a>
-
-            <a asp-controller="Reports" asp-action="InventoryReport" class="dash-card kpi dash-card--link">
-                <div class="kpi-icon"><i class="fa-solid fa-box-archive"></i></div>
-                <div class="kpi-content"><div class="kpi-title">Inventory Reports</div></div>
-            </a>
-
-            <a asp-controller="Reports" asp-action="JobOrderReport" class="dash-card kpi dash-card--link">
-                <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
-                <div class="kpi-content"><div class="kpi-title">Job Order Reports</div></div>
-            </a>
-
-            <article class="dash-card kpi metric-card">
-                <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
                 <div class="kpi-content">
-                    <div class="kpi-title">Completion Rate</div>
-                    <div class="kpi-main">92%</div>
+                    <div class="kpi-title">Total Revenue</div>
+                    <div class="kpi-main">₱@(ViewBag.TotalRevenue?.ToString("N2") ?? "0.00")</div>
+                </div>
+            </article>
+
+            <!-- Avg. Job Value -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Avg. Job Value</div>
+                    <div class="kpi-main">₱@(ViewBag.AvgJobValue?.ToString("N2") ?? "0.00")</div>
+                </div>
+            </article>
+
+            <!-- Total Jobs -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Total Jobs</div>
+                    <div class="kpi-main">@((ViewBag.TotalJobs ?? 0).ToString())</div>
+                </div>
+            </article>
+
+            <!-- Total Inventory Items -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-box-archive"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Total Inventory Items</div>
+                    <div class="kpi-main">@((ViewBag.TotalInventoryItems ?? 0).ToString())</div>
                 </div>
             </article>
         </div>
     </section>
+    
+
 
     <!-- SALES ANALYTICS -->
     <section class="section-block">
@@ -96,124 +109,137 @@
             </article>
         </div>
     </section>
-
-    <!-- SUMMARY SECTION -->
-    <section class="section-block">
-        <h2 class="section-title">Monthly Summary</h2>
-
-        <div class="reports-row reports-row--summary">
-
-            <article class="mm-card">
-                <header class="chart-card-header">
-                    <h3>Performance Summary</h3>
-                    <p>Key monthly operational metrics.</p>
-                </header>
-
-                <div class="summary-table-wrap">
-                    <table class="mm-table">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Total Sales</th>
-                                <th>Jobs Completed</th>
-                                <th>Avg. Job Value</th>
-                                <th>Growth</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @* (Your existing rows unchanged) *@
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-
-            <article class="mm-card insights-card">
-                <header class="chart-card-header">
-                    <h3>Key Highlights</h3>
-                    <p>A quick snapshot of current performance.</p>
-                </header>
-
-                <ul class="insights-list">
-                    <li><span class="insights-label">Best Month</span><span class="insights-value">Oct 2025 (₱284,500)</span></li>
-                    <li><span class="insights-label">Strongest Growth</span><span class="insights-value insights-up">+16.2% (Jun 2025)</span></li>
-                    <li><span class="insights-label">Weakest Month</span><span class="insights-value insights-down">Sep 2025 (–6.0%)</span></li>
-                    <li><span class="insights-label">Top Client</span><span class="insights-value">Tech Industries – ₱450,000</span></li>
-                    <li><span class="insights-label">Most Requested Service</span><span class="insights-value">Hydraulic Repair (35%)</span></li>
-                </ul>
-            </article>
-
-        </div>
-    </section>
-
+    
 </div>
 
 @section Scripts {
-    <!-- Chart.js for UI charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Monthly Sales Trend (Line)
-        const salesTrendCtx = document.getElementById('salesTrendChart');
-        if (salesTrendCtx) {
-            new Chart(salesTrendCtx, {
-                type: 'line',
+        // -------------------------------
+        // 1. Convert Razor ViewBag lists to JS arrays safely
+        // -------------------------------
+        const months = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Months ?? new List<string>()));
+        const monthlyRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.MonthlyRevenue ?? new List<decimal>()));
+        const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceTypes ?? new List<string>()));
+        const serviceRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceRevenue ?? new List<decimal>()));
+        const topClients = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TopClients ?? new List<string>()));
+        const topClientsRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TopClientsRevenue ?? new List<decimal>()));
+        const turnoverCategories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TurnoverCategories ?? new List<string>()));
+        const turnoverValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TurnoverValues ?? new List<decimal>()));
+
+        // -------------------------------
+        // 2. Grab CSS variables for colors
+        // -------------------------------
+        const rootStyles = getComputedStyle(document.documentElement);
+        const mmBlue = rootStyles.getPropertyValue('--mm-blue').trim() || '#4F46E5';
+        const mmYellow = rootStyles.getPropertyValue('--mm-yellow').trim() || '#FACC15';
+        const mmGreen = rootStyles.getPropertyValue('--mm-green').trim() || '#10B981';
+        const mmRed = rootStyles.getPropertyValue('--mm-red').trim() || '#EF4444';
+        const mmDark = rootStyles.getPropertyValue('--mm-dark').trim() || '#1F2937';
+
+        // -------------------------------
+        // 3. Helper to generate array of colors dynamically
+        // -------------------------------
+        function generateColors(length) {
+            const palette = [mmBlue, mmYellow, mmGreen, mmRed, mmDark, '#8B5CF6', '#F472B6', '#10B981'];
+            let colors = [];
+            for (let i = 0; i < length; i++) {
+                colors.push(palette[i % palette.length]);
+            }
+            return colors;
+        }
+
+        // -------------------------------
+        // 4. Safe chart creation helper
+        // -------------------------------
+        function safeCreateChart(ctxId, type, labels, data, extraOptions = {}) {
+            const canvas = document.getElementById(ctxId);
+            if (!labels || !data || labels.length === 0 || data.length === 0) {
+                // Clear canvas and show "No data available"
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = "16px sans-serif";
+                    ctx.fillStyle = "#888";
+                    ctx.textAlign = "center";
+                    ctx.fillText("No data available", canvas.width / 2, canvas.height / 2);
+                }
+                return null;
+            }
+
+            return new Chart(canvas, {
+                type: type,
                 data: {
-                    labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    labels: labels,
                     datasets: [{
-                        label: 'Sales (₱)',
-                        data: [165000, 215000, 240000, 260000, 250000, 285000],
-                        tension: 0.35,
-                        borderWidth: 3,
-                        pointRadius: 3
+                        data: data,
+                        backgroundColor: generateColors(labels.length),
+                        borderColor: '#ffffff',
+                        borderWidth: 1,
+                        ...extraOptions.datasetOptions
                     }]
                 },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: false } }
-                }
+                options: Object.assign({
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: type !== 'line' } },
+                    scales: type === 'line' || type === 'bar' ? { y: { beginAtZero: true } } : {}
+                }, extraOptions.chartOptions)
             });
         }
 
-        // Service Type Distribution (Pie)
-        const serviceTypeCtx = document.getElementById('serviceTypeChart');
-        if (serviceTypeCtx) {
-            new Chart(serviceTypeCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Hydraulic Repair', 'Turbo Repair', 'Metal Fabrication', 'Hydraulic Hose'],
-                    datasets: [{ data: [35, 28, 22, 15] }]
-                },
-                options: { plugins: { legend: { position: 'bottom' } } }
-            });
-        }
+        // -------------------------------
+        // 5. Create all charts safely
+        // -------------------------------
+
+        // Monthly Sales Trend (Line)
+        safeCreateChart('salesTrendChart', 'line', months, monthlyRevenue, {
+            datasetOptions: {
+                label: 'Sales (₱)',
+                borderColor: mmBlue,
+                backgroundColor: 'rgba(11, 98, 143, 0.1)',
+                tension: 0.35,
+                borderWidth: 3,
+                pointRadius: 4,
+                fill: true
+            },
+            chartOptions: { scales: { y: { beginAtZero: false } } }
+        });
+
+        // Service Type Distribution (Pie) with legend at the bottom
+        safeCreateChart('serviceTypeChart', 'pie', serviceTypes, serviceRevenue, {
+            chartOptions: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 12, boxWidth: 12 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.formattedValue || '';
+                                return `${label}: ₱${value}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         // Top Clients by Revenue (Horizontal Bar)
-        const topClientsCtx = document.getElementById('topClientsChart');
-        if (topClientsCtx) {
-            new Chart(topClientsCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Tech Industries', 'ABC Manufacturing', 'XYZ Corporation', 'Global Logistics', 'Metro Construction'],
-                    datasets: [{ data: [450000, 300000, 150000, 120000, 90000] }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true } }
-                }
-            });
-        }
+        safeCreateChart('topClientsChart', 'bar', topClients, topClientsRevenue, {
+            chartOptions: { indexAxis: 'y', scales: { x: { beginAtZero: true } } }
+        });
 
         // Inventory Turnover Rate (Bar)
-        const turnoverCtx = document.getElementById('turnoverChart');
-        if (turnoverCtx) {
-            new Chart(turnoverCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Hoses', 'Fittings', 'Turbo Parts', 'Metal Parts', 'Tools'],
-                    datasets: [{ data: [85, 72, 68, 55, 43] }]
-                },
-                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
-        }
+        safeCreateChart('turnoverChart', 'bar', turnoverCategories, turnoverValues, {
+            chartOptions: { scales: { y: { beginAtZero: true } } }
+        });
+
     </script>
 }
+
+
+

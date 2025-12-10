@@ -22,11 +22,7 @@
             <a asp-controller="JobOrders" asp-action="Create" class="btn-pill btn-primary-mm">
                 <span class="btn-ico">+</span>
                 <span>Create Job Order</span>
-            </a>
-            <button type="button" class="btn-pill btn-outline-mm">
-                <i class="fa-solid fa-sliders btn-ico"></i>
-                <span>Advance Filter</span>
-            </button>
+            </a>            
         </div>
     </header>
 
@@ -99,18 +95,18 @@
                                 </button>
                                 @if (jo.Status == "Completed")
                                 {
-                                    <button class="icon-btn-table btn-edit" disabled title="Completed Job">
+                                   <!-- <button class="icon-btn-table btn-edit" disabled title="Completed Job">
                                         <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
+                                    </button>-->
                                     <button class="icon-btn-table btn-add-parts" disabled title="Completed Job">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 }
                                 else
                                 {
-                                    <a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
+                                    <!--<a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
                                         <i class="fa-regular fa-pen-to-square"></i>
-                                    </a>
+                                    </a>-->
                                     <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
                                         <i class="fa-solid fa-plus"></i>
                                     </a>

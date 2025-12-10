@@ -274,5 +274,20 @@ namespace Moonmax.Controllers
             return RedirectToAction("CustomerList");
         }
 
+
+        // GET: /Sales/ViewInvoicePartial/5
+        public async Task<IActionResult> ViewInvoicePartial(int id)
+        {
+            var invoice = await _context.Invoices
+                                   .Include(i => i.Client)
+                                   .FirstOrDefaultAsync(i => i.InvoiceID == id);
+
+            if (invoice == null)
+                return NotFound();
+
+            return PartialView("_ViewInvoicePartial", invoice);
+        }
+
+
     }
 }

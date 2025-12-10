@@ -1,0 +1,20 @@
+﻿@model Moonmax.Models.Invoice
+
+@{
+    ViewData["Title"] = "View Invoice";
+    ViewData["Nav"] = "Sales";
+    ViewData["AppShell"] = true;
+}
+
+<h1>Invoice @Model.InvoiceNumber</h1>
+
+<div>
+    <p><strong>Client:</strong> @Model.Client.Name</p>
+    <p><strong>Job ID:</strong> @Model.JobID</p>
+    <p><strong>Amount:</strong> @Model.Amount.ToString("C")</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <p><strong>Date Issued:</strong> @Model.DateIssued.ToString("yyyy-MM-dd")</p>
+    <p><strong>Due Date:</strong> @(Model.DueDate?.ToString("yyyy-MM-dd") ?? "-")</p>
+</div>
+
+
