@@ -95,8 +95,9 @@
                    class="proc-tab proc-tab--active">Purchase Orders</a>
                 <a asp-controller="Procurement" asp-action="Suppliers"
                    class="proc-tab">Suppliers</a>
-                <a asp-controller="Procurement" asp-action="Products"
-                   class="proc-tab">Products</a>
+
+                <!-- <a asp-controller="Procurement" asp-action="Products"
+                   class="proc-tab">Products</a> -->
             </div>
         </div>
     </section>
@@ -138,14 +139,13 @@
                             <div class="proc-actions">
 
                                     <!-- View button -->
-                                    <a asp-controller="Procurement"
-                                       asp-action="Details"
-                                       asp-route-id="@po.PurchaseOrderID"
-                                       class="icon-btn-table btn-view"
-                                       style="text-decoration:none;"
-                                       title="View">
+                                    <button class="icon-btn-table btn-view"
+                                            data-id="@po.PurchaseOrderID"
+                                            title="View">
                                         <i class="fa-regular fa-eye"></i>
-                                    </a>
+                                    </button>
+
+                                    
 
                                     <!-- Receive button -->
                                     <form asp-action="Receive"
@@ -162,7 +162,7 @@
 
 
 
-                                    <!-- Cancel button -->
+                                    <!-- Cancel button 
                                     <form asp-action="Cancel"
                                           asp-controller="Procurement"
                                           method="post"
@@ -174,7 +174,7 @@
                                                 @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
                                             <i class="fa-regular fa-circle-xmark"></i>
                                         </button>
-                                    </form>
+                                    </form>-->
 
 
 
@@ -194,6 +194,15 @@
         <span id="pageIndicator">Page 1</span>
         <button class="pg-btn" onclick="changePage(1)">›</button>
     </div>
+
+    <!-- Modal container for PO Details -->
+    <div class="modal fade" id="poModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content"></div>
+        </div>
+    </div>
+
+
 
 </div>
 
@@ -219,6 +228,38 @@
             }
 
             searchInput.addEventListener('input', applySearch);
+
+         // Pre-create modal instance with no backdrop
+        const poModalEl = document.getElementById('poModal');
+        const poModal = new bootstrap.Modal(poModalEl, {
+            backdrop: false,
+            keyboard: true
+        });
+
+        // Click event for View buttons
+        document.querySelector('#poTable tbody').addEventListener('click', async function (e) {
+            const btn = e.target.closest('.btn-view');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+
+            try {
+                const response = await fetch(`/Procurement/ViewPO/${id}`);
+                if (!response.ok) throw new Error("Failed to load Purchase Order details.");
+
+                const html = await response.text();
+                poModalEl.querySelector('.modal-content').innerHTML = html;
+                poModal.show();
+            } catch (err) {
+                alert(err.message);
+                console.error(err);
+            }
+        });
+
+
+      
+
+
         });
 
         // Pagination
@@ -257,5 +298,6 @@
         }
 
         renderTablePage();
+
     </script>
 }

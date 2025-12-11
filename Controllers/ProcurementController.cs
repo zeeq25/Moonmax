@@ -296,6 +296,37 @@ namespace Moonmax.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ViewPO(int id)
+        {
+            var po = await _db.PurchaseOrders
+                .Where(p => p.PurchaseOrderID == id)
+                .Select(p => new PurchaseOrderDetailsVM
+                {
+                    PurchaseOrderID = p.PurchaseOrderID,
+                    SupplierName = p.Supplier.SupplierName,
+                    Status = p.Status,
+                    DateCreated = p.DateCreated,
+                    ExpectedDelivery = p.ExpectedDelivery,
+                    TotalAmount = p.Items.Sum(i => i.Quantity * i.UnitPrice),
+                    Items = p.Items.Select(i => new POItemVM
+                    {
+                        ProductName = i.ProductName,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (po == null)
+                return NotFound();
+
+            return PartialView("_PurchaseOrderDetailsModal", po);
+        }
+
+
+
+
 
 
 

@@ -2,21 +2,32 @@
 @using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
 
-@{
-    // Get logged-in user's email
-    var email = User.Identity.IsAuthenticated
-        ? User.FindFirstValue(ClaimTypes.Name)
-        : null;
 
-    // Get DbContext
+@{
+    int? userId = null;
+
+    if (User.Identity.IsAuthenticated)
+    {
+        var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(idString, out var parsedId))
+        {
+            userId = parsedId;
+        }
+    }
+
     var db = Context.RequestServices.GetRequiredService<Moonmax.Data.AppDbContext>();
 
-    var currentUser = email != null ? db.Users.FirstOrDefault(u => u.Email == email) : null;
-    var displayName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "User";
+    var currentUser = userId != null
+        ? db.Users.FirstOrDefault(u => u.UserID == userId)
+        : null;
 
-    // Use Role column from Users table
+    var displayName = currentUser != null
+        ? $"{currentUser.FirstName} {currentUser.LastName}"
+        : "User";
+
     var displayRole = currentUser?.Role ?? "User";
 }
+
 
 <div class="topbar">
     <!-- LEFT: HAMBURGER (mobile) -->

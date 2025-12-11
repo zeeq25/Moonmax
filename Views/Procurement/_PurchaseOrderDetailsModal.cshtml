@@ -1,0 +1,24 @@
+﻿@model Moonmax.ViewModels.PurchaseOrderDetailsVM
+
+<div class="modal-header">
+    <h5 class="modal-title">Purchase Order #@Model.PurchaseOrderID</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <p><strong>Supplier:</strong> @Model.SupplierName</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <p><strong>Date Created:</strong> @Model.DateCreated.ToString("yyyy-MM-dd")</p>
+    <p><strong>Expected Delivery:</strong> @(Model.ExpectedDelivery?.ToString("yyyy-MM-dd") ?? "-")</p>
+    <p><strong>Total Amount:</strong> ₱@Model.TotalAmount.ToString("N2")</p>
+
+    <h6>Items:</h6>
+    <ul>
+        @foreach (var item in Model.Items)
+        {
+            <li>@(item.ProductName + " — Qty: " + item.Quantity + " @ ₱" + item.UnitPrice.ToString("N2"))</li>
+        }
+    </ul>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

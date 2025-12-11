@@ -107,10 +107,10 @@
                             <td>@client.Phone</td>
                             <td>@client.PaymentType</td>
                             <td>@client.TotalTransactions</td>
-                            <td>@client.TotalRevenue.ToString("C")</td>
+                            <td>@client.TotalRevenue.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                             <td>
                                 <span class="badge @(client.Outstanding == 0 ? "status-ok" : "status-low")">
-                                    @client.Outstanding.ToString("C")
+                                    @client.Outstanding.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                 </span>
                             </td>
 

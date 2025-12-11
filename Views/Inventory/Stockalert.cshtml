@@ -65,10 +65,11 @@
                 <i class="fa-solid fa-filter"></i>
                 <span>Filter</span>
             </button>
-            <button class="btn-chip">
+
+            <!--<button class="btn-chip" id="btnExportPdf">
                 <i class="fa-solid fa-download"></i>
                 <span>Export</span>
-            </button>
+            </button>-->
         </div>
     </section>
 
@@ -191,7 +192,7 @@
         }
 
         function changePage(step) {
-            const table = document.getElementById("inventoryTable");
+            const table = document.getElementById("stockAlertTable");
             const rows = table.querySelectorAll("tbody tr");
             const totalPages = Math.ceil(rows.length / rowsPerPage);
 
@@ -204,4 +205,56 @@
 
         renderTablePage();
     </script>
+
+    <script>
+        document.getElementById('btnExportPdf').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const table = document.getElementById('stockAlertTable');
+            if (!table) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+
+            // Store original display and temporarily show all rows
+            const originalDisplays = [];
+            rows.forEach((row, i) => {
+                originalDisplays[i] = row.style.display;
+                row.style.display = ''; // show all rows for export
+            });
+
+            // Clone the table into a hidden container
+            const tableClone = table.cloneNode(true);
+            const hiddenDiv = document.createElement('div');
+            hiddenDiv.style.position = 'absolute';
+            hiddenDiv.style.left = '-9999px';
+            hiddenDiv.appendChild(tableClone);
+            document.body.appendChild(hiddenDiv);
+
+            try {
+                // Capture the cloned table
+                const canvas = await html2canvas(tableClone, { scale: 2, useCORS: true });
+                const imgData = canvas.toDataURL('image/png');
+
+                const pdf = new jsPDF('l', 'pt', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pageWidth - 40;
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', 20, 20, pdfWidth, pdfHeight);
+                pdf.save(`StockAlert_${new Date().toISOString().slice(0,10)}.pdf`);
+            } catch (err) {
+                console.error('PDF export failed:', err);
+                alert('PDF export failed. Check console for errors.');
+            } finally {
+                // Restore original display for pagination/search
+                rows.forEach((row, i) => row.style.display = originalDisplays[i]);
+                document.body.removeChild(hiddenDiv);
+                renderTablePage(); // restore pagination
+            }
+        });
+    </script>
+
+
 }
