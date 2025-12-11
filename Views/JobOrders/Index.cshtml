@@ -139,35 +139,76 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const rows = document.querySelectorAll('.jo-table tbody tr');
+            const table = document.getElementById("jobOrdersTable");
             const tabs = document.querySelectorAll('.jo-tab');
             const searchInput = document.querySelector('.jo-search-input');
             let currentFilter = 'all';
+            let currentPage = 1;
+            const rowsPerPage = 10;
 
-            function applyFilters() {
+            function getFilteredRows() {
                 const term = (searchInput.value || '').trim().toLowerCase();
-                rows.forEach(row => {
+                return Array.from(table.querySelectorAll("tbody tr")).filter(row => {
                     const status = row.dataset.status;
                     const matchesStatus = currentFilter === 'all' || status === currentFilter;
                     const cells = row.querySelectorAll('td');
                     const combinedText = Array.from(cells).slice(0, 4).map(c => c.innerText.toLowerCase()).join(' ');
-                    row.style.display = (matchesStatus && (term === '' || combinedText.includes(term))) ? '' : 'none';
+                    return matchesStatus && (term === '' || combinedText.includes(term));
                 });
             }
 
+            function renderTable() {
+                const allRows = Array.from(table.querySelectorAll("tbody tr"));
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                // hide all rows
+                allRows.forEach(row => row.style.display = "none");
+
+                // show only the current page of filtered rows
+                filteredRows.forEach((row, index) => {
+                    if (index >= (currentPage - 1) * rowsPerPage &&
+                        index < currentPage * rowsPerPage) {
+                        row.style.display = "";
+                    }
+                });
+
+                document.getElementById("jobOrdersPageIndicator").textContent =
+                    `Page ${currentPage} of ${totalPages}`;
+                document.querySelectorAll(".table-pagination .pg-btn")[0].disabled = currentPage === 1;
+                document.querySelectorAll(".table-pagination .pg-btn")[1].disabled = currentPage === totalPages;
+            }
+
+            function changePage(step) {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                currentPage += step;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                renderTable();
+            }
+
+            // tab click
             tabs.forEach(tab => {
                 tab.addEventListener('click', function () {
                     tabs.forEach(t => t.classList.remove('jo-tab--active'));
                     this.classList.add('jo-tab--active');
                     currentFilter = this.dataset.filter;
-                    applyFilters();
+                    currentPage = 1; // reset to first page
+                    renderTable();
                 });
             });
 
-            if (searchInput) searchInput.addEventListener('input', applyFilters);
-            applyFilters();
+            // search input
+            if (searchInput) searchInput.addEventListener('input', function () {
+                currentPage = 1; // reset page on search
+                renderTable();
+            });
 
-            document.querySelector('.jo-table tbody').addEventListener('click', async function (e) {
+            // Job Order modal
+            table.querySelector("tbody").addEventListener('click', async function (e) {
                 const btn = e.target.closest('.btn-view');
                 if (!btn || btn.disabled) return;
 
@@ -178,47 +219,15 @@
                 document.querySelector('#jobOrderModal .modal-content').innerHTML = html;
                 new bootstrap.Modal(document.getElementById('jobOrderModal')).show();
             });
+
+            // expose pagination function globally
+            window.changeJobOrdersPage = changePage;
+
+            // initial render
+            renderTable();
         });
-    </script>
-
-    <!--Pagination-->
-    <script>
-        const jobOrdersRowsPerPage = 10;
-        let jobOrdersCurrentPage = 1;
-
-        function renderJobOrdersPage() {
-            const table = document.getElementById("jobOrdersTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / jobOrdersRowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (jobOrdersCurrentPage - 1) * jobOrdersRowsPerPage &&
-                    index < jobOrdersCurrentPage * jobOrdersRowsPerPage
-                        ? ""
-                        : "none";
-            });
-
-            document.getElementById("jobOrdersPageIndicator").textContent =
-                `Page ${jobOrdersCurrentPage} of ${totalPages}`;
-            document.querySelectorAll(".table-pagination .pg-btn")[0].disabled = jobOrdersCurrentPage === 1;
-            document.querySelectorAll(".table-pagination .pg-btn")[1].disabled = jobOrdersCurrentPage === totalPages;
-        }
-
-        function changeJobOrdersPage(step) {
-            const table = document.getElementById("jobOrdersTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / jobOrdersRowsPerPage);
-
-            jobOrdersCurrentPage += step;
-            if (jobOrdersCurrentPage < 1) jobOrdersCurrentPage = 1;
-            if (jobOrdersCurrentPage > totalPages) jobOrdersCurrentPage = totalPages;
-
-            renderJobOrdersPage();
-        }
-
-        renderJobOrdersPage();
     </script>
 
     <partial name="_ValidationScriptsPartial" />
 }
+

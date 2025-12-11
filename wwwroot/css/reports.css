@@ -576,5 +576,300 @@
         transform: none;
     }
 
+/* Modern Filters UI */
+.modern-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+    .modern-filters .date-range {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .modern-filters label {
+        font-weight: 500;
+        color: #4F46E5; /* mm-blue */
+    }
+
+.modern-input, .modern-select {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.95rem;
+}
+
+    .modern-input:focus, .modern-select:focus {
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 2px rgba(79,70,229,0.2);
+    }
+
+.filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.modern-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+    .modern-btn i {
+        font-size: 0.95rem;
+    }
+
+/* Primary button */
+.modern-btn-primary {
+    background-color: #4F46E5;
+    color: #fff;
+}
+
+    .modern-btn-primary:hover {
+        background-color: #3730A3;
+    }
+
+/* Secondary button */
+.modern-btn-secondary {
+    background-color: #FACC15;
+    color: #1F2937;
+}
+
+    .modern-btn-secondary:hover {
+        background-color: #EAB308;
+    }
 
 
+ /* Nav Card */
+.dash-cards {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.nav-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .nav-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .nav-card .kpi-icon {
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+
+    .nav-card .kpi-title {
+        font-weight: 600;
+    }
+
+    .nav-card .kpi-main {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+
+
+
+
+/* Back button - yellowish orange */
+.modern-btn-back {
+    background-color: #f59e0b; /* yellow-orange */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    transition: background 0.2s;
+}
+
+    .modern-btn-back:hover {
+        background-color: #d97706;
+    }
+
+/* Add spacing above the back button */
+.dash-header .modern-btn-back {
+    margin: 1rem 0; /* top and bottom spacing */
+    padding: 0.5rem 1rem; /* Keeps button padding */
+    display: inline-block; /* Ensures it doesn’t stretch */
+}
+
+
+/* Export button color */
+.modern-btn-export {
+    background-color: #ef4444; /* red-ish for export */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .modern-btn-export:hover {
+        background-color: #b91c1c;
+    }
+
+/* Make From and To labels black */
+.filters .date-range label {
+    color: #000000; /* plain black */
+    font-weight: 500; /* optional: slightly bolder for clarity */
+}
+
+/* NAV CARDS - larger than KPIs */
+.dash-cards {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.nav-card {
+    flex: 1 1 300px; /* larger min-width */
+    display: flex;
+    align-items: center;
+    padding: 1.5rem; /* larger than KPI padding */
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .nav-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .nav-card .kpi-icon {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+    }
+
+    .nav-card .kpi-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .nav-card .kpi-main {
+        font-size: 0.95rem;
+        color: #666;
+    }
+
+/* Quick charts row */
+.reports-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex: 1 1 300px;
+    padding: 1rem;
+}
+
+.chart-card--wide {
+    flex: 2 1 600px;
+}
+
+.chart-card-header h3 {
+    margin: 0 0 0.25rem;
+}
+
+.chart-card-header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Modern table styling */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+    .modern-table th,
+    .modern-table td {
+        padding: 12px 15px;
+        text-align: left;
+    }
+
+    .modern-table thead {
+        background-color: #4F46E5; /* Dashboard purple */
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .modern-table tbody tr {
+        border-bottom: 1px solid #E5E7EB; /* light gray */
+        transition: background-color 0.2s ease;
+    }
+
+        .modern-table tbody tr:hover {
+            background-color: #F3F4F6; /* light hover effect */
+        }
+
+    .modern-table tbody td {
+        font-size: 13px;
+        color: #111827; /* dark text */
+    }
+
+    /* Optional: striped rows */
+    .modern-table.striped tbody tr:nth-child(even) {
+        background-color: #F9FAFB;
+    }
+
+    /* Optional: hover effect */
+    .modern-table.hover tbody tr:hover {
+        background-color: #E0E7FF;
+    }
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+    .pagination-container button.active {
+        background-color: #4F46E5;
+        color: white;
+    }

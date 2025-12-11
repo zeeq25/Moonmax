@@ -40,6 +40,28 @@ namespace Moonmax.Controllers
             // Generate a new invoice number (simple example, you can customize)
             string invoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
 
+            // 🔹 Determine DueDate based on Payment Terms (Cash, PDC-15, PDC-30, PDC-60)
+            DateTime dateIssued = DateTime.Now;
+            DateTime? dueDate = null;
+
+            string paymentType = jobOrder.Client?.PaymentType ?? "Cash";
+
+            switch (paymentType)
+            {
+                case "PDC-15 DAYS":
+                    dueDate = dateIssued.AddDays(15);
+                    break;
+                case "PDC-30 DAYS":
+                    dueDate = dateIssued.AddDays(30);
+                    break;
+                case "PDC-60 DAYS":
+                    dueDate = dateIssued.AddDays(60);
+                    break;
+                default:
+                    dueDate = dateIssued; // Cash: Due immediately
+                    break;
+            }
+
             // Create invoice
             var invoice = new Invoice
             {
@@ -49,7 +71,7 @@ namespace Moonmax.Controllers
                 Amount = totalInvoiceAmount,
                 PaymentType = jobOrder.Client?.PaymentType ?? "Cash", // use client's payment type
                 DateIssued = DateTime.Now,
-                DueDate = jobOrder.DueDate,
+                DueDate = dueDate,
                 Status = "Pending"
             };
 

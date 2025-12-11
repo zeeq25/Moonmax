@@ -211,7 +211,7 @@ namespace Moonmax.Controllers
             if (inventoryItem == null) return BadRequest("Invalid inventory item.");
 
             // ✅ Check stock
-            if (vm.Quantity > inventoryItem.QuantityInStock)  // Assuming your Inventory model has a Stock property
+            if (vm.Quantity >= inventoryItem.QuantityInStock)  // Assuming your Inventory model has a Stock property
             {
                 TempData["Error"] = $"Insufficient stock for {inventoryItem.PartName}. Available: {inventoryItem.QuantityInStock}.";
 

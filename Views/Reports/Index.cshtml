@@ -6,7 +6,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />    
 }
 
 <div class="page page-reports">
@@ -15,231 +15,216 @@
     <header class="dash-header">
         <div>
             <h1 class="dash-title">Reports &amp; Analytics</h1>
-            <p class="dash-sub">Analyze performance, trends and transaction insights</p>
+            <p class="dash-sub">Generate automated reports and analyze performance trends</p>
         </div>
     </header>
 
-    <!-- KPIs -->
+    <!-- REPORT NAVIGATION CARDS -->
     <section class="section-block">
-        <div class="dash-kpis">
-            <!-- Total Revenue -->
-            <article class="dash-card kpi">
-                <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
+        <div class="dash-cards">
+            <a href="@Url.Action("SalesReport", "Reports")" class="dash-card nav-card">
+                <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
                 <div class="kpi-content">
-                    <div class="kpi-title">Total Revenue</div>
-                    <div class="kpi-main">₱@(ViewBag.TotalRevenue?.ToString("N2") ?? "0.00")</div>
+                    <div class="kpi-title">Sales Report</div>
+                    <div class="kpi-main">View detailed sales data</div>
                 </div>
-            </article>
+            </a>
 
-            <!-- Avg. Job Value -->
-            <article class="dash-card kpi">
+            <a href="@Url.Action("JobReport", "Reports")" class="dash-card nav-card">
                 <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
                 <div class="kpi-content">
-                    <div class="kpi-title">Avg. Job Value</div>
-                    <div class="kpi-main">₱@(ViewBag.AvgJobValue?.ToString("N2") ?? "0.00")</div>
+                    <div class="kpi-title">Job Orders Report</div>
+                    <div class="kpi-main">Track job order history</div>
                 </div>
-            </article>
+            </a>
 
-            <!-- Total Jobs -->
-            <article class="dash-card kpi">
-                <div class="kpi-icon"><i class="fa-solid fa-list-check"></i></div>
+            <a href="@Url.Action("InventoryReport", "Reports")" class="dash-card nav-card">
+                <div class="kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
                 <div class="kpi-content">
-                    <div class="kpi-title">Total Jobs</div>
-                    <div class="kpi-main">@((ViewBag.TotalJobs ?? 0).ToString())</div>
+                    <div class="kpi-title">Inventory Report</div>
+                    <div class="kpi-main">Check current inventory</div>
                 </div>
-            </article>
-
-            <!-- Total Inventory Items -->
-            <article class="dash-card kpi">
-                <div class="kpi-icon"><i class="fa-solid fa-box-archive"></i></div>
-                <div class="kpi-content">
-                    <div class="kpi-title">Total Inventory Items</div>
-                    <div class="kpi-main">@((ViewBag.TotalInventoryItems ?? 0).ToString())</div>
-                </div>
-            </article>
+            </a>
         </div>
     </section>
-    
 
-
-    <!-- SALES ANALYTICS -->
+    <!-- QUICK OVERVIEW CHARTS -->
     <section class="section-block">
-        <h2 class="section-title">Sales Analytics</h2>
-
+        <h2 class="section-title">Quick Overview Charts</h2>
         <div class="reports-row">
-            <article class="mm-card chart-card chart-card--wide">
+            <article class="chart-card chart-card--wide">
                 <header class="chart-card-header">
-                    <h3>Monthly Sales Trend</h3>
-                    <p>Revenue trend for the last 6 months.</p>
+                    <h3>Revenue Trend</h3>
+                    <p>Monthly revenue overview.</p>
                 </header>
-                <div class="chart-card-body"><canvas id="salesTrendChart"></canvas></div>
+                <div class="chart-card-body">
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
             </article>
 
-            <article class="mm-card chart-card">
+            <article class="chart-card">
                 <header class="chart-card-header">
-                    <h3>Service Type Distribution</h3>
-                    <p>Job order share per service type.</p>
+                    <h3>Stock Balance</h3>
+                    <p>Current stock by item.</p>
                 </header>
-                <div class="chart-card-body chart-card-body--pie">
-                    <canvas id="serviceTypeChart"></canvas>
+                <div class="chart-card-body">
+                    <canvas id="stockBalanceChart"></canvas>
+                </div>
+            </article>
+
+            <!-- Jobs per Service Type -->
+            <article class="chart-card">
+                <header class="chart-card-header">
+                    <h3>Jobs per Service Type</h3>
+                    <p>Number of jobs grouped by service type.</p>
+                </header>
+                <div class="chart-card-body">
+                    <canvas id="jobsPerServiceChart"></canvas>
                 </div>
             </article>
         </div>
     </section>
 
-    <!-- CLIENT & INVENTORY -->
-    <section class="section-block">
-        <h2 class="section-title">Clients & Inventory</h2>
-
-        <div class="reports-row">
-            <article class="mm-card chart-card">
-                <header class="chart-card-header">
-                    <h3>Top Clients by Revenue</h3>
-                    <p>Highest contributing customers.</p>
-                </header>
-                <div class="chart-card-body"><canvas id="topClientsChart"></canvas></div>
-            </article>
-
-            <article class="mm-card chart-card">
-                <header class="chart-card-header">
-                    <h3>Inventory Turnover Rate</h3>
-                    <p>Stock movement by category.</p>
-                </header>
-                <div class="chart-card-body"><canvas id="turnoverChart"></canvas></div>
-            </article>
-        </div>
-    </section>
-    
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // -------------------------------
-        // 1. Convert Razor ViewBag lists to JS arrays safely
-        // -------------------------------
+        // Convert ViewBag data to JS arrays
         const months = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Months ?? new List<string>()));
         const monthlyRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.MonthlyRevenue ?? new List<decimal>()));
-        const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceTypes ?? new List<string>()));
-        const serviceRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceRevenue ?? new List<decimal>()));
-        const topClients = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TopClients ?? new List<string>()));
-        const topClientsRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TopClientsRevenue ?? new List<decimal>()));
-        const turnoverCategories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TurnoverCategories ?? new List<string>()));
-        const turnoverValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TurnoverValues ?? new List<decimal>()));
+        const stockItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.StockItems ?? new List<string>()));
+        const stockValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.StockValues ?? new List<decimal>()));
+        const jobsCompleted = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.JobsCompleted ?? new List<decimal>()));
+        const jobsPending = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.JobsPending ?? new List<decimal>()));
 
-        // -------------------------------
-        // 2. Grab CSS variables for colors
-        // -------------------------------
-        const rootStyles = getComputedStyle(document.documentElement);
-        const mmBlue = rootStyles.getPropertyValue('--mm-blue').trim() || '#4F46E5';
-        const mmYellow = rootStyles.getPropertyValue('--mm-yellow').trim() || '#FACC15';
-        const mmGreen = rootStyles.getPropertyValue('--mm-green').trim() || '#10B981';
-        const mmRed = rootStyles.getPropertyValue('--mm-red').trim() || '#EF4444';
-        const mmDark = rootStyles.getPropertyValue('--mm-dark').trim() || '#1F2937';
-
-        // -------------------------------
-        // 3. Helper to generate array of colors dynamically
-        // -------------------------------
-        function generateColors(length) {
-            const palette = [mmBlue, mmYellow, mmGreen, mmRed, mmDark, '#8B5CF6', '#F472B6', '#10B981'];
-            let colors = [];
-            for (let i = 0; i < length; i++) {
-                colors.push(palette[i % palette.length]);
-            }
-            return colors;
+        function generateColors(length, alpha=1) {
+            const palette = ['#4F46E5','#FACC15','#10B981','#EF4444','#1F2937','#8B5CF6','#F472B6','#10B981'];
+            return Array.from({length}, (_, i) => palette[i % palette.length]);
         }
 
-        // -------------------------------
-        // 4. Safe chart creation helper
-        // -------------------------------
-        function safeCreateChart(ctxId, type, labels, data, extraOptions = {}) {
-            const canvas = document.getElementById(ctxId);
-            if (!labels || !data || labels.length === 0 || data.length === 0) {
-                // Clear canvas and show "No data available"
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.font = "16px sans-serif";
-                    ctx.fillStyle = "#888";
-                    ctx.textAlign = "center";
-                    ctx.fillText("No data available", canvas.width / 2, canvas.height / 2);
-                }
-                return null;
-            }
+        function formatCurrency(value) {
+            return '₱' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
-            return new Chart(canvas, {
-                type: type,
+        // Global chart defaults for high-res
+        Chart.defaults.devicePixelRatio = window.devicePixelRatio || 2;
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Revenue Trend - Line Chart
+        const revenueCtx = document.getElementById('revenueTrendChart');
+        if (revenueCtx) {
+            new Chart(revenueCtx, {
+                type: 'line',
                 data: {
-                    labels: labels,
+                    labels: months,
                     datasets: [{
-                        data: data,
-                        backgroundColor: generateColors(labels.length),
-                        borderColor: '#ffffff',
-                        borderWidth: 1,
-                        ...extraOptions.datasetOptions
+                        label: 'Revenue',
+                        data: monthlyRevenue,
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
-                options: Object.assign({
+                options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: type !== 'line' } },
-                    scales: type === 'line' || type === 'bar' ? { y: { beginAtZero: true } } : {}
-                }, extraOptions.chartOptions)
-            });
-        }
-
-        // -------------------------------
-        // 5. Create all charts safely
-        // -------------------------------
-
-        // Monthly Sales Trend (Line)
-        safeCreateChart('salesTrendChart', 'line', months, monthlyRevenue, {
-            datasetOptions: {
-                label: 'Sales (₱)',
-                borderColor: mmBlue,
-                backgroundColor: 'rgba(11, 98, 143, 0.1)',
-                tension: 0.35,
-                borderWidth: 3,
-                pointRadius: 4,
-                fill: true
-            },
-            chartOptions: { scales: { y: { beginAtZero: false } } }
-        });
-
-        // Service Type Distribution (Pie) with legend at the bottom
-        safeCreateChart('serviceTypeChart', 'pie', serviceTypes, serviceRevenue, {
-            chartOptions: {
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: { usePointStyle: true, padding: 12, boxWidth: 12 }
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatCurrency(context.raw);
+                                }
+                            }
+                        }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.formattedValue || '';
-                                return `${label}: ₱${value}`;
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return formatCurrency(value); }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        // Top Clients by Revenue (Horizontal Bar)
-        safeCreateChart('topClientsChart', 'bar', topClients, topClientsRevenue, {
-            chartOptions: { indexAxis: 'y', scales: { x: { beginAtZero: true } } }
-        });
+        // Stock Balance - Bar Chart
+        const stockCtx = document.getElementById('stockBalanceChart');
+        if (stockCtx) {
+            new Chart(stockCtx, {
+                type: 'bar',
+                data: {
+                    labels: stockItems,
+                    datasets: [{
+                        label: 'Stock Quantity',
+                        data: stockValues,
+                        backgroundColor: generateColors(stockItems.length)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
 
-        // Inventory Turnover Rate (Bar)
-        safeCreateChart('turnoverChart', 'bar', turnoverCategories, turnoverValues, {
-            chartOptions: { scales: { y: { beginAtZero: true } } }
-        });
+        // Jobs per Service Type Chart
+        const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceTypes ?? new List<string>()));
+        const serviceCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ServiceCounts ?? new List<int>()));
 
+        const jobsCtx = document.getElementById('jobsPerServiceChart');
+        if (jobsCtx && serviceTypes.length && serviceCounts.length) {
+            new Chart(jobsCtx, {
+                type: 'bar',
+                data: {
+                    labels: serviceTypes,
+                    datasets: [{
+                        label: 'Number of Jobs',
+                        data: serviceCounts,
+                        backgroundColor: generateColors(serviceTypes.length),
+                        borderColor: '#1F2937',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of Jobs' } },
+                        x: { title: { display: true, text: 'Service Type' } }
+                    }
+                }
+            });
+        }
+        
     </script>
 }
-
 
 

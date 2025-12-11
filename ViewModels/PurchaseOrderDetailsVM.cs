@@ -9,6 +9,9 @@
         public DateTime? ExpectedDelivery { get; set; }
         public decimal TotalAmount { get; set; }
         public List<POItemVM> Items { get; set; } = new();
+
+
+
     }
 
     public class POItemVM

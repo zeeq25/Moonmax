@@ -45,7 +45,7 @@
             </div>
             <div>
                 <div class="kpi-title">Active Suppliers</div>
-                <div class="kpi-main">@Model.SelectMany(po => po.Supplier != null ? new[] { po.Supplier } : Array.Empty<Moonmax.Models.Supplier>()).Distinct().Count()</div>
+                <div class="kpi-main">@Model.Count(s => s.Status == "Active")</div>
             </div>
         </article>
 

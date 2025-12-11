@@ -54,6 +54,7 @@
         </article>
     </section>
 
+
     <!-- TABS -->
     <section class="inv-tabs-bar">
         <div class="inv-tabs">
@@ -62,25 +63,73 @@
         </div>
     </section>
 
-    <!-- SEARCH + FILTER / EXPORT -->
-    <section class="inv-filter-bar">
-        <div class="inv-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input class="inv-search-input" type="text" placeholder="Search by invoice, customer, or job ID..." />
-        </div>
-        <div class="inv-filter-actions">
-            <button class="btn-chip"><i class="fa-solid fa-filter"></i><span>Filter</span></button>
-            
-            <button class="btn-chip" id="btnExportPdf">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
-
+    <!-- TABLE 1: IN PROGRESS JOB ORDERS -->
+    <section class="inv-table-wrap">
+        <h3 class="table-section-title">Job Orders (In Progress)</h3>
+        <div class="mm-card">
+            <table class="mm-table" id="jobOrdersTable">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Job ID</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var job in Model.InProgressJobs)
+                    {
+                        <tr>
+                            <td>@job.Client</td>
+                            <td>@job.JobID</td>
+                            <td>@job.Cost.ToString("C")</td>
+                            <td><span class="status status-warn">In Progress</span></td>
+                            <td class="inv-actions">
+                                <a asp-action="CreateInvoice" asp-route-jobId="@job.JobID" class="icon-btn-table btn-create" title="Create Invoice">
+                                    <i class="fa-solid fa-plus"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </section>
 
-    <!-- TABLE: TRANSACTIONS -->
+    <!-- Job Orders Pagination -->
+    <div class="table-pagination" id="jobOrdersPagination">
+        <button class="pg-btn" id="jobOrdersPrev">‹</button>
+        <span id="jobOrdersPageIndicator">Page 1</span>
+        <button class="pg-btn" id="jobOrdersNext">›</button>
+    </div>
+
+    
+
+    <!-- TABLE 2: INVOICES (UNCHANGED) -->
     <section class="inv-table-wrap">
+        <h3 class="table-section-title">Invoices</h3>
+
+        <!-- SEARCH + FILTER / EXPORT -->
+        <section class="inv-filter-bar">
+            <div class="inv-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input class="inv-search-input" type="text" placeholder="Search by invoice, customer, or job ID..." />
+            </div>
+            <div class="inv-filter-actions">
+                <select id="statusFilter" class="btn-chip">
+                    <option value="all">All</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                </select>
+
+                <button class="btn-chip" id="btnExportPdf">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export</span>
+                </button>
+            </div>
+        </section>
+
         <div class="mm-card">
             <table class="mm-table" id="salesTable">
                 <thead>
@@ -109,84 +158,51 @@
                             <td>@(invoice.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
                             <td>
                                 <span class="status @(invoice.Status.ToLower() == "pending" ? "status-pending" :
-                                                                                             invoice.Status.ToLower() == "paid" ? "status-paid" :
-                                                                                             "status-warn")">
+                                                                                                           invoice.Status.ToLower() == "paid" ? "status-paid" :
+                                                                                                           "status-warn")">
                                 @invoice.Status
                             </span>
                         </td>
                         <td class="inv-actions">
                             <div class="sales-actions">
-                                <!-- View Invoice button -->
                                 <button type="button" class="icon-btn-table btn-view" title="View invoice"
-                                     data-invoice-id="@invoice.InvoiceID">
-                                        <i class="fa-regular fa-eye"></i>
-                                 </button>
-
-
-                                    <!-- Receive Payment button -->
-                                    <form asp-action="ReceivePayment" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
-                                        <button type="submit" class="icon-btn-table btn-receive"
-                                                title="Receive payment"
-                                                @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
-                                            <i class="fa-solid fa-check"></i>
-                                        </button>
-                                    </form>
-
-                                    <!-- Cancel button disabled if Paid -->
-                                   <!--<form asp-action="CancelInvoice" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
-                                        <button type="submit" class="icon-btn-table btn-cancel"
-                                                title="Cancel invoice"
-                                                @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </button> 
-                                    </form> --> 
-                                </div>
-                            </td>
-                        </tr>
-                                        }
-
-                    @foreach (var job in Model.InProgressJobs)
-                    {
-                        <tr>
-                            <td>-</td>
-                            <td>@job.Client</td>
-                            <td>@job.JobID</td>
-                            <td>@job.Cost.ToString("C")</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span class="status status-warn">In Progress</span></td>
-                            <td class="inv-actions">
-                                <a asp-action="CreateInvoice" asp-route-jobId="@job.JobID" class="icon-btn-table btn-create" title="Create Invoice">
-                                    <i class="fa-solid fa-plus"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
+                                        data-invoice-id="@invoice.InvoiceID">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <form asp-action="ReceivePayment" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
+                                    <button type="submit" class="icon-btn-table btn-receive"
+                                            title="Receive payment"
+                                            @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+               }
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- PAGINATION -->
-    <div class="table-pagination">
-        <button class="pg-btn" onclick="changePage(-1)">‹</button>
-        <span id="pageIndicator">Page 1</span>
-        <button class="pg-btn" onclick="changePage(1)">›</button>
+    <!-- Invoice Pagination -->
+    <div class="table-pagination" id="invoicePagination">
+        <button class="pg-btn" id="invoicePrev">‹</button>
+        <span id="invoicePageIndicator">Page 1</span>
+        <button class="pg-btn" id="invoiceNext">›</button>
     </div>
 
-    <!-- Invoice Modal -->
+    
+
+    <!-- Invoice Modal (unchanged) -->
     <div id="invoiceModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <div id="invoiceModalBody">
-                <!-- Invoice content will be loaded here dynamically -->
-            </div>
+            <div id="invoiceModalBody"></div>
         </div>
     </div>
-
-
 </div>
+
 
 @section Scripts {
 
@@ -195,55 +211,30 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // SEARCH
-            const searchInput = document.querySelector('.page-sales .inv-search-input');
-            const table = document.querySelector('.page-sales .mm-table');
-            if (searchInput && table) {
-                const rows = table.querySelectorAll('tbody tr');
-                searchInput.addEventListener('input', function () {
-                    const query = this.value.trim().toLowerCase();
-                    rows.forEach(row => {
-                        const text = row.textContent.toLowerCase();
-                        row.style.display = text.includes(query) ? '' : 'none';
-                    });
-                });
-            }
-
             // DISABLE RECEIVE PAYMENT BUTTONS & UPDATE STATUS
             document.querySelectorAll('.btn-receive').forEach(button => {
                 button.addEventListener('click', function (e) {
-                    // Prevent instant reload (form will still submit)
                     setTimeout(() => {
-                        // Disable this receive button
                         button.disabled = true;
-
-                        // Disable cancel button in the same row
                         const cancelBtn = button.closest('tr').querySelector('.btn-cancel');
                         if (cancelBtn) cancelBtn.disabled = true;
-
-                        // Update status cell to Paid
                         const statusEl = button.closest('tr').querySelector('.status');
                         if (statusEl) {
                             statusEl.textContent = 'Paid';
                             statusEl.className = 'status status-paid';
                         }
-                    }, 10); // tiny delay to allow form submission
+                    }, 10);
                 });
             });
-        });
 
-        //Modal View Popup
-        document.addEventListener('DOMContentLoaded', function () {
-            // Modal
+            // Modal View Popup
             const modal = document.getElementById("invoiceModal");
             const modalBody = document.getElementById("invoiceModalBody");
             const closeBtn = modal.querySelector(".close");
 
-            // Open modal on View button click
             document.querySelectorAll('.btn-view').forEach(button => {
                 button.addEventListener('click', function () {
                     const invoiceId = this.dataset.invoiceId;
-                    // Fetch invoice HTML from server
                     fetch(`/Sales/ViewInvoicePartial/${invoiceId}`)
                         .then(response => response.text())
                         .then(html => {
@@ -253,77 +244,107 @@
                 });
             });
 
-            // Close modal
             closeBtn.onclick = function () {
                 modal.style.display = "none";
             };
-
             window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
+                if (event.target == modal) modal.style.display = "none";
             };
         });
-
-
-        // Pagination
-        const rowsPerPage = 10;
-        let currentPage = 1;
-
-        function renderTablePage() {
-            const table = document.getElementById("salesTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
-                        ? ""
-                        : "none";
-            });
-
-            document.getElementById("pageIndicator").textContent =
-                `Page ${currentPage} of ${totalPages}`;
-            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
-            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
-        }
-
-        function changePage(step) {
-            const table = document.getElementById("salesTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            currentPage += step;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            renderTablePage();
-        }
-
-        renderTablePage();
     </script>
 
     <script>
-                document.getElementById('btnExportPdf').addEventListener('click', async () => {
+        // INVOICE PAGINATION WITH SEARCH & FILTER
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('salesTable');
+            const searchInput = document.querySelector('.inv-search-input');
+            const statusFilter = document.getElementById('statusFilter');
+            const rowsPerPage = 10;
+            let currentPage = 1;
+            let currentFilter = 'all';
+
+            function getFilteredRows() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+                return Array.from(table.querySelectorAll('tbody tr')).filter(row => {
+                    const statusEl = row.querySelector('.status');
+                    const statusText = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
+                    const matchesStatus = currentFilter === 'all' || statusText === currentFilter;
+
+                    const rowText = Array.from(row.querySelectorAll('td'))
+                                         .slice(0, 7)
+                                         .map(td => td.textContent.toLowerCase())
+                                         .join(' ');
+                    const matchesSearch = rowText.includes(term);
+                    return matchesStatus && matchesSearch;
+                });
+            }
+
+            function renderTablePage() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                table.querySelectorAll('tbody tr').forEach(r => r.style.display = 'none');
+
+                filteredRows.forEach((row, index) => {
+                    if (index >= (currentPage - 1) * rowsPerPage &&
+                        index < currentPage * rowsPerPage) {
+                        row.style.display = '';
+                    }
+                });
+
+                document.getElementById('invoicePageIndicator').textContent = `Page ${currentPage} of ${totalPages}`;
+                document.getElementById('invoicePrev').disabled = currentPage === 1;
+                document.getElementById('invoiceNext').disabled = currentPage === totalPages;
+            }
+
+            // Pagination buttons
+            document.getElementById('invoicePrev').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage();
+                }
+            });
+
+            document.getElementById('invoiceNext').addEventListener('click', function() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage();
+                }
+            });
+
+            // Search input
+            searchInput.addEventListener('input', function() {
+                currentPage = 1;
+                renderTablePage();
+            });
+
+            // Dropdown filter
+            statusFilter.addEventListener('change', function() {
+                currentFilter = this.value;
+                currentPage = 1;
+                renderTablePage();
+            });
+
+            // initial render
+            renderTablePage();
+        });
+    </script>
+
+    <script>
+        // EXPORT PDF
+        document.getElementById('btnExportPdf').addEventListener('click', async () => {
             const { jsPDF } = window.jspdf;
             const table = document.getElementById('salesTable');
             if (!table) return;
 
-            // Temporarily show all rows
             const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(row => row.style.display = '');
+            rows.forEach(row => row.style.display = ''); // show all
 
-            // Clone table
             const tableClone = table.cloneNode(true);
+            tableClone.querySelectorAll('thead th.col-actions, tbody td.col-actions').forEach(el => el.remove());
 
-            // Remove Actions column
-            tableClone.querySelectorAll('thead th.col-actions').forEach(th => th.remove());
-            tableClone.querySelectorAll('tbody tr').forEach(row => {
-                row.querySelectorAll('td.col-actions').forEach(td => td.remove());
-            });
-
-            // Hidden container for html2canvas
             const hiddenDiv = document.createElement('div');
             hiddenDiv.style.position = 'absolute';
             hiddenDiv.style.left = '-9999px';
@@ -331,16 +352,14 @@
             document.body.appendChild(hiddenDiv);
 
             try {
-                const pdf = new jsPDF('l', 'pt', 'a4'); // landscape
+                const pdf = new jsPDF('l', 'pt', 'a4');
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
-                let yOffset = 20; // top margin
+                let yOffset = 20;
 
-                // Split rows into chunks for multi-page
                 const header = tableClone.querySelector('thead');
                 const bodyRows = Array.from(tableClone.querySelectorAll('tbody tr'));
 
-                // Render header once
                 const headerCanvas = await html2canvas(header, { scale: 2 });
                 const headerImg = headerCanvas.toDataURL('image/png');
                 const headerWidth = pageWidth - 40;
@@ -353,11 +372,9 @@
                     const rowImg = rowCanvas.toDataURL('image/png');
                     const rowHeight = (rowCanvas.height * headerWidth) / rowCanvas.width;
 
-                    // Add new page if exceeding page height
                     if (yOffset + rowHeight > pageHeight - 20) {
                         pdf.addPage();
                         yOffset = 20;
-                        // Repeat header on new page
                         pdf.addImage(headerImg, 'PNG', 20, yOffset, headerWidth, headerHeight);
                         yOffset += headerHeight + 10;
                     }
@@ -371,11 +388,47 @@
                 console.error('PDF export failed:', err);
             } finally {
                 document.body.removeChild(hiddenDiv);
-                // Restore pagination
-                renderTablePage();
             }
         });
-
     </script>
 
+    <script>
+        // JOB ORDERS PAGINATION
+        document.addEventListener('DOMContentLoaded', function () {
+            const jobTable = document.getElementById("jobOrdersTable");
+            const jobRows = jobTable.querySelectorAll("tbody tr");
+            const jobRowsPerPage = 5;
+            let jobCurrentPage = 1;
+
+            function renderJobTablePage() {
+                const totalPages = Math.ceil(jobRows.length / jobRowsPerPage);
+                jobRows.forEach((row, index) => {
+                    row.style.display = (index >= (jobCurrentPage - 1) * jobRowsPerPage &&
+                                         index < jobCurrentPage * jobRowsPerPage) ? "" : "none";
+                });
+                document.getElementById("jobOrdersPageIndicator").textContent =
+                    `Page ${jobCurrentPage} of ${totalPages}`;
+                document.getElementById("jobOrdersPrev").disabled = jobCurrentPage === 1;
+                document.getElementById("jobOrdersNext").disabled = jobCurrentPage === totalPages;
+            }
+
+            document.getElementById("jobOrdersPrev").addEventListener("click", function() {
+                if (jobCurrentPage > 1) {
+                    jobCurrentPage--;
+                    renderJobTablePage();
+                }
+            });
+
+            document.getElementById("jobOrdersNext").addEventListener("click", function() {
+                const totalPages = Math.ceil(jobRows.length / jobRowsPerPage);
+                if (jobCurrentPage < totalPages) {
+                    jobCurrentPage++;
+                    renderJobTablePage();
+                }
+            });
+
+            renderJobTablePage();
+        });
+    </script>
 }
+

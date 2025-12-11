@@ -1,17 +1,10 @@
-﻿@using Moonmax.ViewModels
+﻿@model Moonmax.ViewModels.SalesReportVM
+
 
 @{
-    ViewData["Title"] = "Sales Report";
+    ViewData["Title"] = "Reports & Analytics";
     ViewData["Nav"] = "Reports";
     ViewData["AppShell"] = true;
-
-    var monthlyRevenue = ViewBag.MonthlyRevenue as List<MonthlyRevenueViewModel> ?? new List<MonthlyRevenueViewModel>();
-    var serviceRevenue = ViewBag.ServiceRevenue as List<ServiceRevenueViewModel> ?? new List<ServiceRevenueViewModel>();
-    var allInvoices = ViewBag.AllInvoices as List<Invoice> ?? new List<Invoice>();
-    var totalRevenue = ViewBag.TotalRevenue ?? 0;
-    var totalJobs = ViewBag.TotalJobs ?? 0;
-    var avgJobValue = ViewBag.AvgJobValue ?? 0;
-    var topClient = ViewBag.TopClient;
 }
 
 @section Styles {
@@ -19,255 +12,364 @@
     <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
 }
 
-<div class="page-reports">
+<div class="page page-reports">
 
     <!-- HEADER -->
-    <div class="header-bar">
-        <div class="header-left">
-            <a href="@Url.Action("Index", "Reports")" class="btn btn-warning">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <h1 class="dash-title">Sales Report</h1>
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Reports &amp; Analytics</h1>
+            <p class="dash-sub">Generate automated reports and analyze performance trends</p>
+
+            <!--Back Button-->
+            <div>
+                <button id="btnBack" class="modern-btn modern-btn-back"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <!-- KPI CARDS -->
-    <section class="kpi-wrapper">
-        <article class="kpi">
-            <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
-            <div>
-                <div class="kpi-title">Total Revenue</div>
-                <div class="kpi-main">₱@(String.Format("{0:N0}", totalRevenue))</div>
-            </div>
-        </article>
-
-        <article class="kpi">
-            <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <div>
-                <div class="kpi-title">Total Jobs</div>
-                <div class="kpi-main">@(totalJobs)</div>
-            </div>
-        </article>
-
-        <article class="kpi">
-            <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div>
-                <div class="kpi-title">Avg. Job Value</div>
-                <div class="kpi-main">₱@(String.Format("{0:N0}", avgJobValue))</div>
-            </div>
-        </article>
-
-        <article class="kpi">
-            <div class="kpi-icon"><i class="fa-solid fa-user"></i></div>
-            <div>
-                <div class="kpi-title">Top Client</div>
-                <div class="kpi-main">
-                    @(
-                                        topClient != null
-                                        ? $"{topClient.ClientName ?? "N/A"} (₱{String.Format("{0:N0}", topClient.Revenue ?? 0)})"
-                                        : "N/A"
-                                        )
+    <!-- KPIs -->
+    <section class="section-block">
+        <div class="dash-kpis">
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Total Revenue</div>
+                    <div class="kpi-main">₱@(ViewBag.TotalRevenue?.ToString("N2") ?? "0.00")</div>
                 </div>
-            </div>
-        </article>
+            </article>
+
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Invoices Issued</div>
+                    <div class="kpi-main">@((ViewBag.InvoiceCount ?? 0).ToString())</div>
+                </div>
+            </article>
+
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Avg Invoice Value</div>
+                    <div class="kpi-main">₱@(ViewBag.AvgInvoiceValue?.ToString("N2") ?? "0.00")</div>
+                </div>
+            </article>
+
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-star"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Top Service Type</div>
+                    <div class="kpi-main">@ViewBag.TopServiceRevenue</div>
+                </div>
+            </article>
+        </div>
+
     </section>
 
-    <!-- EXPORT BUTTONS -->
-    <div class="export-row">
-        <button class="btn btn-warning" onclick="exportTableToPDF('allInvoicesTable', 'SalesReport')">
-            Export as PDF
-        </button>
-        <button class="btn btn-secondary" onclick="window.print()">
-            Print Report
-        </button>
-    </div>
 
-    <!-- INVOICES TABLE -->
-    <div class="table-section">
-        <div class="table-title">Invoices</div>
-        <article class="mm-card">
-            <div class="summary-table-wrap">
-                <table class="mm-table" id="allInvoicesTable">
+    <!-- SALES REPORTS -->
+    <section class="section-block">
+        <h2 class="section-title">Sales Reports</h2>
+
+        <!-- DATE RANGE & EXPORT -->
+        <section class="section-block filters-export">
+            <div class="filters modern-filters">
+                <div class="date-range">
+                    <label>From:</label>
+                    <input type="date" id="reportFromDate" value="@DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd")" class="modern-input modern-date" />
+                    <label>To:</label>
+                    <input type="date" id="reportToDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="modern-input modern-date" />
+
+                    <button id="btnApplyFilter" class="modern-btn modern-btn-export" style="flex:1; min-width:120px; background-color:#4F46E5; color:#fff;">
+                        <i class="fa-solid fa-filter"></i> Apply Filter
+                    </button>
+                </div>
+
+                <div class="report-actions" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                    <button id="btnExportPdf" class="modern-btn modern-btn-export" style="flex:1; min-width:120px; background-color:#4F46E5; color:#fff;">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+
+
+        <!-- Invoice Table -->
+        <div class="mm-card table-card">
+            <header class="chart-card-header">
+                <h3>Invoices</h3>
+                <p>List of invoices within the selected date range.</p>
+            </header>
+            <!-- Invoice Table -->
+            <div class="table-responsive" style="margin-bottom: 30px;">
+                <table id="invoiceTable" class="modern-table striped hover" style="width:100%; table-layout:fixed;">
                     <thead>
                         <tr>
                             <th>Invoice #</th>
                             <th>Client</th>
-                            <th>Date Issued</th>
+                            <th>Service Type</th>
                             <th>Amount</th>
+                            <th>Payment Type</th>
+                            <th>Date Issued</th>
+                            <th>Payment Due</th> <!-- NEW -->
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var inv in allInvoices)
+                        @if (Model.InvoiceReport != null && Model.InvoiceReport.Any())
+                        {
+                            foreach (var inv in Model.InvoiceReport)
+                            {
+                                <tr>
+                                    <td>@inv.InvoiceNumber</td>
+                                    <td>@inv.ClientName</td>
+                                    <td>@inv.ServiceType</td>
+                                    <td>₱@inv.Amount.ToString("N2")</td>
+                                    <td>@inv.PaymentType</td>
+                                    <td>@inv.DateIssued.ToString("yyyy-MM-dd")</td>
+                                    <td>@inv.DueDate</td> <!-- NEW -->
+                                    <td>@inv.Status</td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>@(inv.InvoiceNumber ?? "N/A")</td>
-                                <td>@(inv.Client?.Name ?? "N/A")</td>
-                                <td>@(inv.DateIssued != null ? inv.DateIssued.ToString("yyyy-MM-dd") : "N/A")</td>
-                                <td>₱@(String.Format("{0:N0}", inv.Amount))</td>
-                                <td>@(inv.Status ?? "N/A")</td>
+                                <td colspan="8" class="text-center">No invoices found.</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        </article>
-    </div>
 
-    <!-- PAGINATION -->
-    <div class="table-pagination">
-        <button class="pg-btn" onclick="changePage(-1)">‹</button>
-        <span id="pageIndicator">Page 1</span>
-        <button class="pg-btn" onclick="changePage(1)">›</button>
-    </div>
+            <!-- Mini Pagination -->
+            <div class="table-pagination" style="text-align:center; margin-bottom: 20px;">
+                <button class="pg-btn" onclick="changeInvoicePage(-1)">‹</button>
+                <span id="invoicePageIndicator">Page 1</span>
+                <button class="pg-btn" onclick="changeInvoicePage(1)">›</button>
+            </div>
 
-    <!-- CHARTS GRID -->
-    <section class="chart-grid">
-        <article class="mm-card chart-card">
-            <div class="chart-card-header">
-                <h2>📊 Monthly Sales Trend</h2>
-            </div>
-            <div class="chart-card-body">
-                <canvas id="monthlySalesChart"></canvas>
-            </div>
-        </article>
+        </div>
 
-        <article class="mm-card chart-card">
-            <div class="chart-card-header">
-                <h2>Sales by Service Type</h2>
-            </div>
-            <div class="chart-card-body chart-card-body--pie">
-                <canvas id="serviceTypeChart"></canvas>
-            </div>
-        </article>
+
+
+        <!-- Charts -->
+        <div class="reports-row">
+            <article class="mm-card chart-card chart-card--wide">
+                <header class="chart-card-header">
+                    <h3>Revenue Trend</h3>
+                </header>
+                <div class="chart-card-body">
+                    <canvas id="salesTrendChart" style="height:300px;"></canvas>
+                </div>
+            </article>
+
+            <article class="mm-card chart-card">
+                <header class="chart-card-header">
+                    <h3>Service Type Breakdown</h3>
+                </header>
+                <div class="chart-card-body">
+                    <canvas id="serviceTypeChart" style="height:300px;"></canvas>
+                </div>
+            </article>
+        </div>
+
     </section>
+
+
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
     <script>
-        // PDF export function
-        function exportTableToPDF(tableID, filename = 'SalesReport') {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4');
-            const table = document.getElementById(tableID);
+        // Convert Model data to JS arrays
+        const months = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Months));
+        const monthlyRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue));
+        const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceTypes));
+        const serviceRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceRevenue));
 
-            html2canvas(table, { scale: 2 }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const imgProps = doc.getImageProperties(imgData);
-                const pdfWidth = doc.internal.pageSize.getWidth() - 40;
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                doc.addImage(imgData, 'PNG', 20, 20, pdfWidth, pdfHeight);
-                doc.save(filename + '.pdf');
-            });
+        function generateColors(length) {
+            const palette = ['#4F46E5','#FACC15','#10B981','#EF4444','#1F2937','#8B5CF6','#F472B6','#10B981'];
+            return Array.from({length}, (_, i) => palette[i % palette.length]);
         }
 
-        // Pagination
-        const rowsPerPage = 10;
-        let currentPage = 1;
+        // Line Chart - Revenue Trend
+        new Chart(document.getElementById('salesTrendChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Revenue',
+                    data: monthlyRevenue,
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79,70,229,0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // allow canvas to respect height
+                plugins: { legend: { display: true } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
 
-        function renderTablePage() {
-            const table = document.getElementById("allInvoicesTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
-                        ? ""
-                        : "none";
-            });
-
-            document.getElementById("pageIndicator").textContent =
-                `Page ${currentPage} of ${totalPages}`;
-            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
-            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
-        }
-
-        function changePage(step) {
-            const table = document.getElementById("allInvoicesTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            currentPage += step;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            renderTablePage();
-        }
-
-        renderTablePage();
-
-
-        // Charts (with empty-data check)
-        function setHiResCanvas(canvas) {
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            return ctx;
-        }
-
-        // Monthly Sales Chart
-        const monthlyCanvas = document.getElementById('monthlySalesChart');
-        if (monthlyCanvas && @monthlyRevenue.Count > 0) {
-            const ctx = setHiResCanvas(monthlyCanvas);
-            const gradient = ctx.createLinearGradient(0, 0, 0, monthlyCanvas.height);
-            gradient.addColorStop(0, 'rgba(79,70,229,0.5)');
-            gradient.addColorStop(1, 'rgba(79,70,229,0)');
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyRevenue.Select(m => m.Month + "/" + m.Year))),
-                    datasets: [{
-                        label: 'Revenue (₱)',
-                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyRevenue.Select(m => m.Revenue))),
-                        borderWidth: 3,
-                        borderColor: '#4f46e5',
-                        backgroundColor: gradient,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: '#4f46e5',
-                        pointHoverBackgroundColor: '#10b981',
-                        pointBorderWidth: 2,
-                        pointHoverBorderWidth: 2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        // Service Type Chart
-        const serviceCanvas = document.getElementById('serviceTypeChart');
-        if (serviceCanvas && @serviceRevenue.Count > 0) {
-            const ctx = setHiResCanvas(serviceCanvas);
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(serviceRevenue.Select(s => s.ServiceType))),
-                    datasets: [{
-                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(serviceRevenue.Select(s => s.Revenue))),
-                        backgroundColor: ['#4f46e5','#10b981','#f59e0b','#ef4444','#6366f1'],
-                        hoverOffset: 15,
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-
+        // Pie Chart - Service Type Revenue
+        new Chart(document.getElementById('serviceTypeChart'), {
+            type: 'pie',
+            data: {
+                labels: serviceTypes,
+                datasets: [{
+                    data: serviceRevenue,
+                    backgroundColor: generateColors(serviceRevenue.length)
+                }]
+            },
+            options: { responsive: true,
+            maintainAspectRatio: false, // allow canvas to respect height
+            plugins: { legend: { position: 'right' } } }
+        });
     </script>
+
+
+    <!--Pagination-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const table = document.getElementById("invoiceTable");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
+            function renderTablePage(page) {
+                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
+                rows.forEach((row, index) => {
+                    row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? "" : "none";
+                });
+                document.getElementById("invoicePageIndicator").textContent = `Page ${page} of ${totalPages}`;
+                document.querySelectorAll(".table-pagination .pg-btn")[0].disabled = page === 1;
+                document.querySelectorAll(".table-pagination .pg-btn")[1].disabled = page === totalPages;
+            }
+
+            window.changeInvoicePage = function(step) {
+                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
+                currentPage += step;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+                renderTablePage(currentPage);
+            }
+
+            renderTablePage(currentPage);
+        });
+    </script>
+
+
+    <!-- Date Filter -->
+    <script>
+        document.getElementById('btnApplyFilter').addEventListener('click', function () {
+            const from = document.getElementById('reportFromDate').value;
+            const to = document.getElementById('reportToDate').value;
+
+            if (!from || !to) {
+                alert('Please select both From and To dates.');
+                return;
+            }
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('fromDate', from);
+            url.searchParams.set('toDate', to);
+            window.location.href = url.toString();
+        });
+    </script>
+
+
+    
+    <!--Export button-->
+    <script>
+        document.getElementById('btnExportPdf').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait, mm units, A4
+            doc.setFont('helvetica'); // Use a standard, readable font
+            doc.setFontSize(10);
+            doc.text("Invoice Report", 10, 15);
+
+            // Add a horizontal line under title
+            doc.setLineWidth(0.5);
+            doc.line(10, 18, 200, 18);
+
+            // Collect all invoice rows
+            const rows = Array.from(document.querySelectorAll('#invoiceTable tbody tr'));
+
+            if (!rows.length) {
+                alert("No invoices to export.");
+                return;
+            }
+
+            // Group rows by month
+            const invoicesByMonth = {};
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const dateIssued = new Date(cells[5].textContent);
+                const monthKey = dateIssued.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                if (!invoicesByMonth[monthKey]) invoicesByMonth[monthKey] = [];
+                invoicesByMonth[monthKey].push([
+                    cells[0].textContent,                // Invoice #
+                    cells[1].textContent,                // Client
+                    cells[2].textContent,                // Service Type
+                    cells[3].textContent.replace('₱','PHP'), // Amount (fix peso sign)
+                    cells[4].textContent,                // Payment Type
+                    cells[5].textContent,                // Date Issued
+                    cells[6].textContent,                // Payment Due
+                    cells[7].textContent                 // Status
+                ]);
+            });
+
+            let startY = 25; // Start below the line
+
+            for (const month in invoicesByMonth) {
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(month, 10, startY);
+                startY += 6;
+
+                doc.autoTable({
+                    startY: startY,
+                    head: [['Invoice #', 'Client', 'Service Type', 'Amount', 'Payment Type', 'Date Issued', 'Payment Due', 'Status']],
+                    body: invoicesByMonth[month],
+                    theme: 'striped', // Clean grid style
+                    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+                    bodyStyles: { fontSize: 8, cellPadding: 3 },
+                    margin: { left: 8, right: 8 },
+                    styles: { overflow: 'linebreak' }, // wrap long text
+                    showHead: 'everyPage', // repeat header on new page
+                    didDrawPage: function (data) {
+                        startY = data.cursor.y + 10; // Update startY after each table
+                    }
+                });
+
+                // Add spacing for next month
+                startY += 5;
+                if (startY > 270) { // Add new page if overflow
+                    doc.addPage();
+                    startY = 20;
+                }
+            }
+
+            doc.save('InvoiceReport.pdf');
+        });
+    </script>
+
+
+    <!--Back Button-->
+    <script>
+        document.getElementById('btnBack').addEventListener('click', function() {
+            window.history.back(); // Goes back to the previous page
+        });
+    </script>
+
 }

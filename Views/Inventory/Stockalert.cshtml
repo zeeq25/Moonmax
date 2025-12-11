@@ -32,6 +32,35 @@
                 <div class="kpi-main">@Model.Count</div>
             </div>
         </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Low Stock Items</div>
+                <div class="kpi-main">@Model.Count(i => i.QuantityInStock <= 10)</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-peso-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Value</div>
+                <div class="kpi-main">₱@Model.Sum(i => i.UnitCost * i.QuantityInStock)</div>
+            </div>
+        </article>
+
+        <article class="dash-card kpi">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-title">Categories</div>
+                <div class="kpi-main">@Model.Select(i => i.Category).Distinct().Count()</div>
+            </div>
+        </article>
     </section>
 
     <!-- TABS -->

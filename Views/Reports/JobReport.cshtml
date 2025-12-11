@@ -1,0 +1,361 @@
+﻿@model Moonmax.ViewModels.JobOrderReportVM
+
+@{
+    ViewData["Title"] = "Job Reports";
+    ViewData["Nav"] = "Reports";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
+}
+
+<div class="page page-reports">
+
+    <!-- HEADER -->
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Job Order Reports</h1>
+            <p class="dash-sub">Generate automated reports and analyze job performance</p>
+
+            <!--Back Button-->
+            <button id="btnBack" class="modern-btn modern-btn-back"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        </div>
+    </header>
+
+    <!-- KPIs -->
+    <section class="section-block">
+        <div class="dash-kpis">
+
+            <!-- TOTAL JOBS -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Total Jobs</div>
+                    <div class="kpi-main">@Model.TotalJobs</div>
+                </div>
+            </article>
+
+            <!-- COMPLETED JOBS -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-check-circle"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Completed</div>
+                    <div class="kpi-main">@Model.CompletedJobs</div>
+                </div>
+            </article>
+
+            <!-- PENDING JOBS -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Pending</div>
+                    <div class="kpi-main">@Model.PendingJobs</div>
+                </div>
+            </article>
+
+            
+            <!-- JOB REVENUE -->
+            <article class="dash-card kpi">
+                <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-title">Job Labor Revenue</div>
+                    <div class="kpi-main">₱@Model.JobRevenue.ToString("N2")</div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- JOB ORDER REPORT -->
+    <section class="section-block">
+        <h2 class="section-title">Job Order Reports</h2>
+
+        <!-- FILTERS -->
+        <section class="section-block filters-export">
+            <div class="filters modern-filters" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+
+                <!-- DATE RANGE -->
+                <div class="date-range" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <label>From:</label>
+                    <input type="date" id="reportFromDate"
+                           value="@DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd")"
+                           class="modern-input" />
+
+                    <label>To:</label>
+                    <input type="date" id="reportToDate"
+                           value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                           class="modern-input" />
+                </div>
+
+                <!-- STATUS + EXPORT (aligned together) -->
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <!-- STATUS DROPDOWN -->
+                    <div class="status-filter">
+                        <label>Status:</label>
+                        <select id="jobStatusFilter" class="modern-input">
+                            <option value="">All</option>
+                            @foreach (var status in Model.FiltersStatuses)
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>                   
+                </div>
+
+            </div>
+        </section>
+
+        <!-- JOB ORDER TABLE -->
+        <div class="mm-card table-card">
+            <header class="table-card-header">
+                <h3>Job Order List</h3>
+                <p>Filtered job order details</p>
+            </header>
+
+            @if (Model.JobOrderList != null && Model.JobOrderList.Any())
+            {
+                <div class="table-responsive">
+                    <table id="jobReportsTable" class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Client</th>
+                                <th>Technician</th>
+                                <th>Service</th>
+                                <th>Parts/Items</th> <!-- NEW COLUMN -->
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th>Date Created</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var j in Model.JobOrderList)
+                            {
+                                <tr>
+                                    <td>@j.JobID</td>
+                                    <td>@j.ClientName</td>
+                                    <td>@j.TechnicianName</td>
+                                    <td>@j.ServiceType</td>
+                                    <td>
+                                        @if (j.Parts != null && j.Parts.Any())
+                                        {
+                                            @string.Join(", ", j.Parts)
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                    <td>₱@j.Cost.ToString("N2")</td>                                    
+                                    <td>@j.Status</td>
+                                    <td>@j.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>@(j.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="no-data">No Job Orders found for the selected filters.</p>
+            }
+        </div>
+
+        <!--Pagination Modal-->
+        <div class="job-table-pagination table-pagination" style="text-align:center; margin-bottom: 20px;">
+            <button class="pg-btn" onclick="changeJobPage(-1)">‹</button>
+            <span id="jobReportPageIndicator">Page 1</span>
+            <button class="pg-btn" onclick="changeJobPage(1)">›</button>
+        </div>
+
+
+        <!-- CHARTS -->
+        <div class="reports-row" style="display:flex; flex-wrap:wrap; gap:1rem;">
+            <article class="mm-card chart-card chart-card--wide" style="flex:1 1 400px; min-width:300px;">
+                <header class="chart-card-header">
+                    <h3>Jobs per Service Type</h3>
+                </header>
+                <div class="chart-card-body" style="height:280px; position:relative;">
+                    <canvas id="serviceTypeChart"></canvas>
+                </div>
+            </article>
+
+            <article class="mm-card chart-card" style="flex:1 1 400px; min-width:300px;">
+                <header class="chart-card-header">
+                    <h3>Jobs Over Time</h3>
+                </header>
+                <div class="chart-card-body" style="height:280px; position:relative;">
+                    <canvas id="jobDateChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+
+        
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartServiceTypes));
+        const serviceCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartServiceCounts));
+        const chartDates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartDates));
+        const chartDateCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartDateCounts));
+
+        function generateColors(length) {
+            const palette = ['#4F46E5','#10B981','#FACC15','#EF4444','#1F2937','#8B5CF6','#F472B6','#0EA5E9'];
+            return Array.from({length}, (_, i) => palette[i % palette.length]);
+        }
+
+        function createChart(ctxId, type, labels, data) {
+            const canvas = document.getElementById(ctxId);
+            if (!canvas || !labels.length) return;
+
+            new Chart(canvas, {
+                type,
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: generateColors(labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // <-- prevents vertical stretching
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: type === 'bar' ? {
+                        y: { beginAtZero: true }
+                    } : {}
+                }
+            });
+        }
+
+
+        createChart('serviceTypeChart', 'bar', serviceTypes, serviceCounts);
+        createChart('jobDateChart', 'line', chartDates, chartDateCounts);
+
+        // EXPORT PDF
+        document.getElementById('btnExportPdf').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const table = document.getElementById('jobReportsTable');
+            if (!table) return alert("No data to export.");
+
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            pdf.text("Job Order Report", 40, 40);
+
+            pdf.autoTable({ html: '#jobReportsTable', startY: 60 });
+            pdf.save(`JobOrderReport_${Date.now()}.pdf`);
+        });
+
+        // Back Button
+        document.getElementById('btnBack').addEventListener('click', () => {
+            window.history.back();
+        });
+    </script>
+
+
+    <!-- Pagination -->
+    <script>
+                
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const table = document.getElementById("jobReportsTable");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
+            function renderTablePage(page) {
+                // Apply filter values first
+                const fromDate = document.getElementById('reportFromDate').value;
+                const toDate = document.getElementById('reportToDate').value;
+                const statusFilter = document.getElementById('jobStatusFilter').value;
+
+                const filteredRows = rows.filter(row => {
+                    const cells = row.querySelectorAll('td');
+                    const dateCreated = new Date(cells[7].textContent); // Date Created
+                    const status = cells[6].textContent.trim(); // Status
+                    const from = fromDate ? new Date(fromDate) : null;
+                    const to = toDate ? new Date(toDate) : null;
+
+                    const inDateRange = (!from || dateCreated >= from) && (!to || dateCreated <= to);
+                    const statusMatch = !statusFilter || status === statusFilter;
+
+                    return inDateRange && statusMatch;
+                });
+
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                // Hide all rows first
+                rows.forEach(row => row.style.display = "none");
+
+                // Show current page rows
+                filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).forEach(row => row.style.display = "");
+
+                // Update page indicator
+                const indicator = document.getElementById("jobReportPageIndicator");
+                if(indicator) indicator.textContent = `Page ${page} of ${totalPages}`;
+
+                // Enable/disable prev & next buttons
+                const buttons = document.querySelectorAll(".job-table-pagination .pg-btn");
+                if(buttons.length === 2){
+                    buttons[0].disabled = page === 1;
+                    buttons[1].disabled = page === totalPages;
+                }
+            }
+
+            window.changeJobPage = function(step) {
+                const indicator = document.getElementById("jobReportPageIndicator");
+                currentPage += step;
+                if(currentPage < 1) currentPage = 1;
+                // calculate total pages after filtering
+                const fromDate = document.getElementById('reportFromDate').value;
+                const toDate = document.getElementById('reportToDate').value;
+                const statusFilter = document.getElementById('jobStatusFilter').value;
+                const filteredRows = rows.filter(row => {
+                    const cells = row.querySelectorAll('td');
+                    const dateCreated = new Date(cells[7].textContent);
+                    const status = cells[6].textContent.trim();
+                    const from = fromDate ? new Date(fromDate) : null;
+                    const to = toDate ? new Date(toDate) : null;
+                    const inDateRange = (!from || dateCreated >= from) && (!to || dateCreated <= to);
+                    const statusMatch = !statusFilter || status === statusFilter;
+                    return inDateRange && statusMatch;
+                });
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+                if(currentPage > totalPages) currentPage = totalPages;
+
+                renderTablePage(currentPage);
+            }
+
+            // Re-render table when filters change
+            document.getElementById('reportFromDate').addEventListener('change', () => { currentPage = 1; renderTablePage(currentPage); });
+            document.getElementById('reportToDate').addEventListener('change', () => { currentPage = 1; renderTablePage(currentPage); });
+            document.getElementById('jobStatusFilter').addEventListener('change', () => { currentPage = 1; renderTablePage(currentPage); });
+
+            // Initial render
+            renderTablePage(currentPage);
+        });
+    </script>
+
+    <!--Back Button-->
+    <script>
+        document.getElementById('btnBack').addEventListener('click', function() {
+            window.history.back(); // Goes back to the previous page
+        });
+    </script>
+
+    
+
+}
