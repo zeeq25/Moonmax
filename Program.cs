@@ -58,6 +58,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+
 // 7) Middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();

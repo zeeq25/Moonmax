@@ -51,22 +51,10 @@
         </article>
 
         <article class="dash-card kpi">
-            <div class="kpi-icon"><i class="fa-solid fa-calendar-plus"></i></div>
+            <div class="kpi-icon"><i class="fa-solid fa-tools"></i></div>
             <div class="kpi-content">
-                <div class="kpi-title">Recently Added</div>
-                <div class="kpi-main">
-                    @{
-                        var recentUserKpi = Model.Users.OrderByDescending(u => u.CreatedAt).FirstOrDefault();
-                        if (recentUserKpi != null)
-                        {
-                            <text>@recentUserKpi.FirstName @recentUserKpi.LastName <br />@recentUserKpi.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</text>
-                        }
-                        else
-                        {
-                            <text>N/A</text>
-                        }
-                    }
-                </div>
+                <div class="kpi-title">Technicians</div>
+                <div class="kpi-main">@Model.Technicians.Count()</div>
             </div>
         </article>
     </section>
@@ -201,6 +189,85 @@
         </div>
 
     </section>
+
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Create" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">First Name</label>
+                            <input asp-for="CreateModel.FirstName" class="form-control" />
+                            <span asp-validation-for="CreateModel.FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input asp-for="CreateModel.LastName" class="form-control" />
+                            <span asp-validation-for="CreateModel.LastName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input asp-for="CreateModel.Email" type="email" class="form-control" />
+                            <span asp-validation-for="CreateModel.Email" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input asp-for="CreateModel.Password" type="password" class="form-control" />
+                            <span asp-validation-for="CreateModel.Password" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select asp-for="CreateModel.Role" class="form-select">
+                                <option>Admin</option>
+                                <option>Employee</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input asp-for="CreateModel.IsActive" class="form-check-input" />
+                            <label class="form-check-label">Active</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Add User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Add Technician Modal -->
+    <div class="modal fade" id="addTechnicianModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="CreateTechnician" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Technician</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Technician Name</label>
+                            <input asp-for="CreateTechnicianModel.Name" class="form-control" />
+                            <span asp-validation-for="CreateTechnicianModel.Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Add Technician</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
 
 @section Scripts {

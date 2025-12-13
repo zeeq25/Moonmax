@@ -115,6 +115,13 @@ namespace Moonmax.Controllers
             user.Role = model.Role;
             user.IsActive = model.IsActive;
 
+            // Update password only if entered
+            if (!string.IsNullOrWhiteSpace(model.Password))
+            {
+                var hasher = new PasswordHasher<User>();
+                user.PasswordHash = hasher.HashPassword(user, model.Password);
+            }
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
