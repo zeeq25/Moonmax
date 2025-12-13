@@ -64,7 +64,7 @@
                 <i class="fa-solid fa-truck-moving"></i>
             </div>
             <div>
-                <div class="kpi-title">In Transit</div>
+                <div class="kpi-title">Delivered POs</div>
                 <div class="kpi-main">@Model.Count(po => po.Status.ToLower() == "intransit")</div>
             </div>
         </article>
@@ -105,88 +105,59 @@
     <!-- TABLE -->
     <section class="proc-table-wrap">
         <div class="mm-card">
-            <table class="mm-table" id="poTable">
-                <thead>
-                    <tr>
-                        <th>PO Number</th>
-                        <th>Supplier</th>
-                        <th>Items</th>
-                        <th>Total Amount</th>
-                        <th>Date Created</th>
-                        <th>Expected Delivery</th>
-                        <th>Status</th>
-                        <th class="col-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var po in Model)
-                    {
+            <!-- Add this wrapper -->
+            <div class="table-responsive">
+                <table class="mm-table" id="poTable">
+                    <thead>
                         <tr>
-                            <td>@po.PurchaseOrderID</td>
-                            <td>@po.Supplier?.SupplierName</td>
-                            <td>
-                                @string.Join(", ", po.Items.Select(i => $"{i.ProductName} ({i.Quantity})"))
+                            <th>PO Number</th>
+                            <th>Supplier</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Date Created</th>
+                            <th>Expected Delivery</th>
+                            <th>Status</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var po in Model)
+                        {
+                            <tr>
+                                <td>@po.PurchaseOrderID</td>
+                                <td>@po.Supplier?.SupplierName</td>
+                                <td>
+                                    @string.Join(", ", po.Items.Select(i => $"{i.ProductName} ({i.Quantity})"))
+                                </td>
+                                <td>₱@po.Items.Sum(i => i.Quantity * i.UnitPrice)</td>
+                                <td>@po.DateCreated.ToString("yyyy-MM-dd")</td>
+                                <td>@po.ExpectedDelivery.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <span class="badge @(po.Status.ToLower() == "pending" ? "status-pending" :
+                                                                                                                             po.Status.ToLower() == "delivered" ? "status-delivered" :
+                                                                                                                             "status-intransit")">@po.Status</span>
                             </td>
-                            <td>₱@po.Items.Sum(i => i.Quantity * i.UnitPrice)</td>
-                            <td>@po.DateCreated.ToString("yyyy-MM-dd")</td>
-                            <td>@po.ExpectedDelivery.ToString("yyyy-MM-dd")</td>
-                            <td>
-                                <span class="badge @(po.Status.ToLower() == "pending" ? "status-pending" :
-                                                                                           po.Status.ToLower() == "delivered" ? "status-delivered" :
-                                                                                           "status-intransit")">@po.Status</span>
-                        </td>
-                        <td class="col-actions">
-                            <div class="proc-actions">
-
-                                    <!-- View button -->
-                                    <button class="icon-btn-table btn-view"
-                                            data-id="@po.PurchaseOrderID"
-                                            title="View">
+                            <td class="col-actions">
+                                <div class="proc-actions">
+                                    <button class="icon-btn-table btn-view" data-id="@po.PurchaseOrderID" title="View">
                                         <i class="fa-regular fa-eye"></i>
                                     </button>
-
-                                    
-
-                                    <!-- Receive button -->
-                                    <form asp-action="Receive"
-                                          asp-controller="Procurement"
-                                          method="post"
-                                          style="display:inline">
+                                    <form asp-action="Receive" asp-controller="Procurement" method="post" class="receive-po-form" style="display:inline">
                                         <input type="hidden" name="id" value="@po.PurchaseOrderID" />
-                                        <button type="submit" class="icon-btn-table btn-receive"
-                                                title="Receive"
-                                                @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
+                                        <button type="submit" class="icon-btn-table btn-receive" title="Receive" @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
                                             <i class="fa-solid fa-check"></i>
                                         </button>
                                     </form>
-
-
-
-                                    <!-- Cancel button 
-                                    <form asp-action="Cancel"
-                                          asp-controller="Procurement"
-                                          method="post"
-                                          style="display:inline">
-                                        <input type="hidden" name="id" value="@po.PurchaseOrderID" />
-                                        <button type="submit"
-                                                class="icon-btn-table btn-cancel"
-                                                title="Cancel"
-                                                @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
-                                            <i class="fa-regular fa-circle-xmark"></i>
-                                        </button>
-                                    </form>-->
-
-
-
                                 </div>
                             </td>
-
-                    </tr>
-                                        }
-                </tbody>
-            </table>
+                        </tr>
+                                                }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
+
 
     <!-- PAGINATION -->
     <div class="table-pagination">
@@ -208,6 +179,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -300,4 +273,35 @@
         renderTablePage();
 
     </script>
+
+
+    <!-- Confirmation Modal -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.querySelectorAll('.receive-po-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault(); // STOP immediate submit
+
+                    Swal.fire({
+                        title: 'Receive Purchase Order?',
+                        text: 'This action will mark the purchase order as RECEIVED.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Receive',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit(); // ✅ REAL submit only here
+                        }
+                    });
+                });
+            });
+
+        });
+    </script>
+
 }

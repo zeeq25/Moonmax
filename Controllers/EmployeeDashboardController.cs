@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 [Authorize(Roles = "Employee")] // optional if using Claims-based authorization
 public class EmployeeDashboardController : Controller
 {
+
+
     // GET: EmployeeDashboard
     public IActionResult Index()
     {

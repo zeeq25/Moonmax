@@ -65,6 +65,7 @@ else
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.13/dist/jquery.validate.unobtrusive.min.js"></script>
 
+<!--Drop down toggle for user-->
 <script>
     // User dropdown toggle for topbar
     document.addEventListener("DOMContentLoaded", function () {
@@ -93,6 +94,25 @@ else
         });
     });
 </script>
+
+
+<!--Hamburger menu?-->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btnSidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (!btn || !sidebar) return;
+
+        btn.addEventListener('click', function () {
+            sidebar.classList.toggle('collapsed'); // toggle collapsed class
+            btn.classList.toggle('active');        // optional: animate hamburger
+        });
+    });
+</script>
+
+
+
 
 @RenderSection("Scripts", required: false)
 </body>

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
+
+    [Authorize]
     public class JobOrdersController : Controller
     {
         private readonly AppDbContext _db;
@@ -63,7 +66,12 @@ namespace Moonmax.Controllers
                 PendingJobs = await _db.JobOrders.CountAsync(j => j.Status == "Pending"),
                 InProgressJobs = await _db.JobOrders.CountAsync(j => j.Status == "In Progress"),
                 CompletedJobs = await _db.JobOrders.CountAsync(j => j.Status == "Completed"),
-                TotalRevenue = await _db.JobOrders.SumAsync(j => j.Cost),
+
+                // Only sum Completed jobs
+                TotalRevenue = await _db.JobOrders
+                .Where(j => j.Status == "Completed")
+                .SumAsync(j => j.Cost),
+
                 JobOrders = jobOrders.Select(j => new JobOrderListingVM
                 {
                     JobID = j.JobID,

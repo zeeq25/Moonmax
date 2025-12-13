@@ -34,31 +34,42 @@
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
             <div class="kpi-content">
-                <div class="kpi-title">Total Sales (Oct)</div>
-                <div class="kpi-main">₱284,500</div>
+                <div class="kpi-title">Total Sales</div>
+                <div class="kpi-main">
+                    @Model.Sum(c => c.TotalRevenue + c.Outstanding).ToString("C", new System.Globalization.CultureInfo("en-PH"))
+                </div>
             </div>
         </article>
+
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-money-bill-1-wave"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Paid Invoices</div>
-                <div class="kpi-main">₱92,000</div>
+                <div class="kpi-main">
+                    @Model.Sum(c => c.TotalRevenue).ToString("C", new System.Globalization.CultureInfo("en-PH"))
+                </div>
             </div>
         </article>
+
+
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Pending PDCs</div>
-                <div class="kpi-main">₱20,500</div>
+                <div class="kpi-main">
+                    @Model.Sum(c => c.Outstanding).ToString("C", new System.Globalization.CultureInfo("en-PH"))
+                </div>
             </div>
         </article>
+
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-user-group"></i></div>
             <div class="kpi-content">
-                <div class="kpi-title">Active Customers</div>
+                <div class="kpi-title">Total Customers</div>
                 <div class="kpi-main">@Model.Count()</div>
             </div>
         </article>
+
     </section>
 
     <!-- TABS -->

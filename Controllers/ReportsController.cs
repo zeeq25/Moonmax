@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
@@ -8,6 +9,8 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Moonmax.Controllers
 {
+
+    [Authorize]
     public class ReportsController : Controller
     {
         private readonly AppDbContext _context;

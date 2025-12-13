@@ -47,6 +47,7 @@ namespace Moonmax.Controllers
                     Status = s.Status
                 }).ToList();
 
+
             return View(suppliers);
         }
 

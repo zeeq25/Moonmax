@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
@@ -11,6 +12,8 @@ using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
+
+    [Authorize]
     public class InventoryController : Controller
     {
         private readonly AppDbContext _db;

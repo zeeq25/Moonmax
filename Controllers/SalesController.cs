@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
+
+    [Authorize]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
@@ -118,11 +121,31 @@ namespace Moonmax.Controllers
                 })
                 .ToListAsync();
 
+            // Calculate KPIs
+            var totalSales = invoices.Sum(i => i.Amount);
+            var paidInvoices = invoices
+                .Where(i => i.Status.ToLower() == "paid")
+                .Sum(i => i.Amount);
+            var pendingPDCs = invoices
+                .Where(i => i.Status.ToLower() == "pending")
+                .Sum(i => i.Amount);
+            var activeCustomers = invoices
+                .Select(i => i.ClientName)  // pick unique client names
+                .Distinct()
+                .Count();
+
+
             var vm = new SalesIndexViewModel
             {
                 Invoices = invoices,
-                InProgressJobs = inProgressJobs
+                InProgressJobs = inProgressJobs,
+                TotalSales = totalSales,
+                PaidInvoices = paidInvoices,
+                PendingPDCs = pendingPDCs,
+                ActiveCustomers = activeCustomers
             };
+
+
 
             return View(vm);
         }
@@ -140,8 +163,14 @@ namespace Moonmax.Controllers
                     Phone = c.ContactNumber,
                     PaymentType = c.PaymentType,
                     TotalTransactions = c.Invoices.Count(),
-                    TotalRevenue = c.Invoices.Sum(i => i.Amount),
-                    Outstanding = c.Invoices.Where(i => i.Status != "Paid").Sum(i => i.Amount)
+
+                    TotalRevenue = c.Invoices
+                    .Where(i => i.Status == "Paid")
+                    .Sum(i => i.Amount),
+
+                    Outstanding = c.Invoices
+                    .Where(i => i.Status != "Paid")
+                    .Sum(i => i.Amount)
                 })
                 .ToListAsync();
 
@@ -301,14 +330,25 @@ namespace Moonmax.Controllers
         public async Task<IActionResult> ViewInvoicePartial(int id)
         {
             var invoice = await _context.Invoices
-                                   .Include(i => i.Client)
-                                   .FirstOrDefaultAsync(i => i.InvoiceID == id);
+                .Include(i => i.Client)
+
+                // JobOrder → Technician
+                .Include(i => i.JobOrder)
+                    .ThenInclude(j => j.Technician)
+
+                // JobOrder → JobParts → Inventory
+                .Include(i => i.JobOrder)
+                    .ThenInclude(j => j.JobParts)
+                        .ThenInclude(p => p.Inventory)
+
+                .FirstOrDefaultAsync(i => i.InvoiceID == id);
 
             if (invoice == null)
                 return NotFound();
 
             return PartialView("_ViewInvoicePartial", invoice);
         }
+
 
 
     }

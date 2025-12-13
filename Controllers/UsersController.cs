@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
@@ -7,6 +8,8 @@ using Moonmax.ViewModels;
 
 namespace Moonmax.Controllers
 {
+
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
@@ -81,7 +84,7 @@ namespace Moonmax.Controllers
                 UserID = user.UserID,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email,
+                Email = user.Email,               
                 Role = user.Role,
                 IsActive = user.IsActive
             };

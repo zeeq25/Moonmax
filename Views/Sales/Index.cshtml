@@ -27,32 +27,33 @@
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
             <div class="kpi-content">
-                <div class="kpi-title">Total Sales (Oct)</div>
-                <div class="kpi-main">₱284,500</div>
+                <div class="kpi-title">Total Sales</div>
+                <div class="kpi-main">₱@Model.TotalSales.ToString("N2")</div>
             </div>
         </article>
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-money-bill-1-wave"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Paid Invoices</div>
-                <div class="kpi-main">₱92,000</div>
+                <div class="kpi-main">₱@Model.PaidInvoices.ToString("N2")</div>
             </div>
         </article>
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Pending PDCs</div>
-                <div class="kpi-main">₱20,500</div>
+                <div class="kpi-main">₱@Model.PendingPDCs.ToString("N2")</div>
             </div>
         </article>
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-user-group"></i></div>
             <div class="kpi-content">
                 <div class="kpi-title">Active Customers</div>
-                <div class="kpi-main">10</div>
+                <div class="kpi-main">@Model.ActiveCustomers</div>
             </div>
         </article>
     </section>
+
 
 
     <!-- TABS -->
@@ -158,8 +159,8 @@
                             <td>@(invoice.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
                             <td>
                                 <span class="status @(invoice.Status.ToLower() == "pending" ? "status-pending" :
-                                                                                                           invoice.Status.ToLower() == "paid" ? "status-paid" :
-                                                                                                           "status-warn")">
+                                      invoice.Status.ToLower() == "paid" ? "status-paid" :
+                                                   "status-warn")">
                                 @invoice.Status
                             </span>
                         </td>
@@ -169,13 +170,20 @@
                                         data-invoice-id="@invoice.InvoiceID">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
-                                <form asp-action="ReceivePayment" asp-route-id="@invoice.InvoiceID" method="post" style="display:inline;">
-                                    <button type="submit" class="icon-btn-table btn-receive"
-                                            title="Receive payment"
-                                            @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
-                                        <i class="fa-solid fa-check"></i>
-                                    </button>
-                                </form>
+                                <form asp-action="ReceivePayment"
+                                      asp-route-id="@invoice.InvoiceID"
+                                      method="post"
+                                      class="receive-payment-form"
+                                      style="display:inline;">
+
+                                        <button type="submit"
+                                                class="icon-btn-table btn-receive"
+                                                title="Receive payment"
+                                                @(invoice.Status.ToLower() == "paid" ? "disabled" : "")>
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+
                             </div>
                         </td>
                     </tr>
@@ -204,30 +212,20 @@
 </div>
 
 
+
+
+
 @section Scripts {
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
+    <!-- View Modal Pop up -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // DISABLE RECEIVE PAYMENT BUTTONS & UPDATE STATUS
-            document.querySelectorAll('.btn-receive').forEach(button => {
-                button.addEventListener('click', function (e) {
-                    setTimeout(() => {
-                        button.disabled = true;
-                        const cancelBtn = button.closest('tr').querySelector('.btn-cancel');
-                        if (cancelBtn) cancelBtn.disabled = true;
-                        const statusEl = button.closest('tr').querySelector('.status');
-                        if (statusEl) {
-                            statusEl.textContent = 'Paid';
-                            statusEl.className = 'status status-paid';
-                        }
-                    }, 10);
-                });
-            });
 
-            // Modal View Popup
             const modal = document.getElementById("invoiceModal");
             const modalBody = document.getElementById("invoiceModalBody");
             const closeBtn = modal.querySelector(".close");
@@ -235,6 +233,7 @@
             document.querySelectorAll('.btn-view').forEach(button => {
                 button.addEventListener('click', function () {
                     const invoiceId = this.dataset.invoiceId;
+
                     fetch(`/Sales/ViewInvoicePartial/${invoiceId}`)
                         .then(response => response.text())
                         .then(html => {
@@ -247,11 +246,16 @@
             closeBtn.onclick = function () {
                 modal.style.display = "none";
             };
+
             window.onclick = function (event) {
-                if (event.target == modal) modal.style.display = "none";
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
             };
+
         });
     </script>
+
 
     <script>
         // INVOICE PAGINATION WITH SEARCH & FILTER
@@ -430,5 +434,49 @@
             renderJobTablePage();
         });
     </script>
+
+    <!-- Confirmation Modal -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.querySelectorAll('.receive-payment-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault(); // STOP immediate submit
+
+                    const row = form.closest('tr');
+                    const invoiceNo = row?.children[0]?.textContent ?? '';
+                    const client = row?.children[1]?.textContent ?? '';
+                    const amount = row?.children[3]?.textContent ?? '';
+
+                    Swal.fire({
+                        title: 'Receive Payment?',
+                        html: `
+                            <div style="text-align:left">
+                                <p><strong>Invoice:</strong> ${invoiceNo}</p>
+                                <p><strong>Client:</strong> ${client}</p>
+                                <p><strong>Amount:</strong> ${amount}</p>
+                                <hr>
+                                <p>This invoice will be marked as <b>PAID</b>.</p>
+                            </div>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Receive Payment',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit(); // ✅ REAL submit only here
+                        }
+                    });
+                });
+            });
+
+        });
+    </script>
+
+
 }
 

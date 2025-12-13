@@ -1,20 +1,94 @@
 ﻿@model Moonmax.Models.Invoice
 
-@{
-    ViewData["Title"] = "View Invoice";
-    ViewData["Nav"] = "Sales";
-    ViewData["AppShell"] = true;
-}
+<div class="invoice-view">
 
-<h1>Invoice @Model.InvoiceNumber</h1>
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-1">Invoice</h4>
+            <small class="text-muted">@Model.InvoiceNumber</small>
+        </div>
+        <span class="badge bg-secondary">
+            @Model.Status
+        </span>
+    </div>
 
-<div>
-    <p><strong>Client:</strong> @Model.Client.Name</p>
-    <p><strong>Job ID:</strong> @Model.JobID</p>
-    <p><strong>Amount:</strong> @Model.Amount.ToString("C")</p>
-    <p><strong>Status:</strong> @Model.Status</p>
-    <p><strong>Date Issued:</strong> @Model.DateIssued.ToString("yyyy-MM-dd")</p>
-    <p><strong>Due Date:</strong> @(Model.DueDate?.ToString("yyyy-MM-dd") ?? "-")</p>
+    <hr />
+
+    <!-- ================= CLIENT & JOB INFO ================= -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p><strong>Client:</strong> @Model.Client.Name</p>
+            <p><strong>Contact:</strong> @Model.Client.ContactNumber</p>
+            <p><strong>Payment Type:</strong> @(Model.PaymentType ?? "-")</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <p><strong>Job ID:</strong> @Model.JobID</p>
+            <p><strong>Date Issued:</strong> @Model.DateIssued.ToString("yyyy-MM-dd")</p>
+            <p><strong>Due Date:</strong> @(Model.DueDate?.ToString("yyyy-MM-dd") ?? "-")</p>
+        </div>
+    </div>
+
+    <!-- ================= SERVICE INFO ================= -->
+    <div class="mb-3">
+        <p><strong>Service Type:</strong> @Model.JobOrder.ServiceType</p>
+        <p><strong>Technician:</strong> @Model.JobOrder.Technician?.Name</p>
+    </div>
+
+    <hr />
+
+    <!-- ================= JOB PARTS ================= -->
+    <h6 class="mb-2">Job Parts</h6>
+
+    @if (Model.JobOrder?.JobParts != null && Model.JobOrder.JobParts.Any())
+    {
+        <table class="table table-sm table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Part</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit Cost</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var part in Model.JobOrder.JobParts)
+                {
+                    <tr>
+                        <td>@part.Inventory.PartName</td>
+                        <td class="text-center">@part.Quantity</td>
+                        <td class="text-end">@part.UnitCost.ToString("C")</td>
+                        <td class="text-end">@part.TotalCost.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted fst-italic">No parts were added to this job.</p>
+    }
+
+    <!-- ================= COST SUMMARY ================= -->
+    <div class="row justify-content-end mt-3">
+        <div class="col-md-6">
+            <table class="table table-sm">
+                <tr>
+                    <th>Labor Cost</th>
+                    <td class="text-end">@Model.JobOrder.Cost.ToString("C")</td>
+                </tr>
+                <tr>
+                    <th>Parts Total</th>
+                    <td class="text-end">
+                        @Model.JobOrder.JobParts.Sum(p => p.TotalCost).ToString("C")
+                    </td>
+                </tr>
+                <tr class="table-active">
+                    <th>Total Amount</th>
+                    <th class="text-end">@Model.Amount.ToString("C")</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+
 </div>
-
-

@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.ViewModels;
 using System;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 
+[Authorize]
 public class DashboardController : Controller
 {
     private readonly AppDbContext _db;

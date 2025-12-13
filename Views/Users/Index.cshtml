@@ -71,213 +71,137 @@
         </article>
     </section>
 
-    <!-- MAIN GRID: USERS TABLE + RECENTLY ADDED -->
+    <!-- MAIN GRID -->
     <section class="dash-main-grid row mt-4 g-3">
-        <!-- USERS TABLE PANEL -->
-        <div class="col-12 col-lg-8">
-            <article class="panel-card activity-card">
-                <header class="panel-card-header d-flex justify-content-between align-items-center">
-                    <h2>All Users</h2>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        Add New User
-                    </button>
-                </header>
 
+        <div class="col-12 d-flex flex-column flex-lg-row gap-4">
 
-                <div class="table-responsive">
-                    <table class="table table-striped table-custom">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Active</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var user in Model.Users)
-                            {
+            <!-- LEFT PANEL: Users + Technicians (8 cols on lg) -->
+            <div class="flex-grow-1 col-lg-8 d-flex flex-column gap-4">
+
+                <!-- USERS TABLE PANEL -->
+                <article class="panel-card activity-card">
+                    <header class="panel-card-header d-flex justify-content-between align-items-center">
+                        <h2>All Users</h2>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            Add New User
+                        </button>
+                    </header>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-custom">
+                            <thead>
                                 <tr>
-                                    <td>@user.UserID</td>
-                                    <td>@user.FirstName @user.LastName</td>
-                                    <td>@user.Email</td>
-                                    <td>@user.Role</td>
-                                    <td>@(user.IsActive ? "Yes" : "No")</td>
-                                    <td>@user.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
-                                    <td>
-                                        <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-primary">Edit</a>
-                                        <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger">Delete</a>
-                                    </td>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Active</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.Users)
+                                {
+                                    <tr>
+                                        <td>@user.UserID</td>
+                                        <td>@user.FirstName @user.LastName</td>
+                                        <td>@user.Email</td>
+                                        <td>@user.Role</td>
+                                        <td>@(user.IsActive ? "Yes" : "No")</td>
+                                        <td>@user.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                        <td>
+                                            <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-primary">Edit</a>
+                                            <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <!-- TECHNICIANS TABLE PANEL -->
+                <article class="panel-card activity-card">
+                    <header class="panel-card-header d-flex justify-content-between align-items-center">
+                        <h2>All Technicians</h2>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTechnicianModal">
+                            Add New Technician
+                        </button>
+                    </header>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-custom">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Assigned Jobs</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tech in Model.Technicians)
+                                {
+                                    <tr>
+                                        <td>@tech.TechnicianID</td>
+                                        <td>@tech.Name</td>
+                                        <td>@tech.JobOrders.Count()</td>
+                                        <td>
+                                            <a asp-action="EditTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-primary">Edit</a>
+                                            <a asp-action="DeleteTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-danger">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+            </div>
+
+            <!-- RIGHT PANEL: Recently Added Users (4 cols on lg) -->
+            <div class="col-lg-4 flex-shrink-0">
+                <article class="panel-card activity-card">
+                    <header class="panel-card-header">
+                        <h2>Recently Added</h2>
+                    </header>
+
+                    <ul class="activity-list">
+                        @{
+                            var recentTableUser = Model.Users.OrderByDescending(u => u.CreatedAt).Take(5).ToList();
+                            if (recentTableUser.Any())
+                            {
+                                foreach (var ru in recentTableUser)
+                                {
+                                    <li class="activity-item">
+                                        <div class="activity-icon icon-blue">
+                                            <i class="fa-solid fa-user-plus"></i>
+                                        </div>
+                                        <div class="activity-body">
+                                            <div class="activity-title">@ru.FirstName @ru.LastName</div>
+                                            <div class="activity-meta">@ru.Email</div>
+                                        </div>
+                                        <div class="activity-time">@ru.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</div>
+                                    </li>
+                                }
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-        </div>
-
-        <!-- RECENTLY ADDED USERS -->
-        <div class="col-12 col-lg-4">
-            <article class="panel-card activity-card">
-                <header class="panel-card-header">
-                    <h2>Recently Added</h2>
-                </header>
-
-                <ul class="activity-list">
-                    @{
-                        var recentTableUser = Model.Users.OrderByDescending(u => u.CreatedAt).Take(5).ToList();
-                        if (recentTableUser.Any())
-                        {
-                            foreach (var ru in recentTableUser)
+                            else
                             {
                                 <li class="activity-item">
-                                    <div class="activity-icon icon-blue">
-                                        <i class="fa-solid fa-user-plus"></i>
-                                    </div>
                                     <div class="activity-body">
-                                        <div class="activity-title">@ru.FirstName @ru.LastName</div>
-                                        <div class="activity-meta">@ru.Email</div>
+                                        <div class="activity-title">No users found</div>
                                     </div>
-                                    <div class="activity-time">@ru.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</div>
                                 </li>
                             }
                         }
-                        else
-                        {
-                            <li class="activity-item">
-                                <div class="activity-body">
-                                    <div class="activity-title">No users found</div>
-                                </div>
-                            </li>
-                        }
-                    }
-                </ul>
-            </article>
+                    </ul>
+                </article>
+            </div>
+
         </div>
+
     </section>
 
-
-    <!-- TECHNICIANS TABLE PANEL -->
-    <div class="col-12 col-lg-8 mt-5">
-        <article class="panel-card activity-card">
-            <header class="panel-card-header d-flex justify-content-between align-items-center">
-                <h2>All Technicians</h2>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTechnicianModal">
-                    Add New Technician
-                </button>
-            </header>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-custom">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Assigned Jobs</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tech in Model.Technicians)
-                        {
-                            <tr>
-                                <td>@tech.TechnicianID</td>
-                                <td>@tech.Name</td>
-                                <td>@tech.JobOrders.Count()</td>
-                                <td>
-                                    <a asp-action="EditTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-primary">Edit</a>
-                                    <a asp-action="DeleteTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-danger">Delete</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </article>
-    </div>
-
-    <!-- CREATE TECHNICIAN MODAL -->
-    <div class="modal fade" id="addTechnicianModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form asp-action="CreateTechnician" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Technician</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Technician Name</label>
-                            <input asp-for="CreateTechnicianModel.Name" class="form-control" />
-                            <span asp-validation-for="CreateTechnicianModel.Name" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Create Technician</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- CREATE USER MODAL -->
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form asp-action="Create" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">First Name</label>
-                            <input asp-for="CreateModel.FirstName" class="form-control" />
-                            <span asp-validation-for="CreateModel.FirstName" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Last Name</label>
-                            <input asp-for="CreateModel.LastName" class="form-control" />
-                            <span asp-validation-for="CreateModel.LastName" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input asp-for="CreateModel.Email" type="email" class="form-control" />
-                            <span asp-validation-for="CreateModel.Email" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select asp-for="CreateModel.Role" class="form-select">
-                                <option value="Admin">Admin</option>
-                                <option value="Employee">Employee</option>
-                            </select>
-                            <span asp-validation-for="CreateModel.Role" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input asp-for="CreateModel.Password" type="password" class="form-control" />
-                            <span asp-validation-for="CreateModel.Password" class="text-danger"></span>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input asp-for="CreateModel.IsActive" class="form-check-input" />
-                            <label class="form-check-label">Active</label>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Create User</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
