@@ -91,7 +91,7 @@
         </div>
     </section>
 
-    <!-- SEARCH + FILTER / EXPORT -->
+    <!-- SEARCH + FILTER -->
     <section class="inv-filter-bar">
         <div class="inv-search">
             <i class="fa-solid fa-magnifying-glass"></i>
@@ -101,16 +101,11 @@
         </div>
 
         <div class="inv-filter-actions">
-            <button class="btn-chip">
-                <i class="fa-solid fa-filter"></i>
-                <span>Filter</span>
-            </button>
-
-            <button class="btn-chip" id="btnExportPdf">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
-
+            <select id="statusFilter" class="btn-chip">
+                <option value="all">All Status</option>
+                <option value="in-stock">In Stock</option>
+                <option value="low-stock">Low Stock</option>
+            </select>
         </div>
     </section>
 
@@ -187,70 +182,87 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+                document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.querySelector('.inv-search-input');
-            const rows = document.querySelectorAll('.mm-table tbody tr');
+            const statusFilter = document.getElementById('statusFilter');
+            const table = document.getElementById("inventoryTable");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
 
-            function applyInventorySearch() {
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
+            function getFilteredRows() {
                 const term = (searchInput.value || '').trim().toLowerCase();
+                const status = (statusFilter.value || 'all');
 
-                rows.forEach(row => {
+                return rows.filter(row => {
                     const cells = row.querySelectorAll('td');
-
                     const code = cells[0]?.innerText.toLowerCase() || '';
                     const name = cells[1]?.innerText.toLowerCase() || '';
                     const category = cells[2]?.innerText.toLowerCase() || '';
                     const supplier = cells[5]?.innerText.toLowerCase() || '';
+                    const rowStatus = cells[6]?.innerText.toLowerCase() || '';
 
                     const combined = `${code} ${name} ${category} ${supplier}`;
 
-                    row.style.display = term === '' || combined.includes(term) ? '' : 'none';
+                    const matchesSearch = term === '' || combined.includes(term);
+                    const matchesStatus =
+                        status === 'all' ||
+                        (status === 'in-stock' && rowStatus.includes('in stock')) ||
+                        (status === 'low-stock' && rowStatus.includes('low stock'));
+
+                    return matchesSearch && matchesStatus;
                 });
             }
 
-            if (searchInput) {
-                searchInput.addEventListener('input', applyInventorySearch);
+            function renderTablePage() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                rows.forEach(row => row.style.display = 'none');
+
+                filteredRows.forEach((row, index) => {
+                    if (index >= (currentPage - 1) * rowsPerPage &&
+                        index < currentPage * rowsPerPage) {
+                        row.style.display = '';
+                    }
+                });
+
+                document.getElementById("pageIndicator").textContent =
+                    `Page ${currentPage} of ${totalPages}`;
+
+                document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
+                document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
             }
 
-            applyInventorySearch();
-        });
+            function changePage(step) {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
 
-        // Pagination
-        const rowsPerPage = 10;
-        let currentPage = 1;
+                currentPage += step;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
 
-        function renderTablePage() {
-            const table = document.getElementById("inventoryTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
+                renderTablePage();
+            }
 
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
-                        ? ""
-                        : "none";
+            // Hook up search and filter
+            searchInput.addEventListener('input', () => {
+                currentPage = 1;
+                renderTablePage();
             });
 
-            document.getElementById("pageIndicator").textContent =
-                `Page ${currentPage} of ${totalPages}`;
-            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
-            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
-        }
+            statusFilter.addEventListener('change', () => {
+                currentPage = 1;
+                renderTablePage();
+            });
 
-        function changePage(step) {
-            const table = document.getElementById("inventoryTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
+            // Expose pagination globally
+            window.changePage = changePage;
 
-            currentPage += step;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
+            // Initial render
             renderTablePage();
-        }
-
-        renderTablePage();
+        });
 
     </script>
 
@@ -322,6 +334,8 @@
 
     </script>
 
+    
+    
 
 
   

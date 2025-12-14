@@ -8,10 +8,12 @@ namespace Moonmax.Models
         [Key]
         public int JobID { get; set; }
 
-        public int? ClientID { get; set; } // nullable for Walk-In
+        [Required]
+        public int ClientID { get; set; } 
         public Client? Client { get; set; }
 
-        public string? ContactNumber { get; set; } 
+        
+        public string? ContactNumber { get; set; }
 
         [Required]
         public int TechnicianID { get; set; }
@@ -21,6 +23,7 @@ namespace Moonmax.Models
         public string ServiceType { get; set; }
         
         public DateTime CreatedAt { get; set; }
+
 
         public DateTime? DueDate { get; set; }
 

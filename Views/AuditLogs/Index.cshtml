@@ -1,0 +1,62 @@
+﻿@model IEnumerable<Moonmax.Models.AuditLog>
+
+@{
+    ViewData["Title"] = "Audit Logs";
+    ViewData["Nav"] = "AuditLogs";
+    ViewData["AppShell"] = true;
+}
+
+<div class="container mt-4">
+    <h2>Audit Logs</h2>
+
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-secondary btn-sm">All</a>
+        <a asp-action="Index" asp-route-module="User Management" class="btn btn-secondary btn-sm">User Management</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Module</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@(log.User != null ? $"{log.User.FirstName} {log.User.LastName}" : "Unknown")</td>
+                    <td>
+                        <span class="badge bg-@GetActionColor(log.Action)">
+                            @log.Action
+                        </span>
+                    </td>
+                    <td>@log.Module</td>
+                    <td>@log.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No audit logs found.</div>
+    }
+</div>
+
+@functions {
+    string GetActionColor(string action)
+    {
+        return action switch
+        {
+            "CREATE" => "success",
+            "UPDATE" => "warning",
+            "DELETE" => "danger",
+            _ => "secondary"
+        };
+    }
+}

@@ -36,5 +36,7 @@ namespace Moonmax.Models
         // Navigation property
         [ForeignKey("SupplierID")]
         public Supplier Supplier { get; set; }
+
+        public int ReservedQuantity { get; set; } = 0;
     }
 }

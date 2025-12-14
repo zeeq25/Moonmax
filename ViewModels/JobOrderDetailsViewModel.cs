@@ -10,7 +10,7 @@
         public DateTime? DueDate { get; set; }
         public decimal Cost { get; set; }
         public string Status { get; set; }
-        public string Description { get; set; }
+       
 
         // Collection of parts used for this job
         public List<JobOrderPartViewModel> Parts { get; set; } = new List<JobOrderPartViewModel>();

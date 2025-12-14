@@ -68,6 +68,8 @@
         <!-- DATE RANGE & EXPORT -->
         <section class="section-block filters-export">
             <div class="filters modern-filters">
+
+                <!--Date range & filter button-->
                 <div class="date-range">
                     <label>From:</label>
                     <input type="date" id="reportFromDate" value="@ViewBag.FromDate" class="modern-input" />
@@ -77,11 +79,22 @@
                     <button id="btnApplyFilter" class="modern-btn modern-btn-primary" style="margin-left:10px;">
                         <i class="fa-solid fa-filter"></i> Apply Filter
                     </button>
+                </div>
 
+
+
+                <!-- Search + Export -->
+                <div class="filter-actions-group" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                    <input type="text"
+                           id="searchFilter"
+                           class="modern-input"
+                           placeholder="Search part, category, or supplier…" />
+
+                    <button id="btnExportPdf" class="modern-btn modern-btn-primary">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
                 </div>
-                <div class="filter-actions">
-                    <button id="btnExportPdf" class="modern-btn modern-btn-primary"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-                </div>
+                
             </div>
         </section>
 
@@ -200,78 +213,120 @@
                 scales: { y: { beginAtZero: true } }
             }
         );
-
-
-        // PDF Export
-        document.getElementById('btnExportPdf').addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Inventory Report", 10, 10);
-
-            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr')).map(row => {
-                return Array.from(row.cells).map(c => c.innerText);
-            });
-
-            doc.autoTable({
-                head: [['ID','Category','Part','Unit Cost','Qty In Stock','Reorder','Supplier','Created At']],
-                body: rows,
-                theme: 'striped',
-                headStyles: { fillColor: [79,70,229], textColor: 255 },
-                styles: { fontSize: 10 },
-                startY: 20,
-                margin: { left: 10, right: 10 },
-                showHead: 'everyPage'
-            });
-
-            doc.save(`InventoryReport_${Date.now()}.pdf`);
-        });
-
         
     </script>
 
+    <!-- Pagination -->
     <script>
-                document.addEventListener("DOMContentLoaded", function() {
-            const table = document.getElementById("inventoryTable");
-            const rows = Array.from(table.querySelectorAll("tbody tr"));
-            const rowsPerPage = 10; // Change this to show more/less per page
-            let currentPage = 1;
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let allRows = [];
 
-            function renderTablePage(page) {
-                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
-                rows.forEach((row, index) => {
-                    row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? "" : "none";
-                });
-                document.getElementById("pageIndicator").textContent = `Page ${page} of ${totalPages}`;
+        function getVisibleRows() {
+            return allRows.filter(r => r.dataset.filtered === "true");
+        }
 
-                document.getElementById("prevPage").disabled = page === 1;
-                document.getElementById("nextPage").disabled = page === totalPages;
-            }
+        function renderTablePage(page) {
+            const visibleRows = getVisibleRows();
+            const totalPages = Math.max(Math.ceil(visibleRows.length / rowsPerPage), 1);
 
-            document.getElementById("prevPage").addEventListener("click", () => {
+            visibleRows.forEach((row, index) => {
+                row.style.display =
+                    (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage)
+                        ? ""
+                        : "none";
+            });
+
+            document.getElementById("pageIndicator").textContent =
+                `Page ${page} of ${totalPages}`;
+
+            document.getElementById("prevPage").disabled = page === 1;
+            document.getElementById("nextPage").disabled = page === totalPages;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
+
+            // initially all rows are visible
+            allRows.forEach(r => r.dataset.filtered = "true");
+
+            document.getElementById("prevPage").onclick = () => {
                 if (currentPage > 1) {
                     currentPage--;
                     renderTablePage(currentPage);
                 }
-            });
+            };
 
-            document.getElementById("nextPage").addEventListener("click", () => {
-                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderTablePage(currentPage);
-                }
-            });
+            document.getElementById("nextPage").onclick = () => {
+                currentPage++;
+                renderTablePage(currentPage);
+            };
 
-            // Initial render
             renderTablePage(currentPage);
         });
+    </script>
 
+    <!--Search filter-->
+    <script>
+        const searchInput = document.getElementById('searchFilter');
+        const fromDateInput = document.getElementById('reportFromDate');
+        const toDateInput = document.getElementById('reportToDate');
+
+        function updateRowVisibility() {
+            const search = searchInput.value.toLowerCase().trim();
+            const fromDate = fromDateInput.value ? new Date(fromDateInput.value) : null;
+            const toDate = toDateInput.value ? new Date(toDateInput.value) : null;
+            if (toDate) toDate.setHours(23, 59, 59, 999);
+
+            allRows.forEach(row => {
+                const createdAt = new Date(row.cells[7].innerText.trim());
+                const partName = row.cells[2].innerText.toLowerCase();
+                const supplier = row.cells[6].innerText.toLowerCase();
+                const category = row.cells[1].innerText.toLowerCase();
+
+                const matchesDate = (!fromDate || !toDate) || (createdAt >= fromDate && createdAt <= toDate);
+                const matchesSearch = !search || partName.includes(search) || supplier.includes(search) || category.includes(search);
+
+                row.dataset.visible = (matchesDate && matchesSearch) ? "true" : "false";
+            });
+
+            currentPage = 1;
+            renderTablePage(currentPage);
+        }
+
+        searchInput.addEventListener('input', updateRowVisibility);
+        document.getElementById('btnApplyFilter').addEventListener('click', updateRowVisibility);
+
+        function renderTablePage(page) {
+            const visibleRows = allRows.filter(r => r.dataset.visible === "true");
+            const totalPages = Math.max(Math.ceil(visibleRows.length / rowsPerPage), 1);
+
+            allRows.forEach(row => row.style.display = "none"); // hide all rows first
+            visibleRows.slice((page-1)*rowsPerPage, page*rowsPerPage).forEach(row => row.style.display = "");
+
+            document.getElementById("pageIndicator").textContent = `Page ${page} of ${totalPages}`;
+            document.getElementById("prevPage").disabled = page === 1;
+            document.getElementById("nextPage").disabled = page === totalPages;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
+            allRows.forEach(r => r.dataset.visible = "true"); // initially visible
+
+            document.getElementById("prevPage").onclick = () => { if (currentPage > 1) { currentPage--; renderTablePage(currentPage); } };
+            document.getElementById("nextPage").onclick = () => { currentPage++; renderTablePage(currentPage); };
+
+            renderTablePage(currentPage);
+        });
     </script>
 
 
-    <!-- Date Filter -->
+
+
+
+    <!-- From-To Filter -->
     <script>
-                document.getElementById('btnApplyFilter').addEventListener('click', () => {
+        document.getElementById('btnApplyFilter').addEventListener('click', () => {
             const fromDate = document.getElementById('reportFromDate').value;
             const toDate = document.getElementById('reportToDate').value;
 
@@ -282,69 +337,61 @@
 
             const from = new Date(fromDate);
             const to = new Date(toDate);
+            to.setHours(23, 59, 59, 999);
 
-            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr'));
+            allRows.forEach(row => {
+                const createdAt = new Date(row.cells[7].innerText.trim());
+                const isVisible = createdAt >= from && createdAt <= to;
 
-            rows.forEach(row => {
-                const createdAt = new Date(row.cells[7].innerText); // Created At column (index 7)
-                if (createdAt >= from && createdAt <= to) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+                row.dataset.filtered = isVisible ? "true" : "false";
+                row.style.display = "none"; // pagination controls visibility
             });
 
-            // After filtering, reset pagination
             currentPage = 1;
             renderTablePage(currentPage);
         });
-
     </script>
+
 
 
     <!-- Export  -->
     <script>
-
-            document.getElementById('btnExportPdf').addEventListener('click', () => {
+        document.getElementById('btnExportPdf').addEventListener('click', () => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(8);
-            doc.text("Inventory Report", 10, 10);
 
-            // Collect all rows for export
-            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr'))
-                .map(row => {
-                    return Array.from(row.cells).map((c, index) => {
-                        // Replace ₱ with P in Unit Cost column (index 3)
-                        if (index === 3) {
-                            return 'P' + c.innerText.replace(/₱/g, '').trim();
-                        }
-                        return c.innerText;
-                    });
-                });
+            const rows = getVisibleRows().map(row =>
+                Array.from(row.cells).map((cell, i) => {
+                    if (i === 3) {
+                        return 'P' + cell.innerText.replace(/₱/g, '').trim();
+                    }
+                    return cell.innerText.trim();
+                })
+            );
 
             if (rows.length === 0) {
                 alert("No data to export.");
                 return;
             }
 
+            doc.setFontSize(10);
+            doc.text("Inventory Report", 14, 15);
+
             doc.autoTable({
                 head: [['ID','Category','Part','Unit Cost','Qty In Stock','Reorder','Supplier','Created At']],
                 body: rows,
-                theme: 'striped',
-                headStyles: { fillColor: [79,70,229], textColor: 255 },
-                styles: { fontSize: 8 },
                 startY: 20,
-                margin: { left: 7, right: 7 },
-                showHead: 'everyPage'
+                theme: 'striped',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [79,70,229], textColor: 255 },
+                showHead: 'everyPage',
+                margin: { left: 7, right: 7 }
             });
 
             doc.save(`InventoryReport_${Date.now()}.pdf`);
         });
-
-
-
     </script>
+
 
 
 

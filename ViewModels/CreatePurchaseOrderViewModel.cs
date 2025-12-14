@@ -8,10 +8,10 @@ namespace Moonmax.ViewModels
 {
     public class CreatePurchaseOrderViewModel
     {
-        [Required]
+        [Required(ErrorMessage ="Supplier is required.")]
         public int SupplierID { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Parts/Items required.")]
         public List<PurchaseOrderItem> Items { get; set; } = new();
 
         [Required]

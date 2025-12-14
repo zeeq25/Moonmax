@@ -22,9 +22,6 @@ namespace Moonmax.Models
 
         // 🔹 Add this navigation property
         public ICollection<Invoice> Invoices { get; set; }
-
-
-
         public ICollection<JobOrder> JobOrders { get; set; } = new List<JobOrder>();
     }
 }

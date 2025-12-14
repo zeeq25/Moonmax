@@ -93,24 +93,17 @@
                                 <button class="icon-btn-table btn-view" data-id="@jo.JobID" title="View Job Order">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
-                                @if (jo.Status == "Completed")
+
+                                @if (!string.Equals(jo.Status?.Trim(), "Completed", StringComparison.OrdinalIgnoreCase))
                                 {
-                                   <!-- <button class="icon-btn-table btn-edit" disabled title="Completed Job">
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>-->
-                                    <button class="icon-btn-table btn-add-parts" disabled title="Completed Job">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                }
-                                else
-                                {
-                                    <!--<a class="icon-btn-table btn-edit" asp-action="Edit" asp-route-id="@jo.JobID" title="Edit Job Order">
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </a>-->
-                                    <a class="icon-btn-table btn-add-parts" asp-action="AddParts" asp-route-id="@jo.JobID" title="Add Parts">
+                                    <a class="icon-btn-table btn-add-parts"
+                                       asp-action="AddParts"
+                                       asp-route-id="@jo.JobID"
+                                       title="Add Parts">
                                         <i class="fa-solid fa-plus"></i>
                                     </a>
                                 }
+
                             </div>
                         </td>
                     </tr>
@@ -206,25 +199,32 @@
                 currentPage = 1; // reset page on search
                 renderTable();
             });
-
-            // Job Order modal
-            table.querySelector("tbody").addEventListener('click', async function (e) {
-                const btn = e.target.closest('.btn-view');
-                if (!btn || btn.disabled) return;
-
-                const id = btn.dataset.id;
-                const response = await fetch(`/JobOrders/ViewJob/${id}`);
-                const html = await response.text();
-
-                document.querySelector('#jobOrderModal .modal-content').innerHTML = html;
-                new bootstrap.Modal(document.getElementById('jobOrderModal')).show();
-            });
-
+                      
             // expose pagination function globally
             window.changeJobOrdersPage = changePage;
 
             // initial render
             renderTable();
+        });
+    </script>
+
+    <!--Job order modal-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalContainer = document.getElementById('jobOrderModal');
+
+            document.querySelectorAll('.btn-view').forEach(function(btn) {
+                btn.addEventListener('click', async function () {
+                    const jobId = this.dataset.id;
+                    if (!jobId) return;
+
+                    const response = await fetch(`/JobOrders/ViewJobOrderDetailsModal/${jobId}`);
+                    const html = await response.text();
+
+                    modalContainer.querySelector('.modal-content').innerHTML = html;
+                    new bootstrap.Modal(modalContainer).show();
+                });
+            });
         });
     </script>
 

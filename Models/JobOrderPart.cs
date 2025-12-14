@@ -8,11 +8,11 @@ namespace Moonmax.Models
         [Key]
         public int JobOrderPartID { get; set; }
 
-        [Required]
+        
         public int JobID { get; set; }
-        public JobOrder? JobOrder { get; set; }
+        public JobOrder JobOrder { get; set; }
 
-        [Required]
+        
         public int InventoryID { get; set; }
         public Inventory? Inventory { get; set; }
 

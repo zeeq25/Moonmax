@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Moonmax.Data;
 
@@ -11,9 +12,11 @@ using Moonmax.Data;
 namespace Moonmax.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251214094542_AddReservedQuantityToInventory")]
+    partial class AddReservedQuantityToInventory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,40 +24,6 @@ namespace Moonmax.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Moonmax.Models.AuditLog", b =>
-                {
-                    b.Property<int>("AuditID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditID"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Module")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TargetID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("AuditID");
-
-                    b.ToTable("AuditLogs");
-                });
 
             modelBuilder.Entity("Moonmax.Models.Client", b =>
                 {
@@ -190,7 +159,7 @@ namespace Moonmax.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobID"));
 
-                    b.Property<int>("ClientID")
+                    b.Property<int?>("ClientID")
                         .HasColumnType("int");
 
                     b.Property<string>("ContactNumber")
@@ -249,7 +218,7 @@ namespace Moonmax.Migrations
                     b.Property<int>("JobID")
                         .HasColumnType("int");
 
-                    b.Property<int>("JobOrderJobID")
+                    b.Property<int?>("JobOrderJobID")
                         .HasColumnType("int");
 
                     b.Property<string>("PartName")
@@ -322,6 +291,7 @@ namespace Moonmax.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("PurchaseOrderItemID");
@@ -552,9 +522,7 @@ namespace Moonmax.Migrations
                 {
                     b.HasOne("Moonmax.Models.Client", "Client")
                         .WithMany("JobOrders")
-                        .HasForeignKey("ClientID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("ClientID");
 
                     b.HasOne("Moonmax.Models.Technicians", "Technician")
                         .WithMany("JobOrders")
@@ -577,9 +545,7 @@ namespace Moonmax.Migrations
 
                     b.HasOne("Moonmax.Models.JobOrder", "JobOrder")
                         .WithMany()
-                        .HasForeignKey("JobOrderJobID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("JobOrderJobID");
 
                     b.Navigation("Inventory");
 

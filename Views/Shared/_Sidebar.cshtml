@@ -76,5 +76,14 @@
             <span>User Management</span>
         </a>
 
+        <!-- AUDIT LOGS -->
+        <a class="menu-item @(current == "AuditLogs" ? "active" : "")"
+           asp-controller="AuditLogs" asp-action="Index">
+            <span class="menu-icon">
+                <i class="fa-solid fa-clipboard-list"></i>
+            </span>
+            <span>Audit Logs</span>
+        </a>
+
     </nav>
 </div>

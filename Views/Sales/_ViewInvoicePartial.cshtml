@@ -1,6 +1,6 @@
 ﻿@model Moonmax.Models.Invoice
 
-<div class="invoice-view">
+<div class="invoice-view p-3" style="max-width:600px; margin:auto; font-family: Arial, sans-serif;">
 
     <!-- ================= HEADER ================= -->
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -57,8 +57,8 @@
                     <tr>
                         <td>@part.Inventory.PartName</td>
                         <td class="text-center">@part.Quantity</td>
-                        <td class="text-end">@part.UnitCost.ToString("C")</td>
-                        <td class="text-end">@part.TotalCost.ToString("C")</td>
+                        <td class="text-end">₱@part.UnitCost.ToString("N2")</td>
+                        <td class="text-end">₱@part.TotalCost.ToString("N2")</td>
                     </tr>
                 }
             </tbody>
@@ -75,17 +75,15 @@
             <table class="table table-sm">
                 <tr>
                     <th>Labor Cost</th>
-                    <td class="text-end">@Model.JobOrder.Cost.ToString("C")</td>
+                    <td class="text-end">₱@Model.JobOrder.Cost.ToString("N2")</td>
                 </tr>
                 <tr>
                     <th>Parts Total</th>
-                    <td class="text-end">
-                        @Model.JobOrder.JobParts.Sum(p => p.TotalCost).ToString("C")
-                    </td>
+                    <td class="text-end">₱@Model.JobOrder.JobParts.Sum(p => p.TotalCost).ToString("N2")</td>
                 </tr>
                 <tr class="table-active">
                     <th>Total Amount</th>
-                    <th class="text-end">@Model.Amount.ToString("C")</th>
+                    <th class="text-end">₱@Model.Amount.ToString("N2")</th>
                 </tr>
             </table>
         </div>

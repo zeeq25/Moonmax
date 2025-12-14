@@ -84,7 +84,15 @@
                     </button>
                 </div>
 
-                <div class="report-actions" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                <div class="report-actions" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center;">
+                    <!-- Status Drop-down -->
+                    <select id="statusFilter" class="modern-input" style="min-width:150px;">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                    </select>
+
+                    <!-- Export Button -->
                     <button id="btnExportPdf" class="modern-btn modern-btn-export" style="flex:1; min-width:120px; background-color:#4F46E5; color:#fff;">
                         <i class="fa-solid fa-file-pdf"></i> Export PDF
                     </button>
@@ -362,6 +370,38 @@
 
             doc.save('InvoiceReport.pdf');
         });
+    </script>
+
+    <script>
+                const statusInput = document.getElementById('statusFilter');
+
+        function updateInvoiceVisibility() {
+            const fromDate = document.getElementById('reportFromDate').value;
+            const toDate = document.getElementById('reportToDate').value;
+            const status = statusInput.value;
+
+            const rows = Array.from(document.querySelectorAll('#invoiceTable tbody tr'));
+
+            rows.forEach(row => {
+                const rowDate = row.cells[5].innerText.trim(); // Date Issued
+                const rowStatus = row.cells[7].innerText.trim();
+
+                const matchesStatus = !status || rowStatus === status;
+
+                row.style.display = matchesStatus ? "" : "none";
+            });
+
+            // Optionally, you can update pagination after filtering
+            currentPage = 1;
+            renderTablePage(currentPage);
+        }
+
+        // Trigger filter when status changes
+        statusInput.addEventListener('change', updateInvoiceVisibility);
+
+        // Also trigger when applying date filter
+        document.getElementById('btnApplyFilter').addEventListener('click', updateInvoiceVisibility);
+
     </script>
 
 

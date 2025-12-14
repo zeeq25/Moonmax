@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
 using Moonmax.ViewModels;
+using Moonmax.Services;  // ⬅️ ADD THIS
 using System.Linq;
+using System.Security.Claims;  // ⬅️ ADD THIS
 
 namespace Moonmax.Controllers
 {
@@ -12,26 +14,24 @@ namespace Moonmax.Controllers
     public class ProcurementController : Controller
     {
         private readonly AppDbContext _db;
+        private readonly IAuditService _auditService;  // ⬅️ ADD THIS
 
-        public ProcurementController(AppDbContext context)
+        // ⬅️ UPDATE CONSTRUCTOR
+        public ProcurementController(AppDbContext context, IAuditService auditService)
         {
             _db = context;
+            _auditService = auditService;  // ⬅️ ADD THIS
         }
 
         public IActionResult Index()
         {
-            // Fetch purchase orders with related supplier and items
             var pos = _db.PurchaseOrders
                 .Include(po => po.Supplier)
                 .Include(po => po.Items)
                 .ToList();
 
-            return View(pos); // Pass the list to the view
+            return View(pos);
         }
-
-        // ============================
-        // Index (Suppliers Tab)
-        // ============================
 
         public IActionResult Suppliers()
         {
@@ -47,27 +47,18 @@ namespace Moonmax.Controllers
                     Status = s.Status
                 }).ToList();
 
-
             return View(suppliers);
         }
 
-       
-
-        // ============================
-        // GET: Create Supplier
-        // ============================
         [HttpGet]
         public IActionResult CreateSupplier()
         {
             return View(new CreateSupplierViewModel());
         }
 
-        // ============================
-        // POST: Create Supplier
-        // ============================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateSupplier(CreateSupplierViewModel model)
+        public async Task<IActionResult> CreateSupplier(CreateSupplierViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -85,41 +76,46 @@ namespace Moonmax.Controllers
             };
 
             _db.Suppliers.Add(supplier);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "CREATE",
+                module: "Procurement",
+                description: $"Created new supplier: {supplier.SupplierName} - Product Line: {supplier.ProductLine}",
+                targetId: supplier.SupplierID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
 
             return RedirectToAction("Suppliers");
         }
 
-
-
-        // GET: Procurement/CreatePurchaseOrder
         [HttpGet]
         public IActionResult CreatePurchaseOrder()
         {
             var vm = new CreatePurchaseOrderViewModel
             {
                 Suppliers = _db.Suppliers
-                                    .Where(s => s.Status == "Active")
-                                    .ToList()
+                    .Where(s => s.Status == "Active")
+                    .ToList()
             };
 
             return View("~/Views/Procurement/CreatePurchaseOrder.cshtml", vm);
         }
 
-        // POST: Procurement/CreatePurchaseOrder
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreatePurchaseOrder(CreatePurchaseOrderViewModel vm)
+        public async Task<IActionResult> CreatePurchaseOrder(CreatePurchaseOrderViewModel vm)
         {
             if (!ModelState.IsValid)
             {
                 vm.Suppliers = _db.Suppliers
-                                        .Where(s => s.Status == "Active")
-                                        .ToList();
+                    .Where(s => s.Status == "Active")
+                    .ToList();
                 return View("~/Views/Procurement/CreatePurchaseOrder.cshtml", vm);
             }
 
-            // Create the PurchaseOrder entity
             var po = new PurchaseOrders
             {
                 SupplierID = vm.SupplierID,
@@ -129,9 +125,8 @@ namespace Moonmax.Controllers
             };
 
             _db.PurchaseOrders.Add(po);
-            _db.SaveChanges(); // Save first to get the generated PurchaseOrderID
+            await _db.SaveChangesAsync();
 
-            // Add the items using fully qualified class name to avoid ambiguity
             foreach (var item in vm.Items)
             {
                 _db.PurchaseOrderItems.Add(new Moonmax.Models.PurchaseOrderItem
@@ -144,9 +139,22 @@ namespace Moonmax.Controllers
                 });
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
-            // Redirect to Index of Procurement (your Purchase Orders list)
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            var supplier = await _db.Suppliers.FindAsync(vm.SupplierID);
+            decimal totalAmount = vm.Items.Sum(i => i.Quantity * i.UnitPrice);
+            int totalItems = vm.Items.Count;
+
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "CREATE",
+                module: "Procurement",
+                description: $"Created Purchase Order #{po.PurchaseOrderID} for {supplier?.SupplierName} - {totalItems} items, Total: ₱{totalAmount:N2}, Expected: {vm.ExpectedDelivery:yyyy-MM-dd}",
+                targetId: po.PurchaseOrderID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             return RedirectToAction("Index");
         }
 
@@ -160,6 +168,17 @@ namespace Moonmax.Controllers
             supplier.UpdatedAt = DateTime.Now;
 
             await _db.SaveChangesAsync();
+
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "UPDATE",
+                module: "Procurement",
+                description: $"Deactivated supplier: {supplier.SupplierName}",
+                targetId: supplier.SupplierID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             TempData["Success"] = "Supplier deactivated successfully.";
             return RedirectToAction("Suppliers");
         }
@@ -174,11 +193,21 @@ namespace Moonmax.Controllers
             supplier.UpdatedAt = DateTime.Now;
 
             await _db.SaveChangesAsync();
+
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "UPDATE",
+                module: "Procurement",
+                description: $"Activated supplier: {supplier.SupplierName}",
+                targetId: supplier.SupplierID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             TempData["Success"] = "Supplier activated successfully.";
             return RedirectToAction("Suppliers");
         }
 
-        // GET: display edit form
         public async Task<IActionResult> EditSupplier(int id)
         {
             var supplier = await _db.Suppliers.FindAsync(id);
@@ -198,7 +227,6 @@ namespace Moonmax.Controllers
             return View(vm);
         }
 
-        // POST: save changes
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditSupplier(EditSupplierViewModel vm)
@@ -207,6 +235,12 @@ namespace Moonmax.Controllers
 
             var supplier = await _db.Suppliers.FindAsync(vm.SupplierID);
             if (supplier == null) return NotFound();
+
+            // ⬇️ TRACK CHANGES FOR AUDIT
+            var changes = new List<string>();
+            if (supplier.SupplierName != vm.SupplierName) changes.Add($"Name: {supplier.SupplierName} → {vm.SupplierName}");
+            if (supplier.ContactNumber != vm.ContactNumber) changes.Add($"Contact: {supplier.ContactNumber} → {vm.ContactNumber}");
+            if (supplier.Email != vm.Email) changes.Add($"Email: {supplier.Email} → {vm.Email}");
 
             supplier.SupplierName = vm.SupplierName;
             supplier.ContactNumber = vm.ContactNumber;
@@ -218,9 +252,21 @@ namespace Moonmax.Controllers
             _db.Update(supplier);
             await _db.SaveChangesAsync();
 
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            if (changes.Any())
+            {
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "UPDATE",
+                    module: "Procurement",
+                    description: $"Updated supplier {supplier.SupplierName}: {string.Join(", ", changes)}",
+                    targetId: supplier.SupplierID
+                );
+            }
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             return RedirectToAction("Suppliers");
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -228,6 +274,7 @@ namespace Moonmax.Controllers
         {
             var po = await _db.PurchaseOrders
                 .Include(p => p.Items)
+                .Include(p => p.Supplier)
                 .FirstOrDefaultAsync(p => p.PurchaseOrderID == id);
 
             if (po == null) return NotFound();
@@ -269,8 +316,6 @@ namespace Moonmax.Controllers
                         UpdatedAt = DateTime.Now
                     };
                     _db.Inventories.Add(inventoryItem);
-
-                    // Save immediately so InventoryID is generated for StockMovement
                     await _db.SaveChangesAsync();
 
                     previousQty = 0;
@@ -292,6 +337,19 @@ namespace Moonmax.Controllers
             }
 
             await _db.SaveChangesAsync();
+
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            int totalItems = po.Items.Count;
+            int totalQuantity = po.Items.Sum(i => i.Quantity);
+
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "RECEIVE",
+                module: "Procurement",
+                description: $"Received Purchase Order #{po.PurchaseOrderID} from {po.Supplier.SupplierName} - {totalItems} items ({totalQuantity} units) added to inventory",
+                targetId: po.PurchaseOrderID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
 
             TempData["Success"] = $"Purchase Order #{po.PurchaseOrderID} received successfully!";
             return RedirectToAction(nameof(Index));
@@ -325,13 +383,6 @@ namespace Moonmax.Controllers
             return PartialView("_PurchaseOrderDetailsModal", po);
         }
 
-
-
-
-
-
-
-        //AUTO-FILL UNIT PRICE
         [HttpGet]
         public IActionResult GetUnitPrice(string productName)
         {
@@ -347,6 +398,27 @@ namespace Moonmax.Controllers
             return Json(new { price = item.UnitCost });
         }
 
+        // ⬇️⬇️⬇️ ADD THIS HELPER METHOD ⬇️⬇️⬇️
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
 
+            var email = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = _db.Users.FirstOrDefault(u => u.Email == email);
+                if (user != null)
+                {
+                    return user.UserID;
+                }
+            }
+
+            return 0;
+        }
+        // ⬆️⬆️⬆️ END HELPER METHOD ⬆️⬆️⬆️
     }
 }

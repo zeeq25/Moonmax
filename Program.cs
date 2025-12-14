@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Moonmax.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // 4) MVC + Razor
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Register Audit Service
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // 5) Build the app
 var app = builder.Build();

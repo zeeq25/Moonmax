@@ -94,10 +94,7 @@
                 <a asp-controller="Procurement" asp-action="Index"
                    class="proc-tab proc-tab--active">Purchase Orders</a>
                 <a asp-controller="Procurement" asp-action="Suppliers"
-                   class="proc-tab">Suppliers</a>
-
-                <!-- <a asp-controller="Procurement" asp-action="Products"
-                   class="proc-tab">Products</a> -->
+                   class="proc-tab">Suppliers</a>                
             </div>
         </div>
     </section>
@@ -115,7 +112,7 @@
                             <th>Items</th>
                             <th>Total Amount</th>
                             <th>Date Created</th>
-                            <th>Expected Delivery</th>
+                            <th>Expected Delivery Arrival</th>
                             <th>Status</th>
                             <th class="col-actions">Actions</th>
                         </tr>
@@ -134,8 +131,8 @@
                                 <td>@po.ExpectedDelivery.ToString("yyyy-MM-dd")</td>
                                 <td>
                                     <span class="badge @(po.Status.ToLower() == "pending" ? "status-pending" :
-                                                                                                                             po.Status.ToLower() == "delivered" ? "status-delivered" :
-                                                                                                                             "status-intransit")">@po.Status</span>
+                                                        po.Status.ToLower() == "delivered" ? "status-delivered" :
+                                                         "status-intransit")">@po.Status</span>
                             </td>
                             <td class="col-actions">
                                 <div class="proc-actions">
@@ -151,7 +148,7 @@
                                 </div>
                             </td>
                         </tr>
-                                                }
+                           }
                     </tbody>
                 </table>
             </div>

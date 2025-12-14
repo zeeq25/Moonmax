@@ -124,13 +124,15 @@
                                 <th>Client</th>
                                 <th>Technician</th>
                                 <th>Service</th>
-                                <th>Parts/Items</th> <!-- NEW COLUMN -->
-                                <th>Total Cost</th>
-                                <th>Status</th>
+                                <th>Parts/Items</th> 
+                                <th>Total Cost</th>                                
                                 <th>Date Created</th>
                                 <th>Due Date</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
+
+
                         <tbody>
                             @foreach (var j in Model.JobOrderList)
                             {
@@ -149,10 +151,10 @@
                                             <span>-</span>
                                         }
                                     </td>
-                                    <td>₱@j.Cost.ToString("N2")</td>                                    
-                                    <td>@j.Status</td>
+                                    <td>₱@j.Cost.ToString("N2")</td>                                                                        
                                     <td>@j.CreatedAt.ToString("yyyy-MM-dd")</td>
                                     <td>@(j.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                    <td>@j.Status</td>
 
                                 </tr>
                             }

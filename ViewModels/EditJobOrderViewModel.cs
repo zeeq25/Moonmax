@@ -3,7 +3,7 @@
 public class EditJobOrderViewModel
 {
     public int JobID { get; set; }
-    public int? ClientID { get; set; }
+    public int ClientID { get; set; }
     public string ServiceType { get; set; }
     public int TechnicianID { get; set; }
     public DateTime Created { get; set; }

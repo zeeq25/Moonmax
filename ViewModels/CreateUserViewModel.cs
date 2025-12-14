@@ -14,7 +14,7 @@ namespace Moonmax.ViewModels
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Role { get; set; } = "Staff";
+        public string Role { get; set; } = "";
 
         public bool IsActive { get; set; } = true;
 

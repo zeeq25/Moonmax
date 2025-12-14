@@ -6,8 +6,9 @@ using System.ComponentModel.DataAnnotations;
 namespace Moonmax.ViewModels
 {
     public class CreateJobOrderViewModel
-    {
-        public int? ClientID { get; set; } // optional for walk-in
+    {   
+        [Required(ErrorMessage = "Client is required.")]
+        public int ClientID { get; set; } // optional for walk-in
         public string ContactNumber { get; set; }
 
         [Required(ErrorMessage = "Technician is required.")]
@@ -16,6 +17,7 @@ namespace Moonmax.ViewModels
         [Required(ErrorMessage = "Service type is required.")]
         public string ServiceType { get; set; }
 
+        [Required(ErrorMessage = "Due date is required.")]
         public DateTime? DueDate { get; set; }
 
         [Required(ErrorMessage = "Cost is required.")]

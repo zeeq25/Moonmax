@@ -4,28 +4,30 @@ using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
 using Moonmax.ViewModels;
+using Moonmax.Services;  // ⬅️ ADD THIS
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;  // ⬅️ ADD THIS
 
 namespace Moonmax.Controllers
 {
-
     [Authorize]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;  // ⬅️ ADD THIS
 
-        public SalesController(AppDbContext context)
+        // ⬅️ UPDATE CONSTRUCTOR
+        public SalesController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;  // ⬅️ ADD THIS
         }
-
 
         // GET: Sales/CreateInvoice/5
         public async Task<IActionResult> CreateInvoice(int jobId)
         {
-            // Fetch the job including its parts
             var jobOrder = await _context.JobOrders
                 .Include(j => j.JobParts)
                 .Include(j => j.Client)
@@ -36,14 +38,11 @@ namespace Moonmax.Controllers
                 return NotFound();
             }
 
-            // Calculate total cost: JobOrder + all parts
             decimal totalPartsCost = jobOrder.JobParts.Sum(p => p.TotalCost);
             decimal totalInvoiceAmount = jobOrder.Cost + totalPartsCost;
 
-            // Generate a new invoice number (simple example, you can customize)
             string invoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
 
-            // 🔹 Determine DueDate based on Payment Terms (Cash, PDC-15, PDC-30, PDC-60)
             DateTime dateIssued = DateTime.Now;
             DateTime? dueDate = null;
 
@@ -61,18 +60,17 @@ namespace Moonmax.Controllers
                     dueDate = dateIssued.AddDays(60);
                     break;
                 default:
-                    dueDate = dateIssued; // Cash: Due immediately
+                    dueDate = dateIssued;
                     break;
             }
 
-            // Create invoice
             var invoice = new Invoice
             {
                 InvoiceNumber = invoiceNumber,
-                ClientID = jobOrder.ClientID ?? 0, // handle walk-in jobs
+                ClientID = jobOrder.ClientID,
                 JobID = jobOrder.JobID,
                 Amount = totalInvoiceAmount,
-                PaymentType = jobOrder.Client?.PaymentType ?? "Cash", // use client's payment type
+                PaymentType = jobOrder.Client?.PaymentType ?? "Cash",
                 DateIssued = DateTime.Now,
                 DueDate = dueDate,
                 Status = "Pending"
@@ -81,14 +79,24 @@ namespace Moonmax.Controllers
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
 
-            // Redirect to invoice list or details page
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            string clientName = jobOrder.Client?.Name ?? $"Walk-In ({jobOrder.ContactNumber})";
+
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "CREATE",
+                module: "Sales & Billing",
+                description: $"Created Invoice {invoiceNumber} for {clientName} - Job #{jobOrder.JobID}, Amount: ₱{totalInvoiceAmount:N2}, Payment: {paymentType}",
+                targetId: invoice.InvoiceID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             return RedirectToAction("Index", "Sales");
         }
 
         // GET: Sales
         public async Task<IActionResult> Index()
         {
-            // Completed invoices
             var invoices = await _context.Invoices
                 .Include(i => i.Client)
                 .Include(i => i.JobOrder)
@@ -107,7 +115,6 @@ namespace Moonmax.Controllers
                 })
                 .ToListAsync();
 
-            // Jobs that are in progress but don't have an invoice yet
             var inProgressJobs = await _context.JobOrders
                 .Include(j => j.Client)
                 .Where(j => j.Status == "In Progress")
@@ -121,7 +128,6 @@ namespace Moonmax.Controllers
                 })
                 .ToListAsync();
 
-            // Calculate KPIs
             var totalSales = invoices.Sum(i => i.Amount);
             var paidInvoices = invoices
                 .Where(i => i.Status.ToLower() == "paid")
@@ -130,10 +136,9 @@ namespace Moonmax.Controllers
                 .Where(i => i.Status.ToLower() == "pending")
                 .Sum(i => i.Amount);
             var activeCustomers = invoices
-                .Select(i => i.ClientName)  // pick unique client names
+                .Select(i => i.ClientName)
                 .Distinct()
                 .Count();
-
 
             var vm = new SalesIndexViewModel
             {
@@ -145,11 +150,8 @@ namespace Moonmax.Controllers
                 ActiveCustomers = activeCustomers
             };
 
-
-
             return View(vm);
         }
-
 
         // GET - CUSTOMER LIST
         public async Task<IActionResult> CustomerList()
@@ -165,23 +167,21 @@ namespace Moonmax.Controllers
                     TotalTransactions = c.Invoices.Count(),
 
                     TotalRevenue = c.Invoices
-                    .Where(i => i.Status == "Paid")
-                    .Sum(i => i.Amount),
+                        .Where(i => i.Status == "Paid")
+                        .Sum(i => i.Amount),
 
                     Outstanding = c.Invoices
-                    .Where(i => i.Status != "Paid")
-                    .Sum(i => i.Amount)
+                        .Where(i => i.Status != "Paid")
+                        .Sum(i => i.Amount)
                 })
                 .ToListAsync();
 
             return View(clients);
         }
 
-
         // GET: Sales/CreateCustomer
         public IActionResult CreateCustomer()
         {
-            // Payment type options
             ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
             return View();
         }
@@ -208,6 +208,16 @@ namespace Moonmax.Controllers
             _context.Client.Add(client);
             await _context.SaveChangesAsync();
 
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "CREATE",
+                module: "Sales & Billing",
+                description: $"Created new customer: {client.Name} - Payment Terms: {client.PaymentType}",
+                targetId: client.ClientID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             return RedirectToAction("CustomerList");
         }
 
@@ -217,7 +227,8 @@ namespace Moonmax.Controllers
         public async Task<IActionResult> ReceivePayment(int id)
         {
             var invoice = await _context.Invoices
-                .Include(i => i.JobOrder) // make sure JobOrder is included
+                .Include(i => i.Client)
+                .Include(i => i.JobOrder)
                 .ThenInclude(j => j.JobParts)
                 .FirstOrDefaultAsync(i => i.InvoiceID == id);
 
@@ -237,20 +248,21 @@ namespace Moonmax.Controllers
 
                     if (inventoryItem != null)
                     {
-
                         int previousQty = inventoryItem.QuantityInStock;
 
                         inventoryItem.QuantityInStock -= part.Quantity;
                         if (inventoryItem.QuantityInStock < 0)
                             inventoryItem.QuantityInStock = 0;
 
+                        inventoryItem.ReservedQuantity -= part.Quantity;
+                        if (inventoryItem.ReservedQuantity < 0)
+                            inventoryItem.ReservedQuantity = 0;
+
                         int newQty = inventoryItem.QuantityInStock;
 
-                        // Get logged in user ID
                         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                         int parsedUserId = int.Parse(userId);
 
-                        // CREATE STOCK MOVEMENT RECORD (OUT)
                         var movement = new StockMovement
                         {
                             InventoryID = inventoryItem.InventoryID,
@@ -264,16 +276,26 @@ namespace Moonmax.Controllers
                         };
 
                         _context.StockMovement.Add(movement);
-
                     }
                 }
 
-                // Mark the JobOrder as Completed
                 invoice.JobOrder.Status = "Completed";
             }
 
-            // Save everything in one call
             await _context.SaveChangesAsync();
+
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            string clientName = invoice.Client?.Name ?? "Unknown";
+            int totalParts = invoice.JobOrder?.JobParts?.Count ?? 0;
+
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "PAYMENT_RECEIVED",
+                module: "Sales & Billing",
+                description: $"Payment received for Invoice {invoice.InvoiceNumber} - Client: {clientName}, Amount: ₱{invoice.Amount:N2}, Job #{invoice.JobID} completed, {totalParts} parts deducted from inventory",
+                targetId: invoice.InvoiceID
+            );
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
 
             return RedirectToAction("Index");
         }
@@ -299,7 +321,6 @@ namespace Moonmax.Controllers
             return View(model);
         }
 
-
         // POST: Sales/EditCustomer
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -315,6 +336,12 @@ namespace Moonmax.Controllers
             if (client == null)
                 return NotFound();
 
+            // ⬇️ TRACK CHANGES FOR AUDIT
+            var changes = new List<string>();
+            if (client.Name != model.Name) changes.Add($"Name: {client.Name} → {model.Name}");
+            if (client.Email != model.Email) changes.Add($"Email: {client.Email} → {model.Email}");
+            if (client.PaymentType != model.PaymentType) changes.Add($"Payment Terms: {client.PaymentType} → {model.PaymentType}");
+
             client.Name = model.Name;
             client.Email = model.Email;
             client.ContactNumber = model.Phone;
@@ -322,25 +349,32 @@ namespace Moonmax.Controllers
 
             await _context.SaveChangesAsync();
 
+            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            if (changes.Any())
+            {
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "UPDATE",
+                    module: "Sales & Billing",
+                    description: $"Updated customer {client.Name}: {string.Join(", ", changes)}",
+                    targetId: client.ClientID
+                );
+            }
+            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
             return RedirectToAction("CustomerList");
         }
-
 
         // GET: /Sales/ViewInvoicePartial/5
         public async Task<IActionResult> ViewInvoicePartial(int id)
         {
             var invoice = await _context.Invoices
                 .Include(i => i.Client)
-
-                // JobOrder → Technician
                 .Include(i => i.JobOrder)
                     .ThenInclude(j => j.Technician)
-
-                // JobOrder → JobParts → Inventory
                 .Include(i => i.JobOrder)
                     .ThenInclude(j => j.JobParts)
                         .ThenInclude(p => p.Inventory)
-
                 .FirstOrDefaultAsync(i => i.InvoiceID == id);
 
             if (invoice == null)
@@ -349,7 +383,43 @@ namespace Moonmax.Controllers
             return PartialView("_ViewInvoicePartial", invoice);
         }
 
+        // GET: /Sales/ViewJobOrderPartial/5
+        public async Task<IActionResult> ViewJobOrderPartial(int id)
+        {
+            var job = await _context.JobOrders
+                .Include(j => j.Client)
+                .Include(j => j.Technician)
+                .Include(j => j.JobParts)
+                    .ThenInclude(p => p.Inventory)
+                .FirstOrDefaultAsync(j => j.JobID == id);
 
+            if (job == null)
+                return PartialView("_ViewJobOrderPartial", null);
 
+            return PartialView("_ViewJobOrderPartial", job);
+        }
+
+        // ⬇️⬇️⬇️ ADD THIS HELPER METHOD ⬇️⬇️⬇️
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+
+            var email = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Email == email);
+                if (user != null)
+                {
+                    return user.UserID;
+                }
+            }
+
+            return 0;
+        }
+        // ⬆️⬆️⬆️ END HELPER METHOD ⬆️⬆️⬆️
     }
 }

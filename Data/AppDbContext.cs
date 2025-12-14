@@ -35,11 +35,14 @@ namespace Moonmax.Data
         //STOCK MOVEMENT
         public DbSet<StockMovement> StockMovement { get; set; }
 
+        //AUDIT LOGS
+        public DbSet<AuditLog> AuditLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Add decimal precision here
+            // Decimal precision configurations
             modelBuilder.Entity<Invoice>()
                 .Property(i => i.Amount)
                 .HasPrecision(18, 2);
@@ -58,9 +61,17 @@ namespace Moonmax.Data
 
             modelBuilder.Entity<PurchaseOrderItem>()
                 .Property(poi => poi.UnitPrice)
-                .HasPrecision(18, 2);
+                .HasColumnType("decimal(18,2)");
 
-            // You can also configure other relationships or constraints here
+            // Relationship configurations
+            modelBuilder.Entity<JobOrder>()
+                .HasOne(jo => jo.Client)
+                .WithMany(c => c.JobOrders)
+                .HasForeignKey(jo => jo.ClientID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AuditLog>()
+                .HasKey(a => a.AuditID);
         }
 
     }

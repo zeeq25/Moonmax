@@ -90,16 +90,13 @@
         </div>
 
         <div class="inv-filter-actions">
-            <button class="btn-chip">
-                <i class="fa-solid fa-filter"></i>
-                <span>Filter</span>
-            </button>
-
-            <!--<button class="btn-chip" id="btnExportPdf">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>-->
+            <select id="statusFilter" class="btn-chip">
+                <option value="all">All Status</option>
+                <option value="low-stock">Low Stock</option>
+                <option value="critical">Critical</option>
+            </select>
         </div>
+
     </section>
 
     <!-- TABLE -->
@@ -168,71 +165,81 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+               document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.querySelector('.inv-search-input');
-            const rows = document.querySelectorAll('.mm-table tbody tr');
+            const statusFilter = document.getElementById('statusFilter');
+            const table = document.getElementById("stockAlertTable");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
 
-            function applyStockAlertSearch() {
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
+            function getFilteredRows() {
                 const term = (searchInput.value || '').trim().toLowerCase();
+                const status = (statusFilter.value || 'all');
 
-                rows.forEach(row => {
+                return rows.filter(row => {
                     const cells = row.querySelectorAll('td');
-
-                    // 0: Code, 1: Name, 2: Category, 5: Supplier
                     const code = cells[0]?.innerText.toLowerCase() || '';
                     const name = cells[1]?.innerText.toLowerCase() || '';
                     const category = cells[2]?.innerText.toLowerCase() || '';
                     const supplier = cells[5]?.innerText.toLowerCase() || '';
+                    const rowStatus = cells[7]?.innerText.toLowerCase() || '';
 
                     const combined = `${code} ${name} ${category} ${supplier}`;
+                    const matchesSearch = term === '' || combined.includes(term);
 
-                    row.style.display = term === '' || combined.includes(term) ? '' : 'none';
+                    const matchesStatus =
+                        status === 'all' ||
+                        (status === 'low-stock' && rowStatus.includes('low stock')) ||
+                        (status === 'critical' && rowStatus.includes('critical'));
+
+                    return matchesSearch && matchesStatus;
                 });
             }
 
-            if (searchInput) {
-                searchInput.addEventListener('input', applyStockAlertSearch);
+            function renderTablePage() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                rows.forEach(row => row.style.display = 'none');
+
+                filteredRows.forEach((row, index) => {
+                    if (index >= (currentPage - 1) * rowsPerPage &&
+                        index < currentPage * rowsPerPage) {
+                        row.style.display = '';
+                    }
+                });
+
+                document.getElementById("pageIndicator").textContent =
+                    `Page ${currentPage} of ${totalPages}`;
+
+                document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
+                document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
             }
 
-            applyStockAlertSearch();
+            function changePage(step) {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                currentPage += step;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                renderTablePage();
+            }
+
+            // Hook up search and filter
+            searchInput.addEventListener('input', () => { currentPage = 1; renderTablePage(); });
+            statusFilter.addEventListener('change', () => { currentPage = 1; renderTablePage(); });
+
+            // Expose pagination buttons
+            window.changePage = changePage;
+
+            // Initial render
+            renderTablePage();
         });
 
-        // Pagination
-        const rowsPerPage = 10;
-        let currentPage = 1;
-
-        function renderTablePage() {
-            const table = document.getElementById("stockAlertTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
-                        ? ""
-                        : "none";
-            });
-
-            document.getElementById("pageIndicator").textContent =
-                `Page ${currentPage} of ${totalPages}`;
-            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
-            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
-        }
-
-        function changePage(step) {
-            const table = document.getElementById("stockAlertTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            currentPage += step;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            renderTablePage();
-        }
-
-        renderTablePage();
     </script>
 
     <script>

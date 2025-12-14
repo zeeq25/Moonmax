@@ -12,12 +12,12 @@ namespace Moonmax.Models
         [Required]
         public int JobID { get; set; }
         [ForeignKey("JobID")]
-        public JobOrder JobOrder { get; set; }
+        public JobOrder? JobOrder { get; set; }
 
         [Required]
         public int InventoryID { get; set; }  // FK to Inventories
         [ForeignKey("InventoryID")]
-        public Inventory Inventory { get; set; }
+        public Inventory? Inventory { get; set; }
 
         [Required]
         public int Quantity { get; set; }
