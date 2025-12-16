@@ -98,7 +98,14 @@
     <section class="confirm-parts mt-3">
         <form asp-action="ConfirmParts" method="post">
             <input type="hidden" asp-for="JobID" />
-            <button type="submit" class="btn btn-success w-100">Confirm Parts</button>
+            <section class="confirm-parts mt-3 text-end">
+                <form asp-action="ConfirmParts" method="post" class="d-inline-block">
+                    <input type="hidden" asp-for="JobID" />
+                    <button type="submit" class="btn btn-success px-5 py-2">
+                        Confirm Parts
+                    </button>
+                </form>
+            </section>
         </form>
     </section>
 

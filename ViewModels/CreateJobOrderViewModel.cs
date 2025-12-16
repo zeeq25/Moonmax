@@ -8,7 +8,8 @@ namespace Moonmax.ViewModels
     public class CreateJobOrderViewModel
     {   
         [Required(ErrorMessage = "Client is required.")]
-        public int ClientID { get; set; } // optional for walk-in
+        [Range(1, int.MaxValue, ErrorMessage = "Client is required.")]  // ⬅️ Must be > 0
+        public int ClientID { get; set; } 
         public string ContactNumber { get; set; }
 
         [Required(ErrorMessage = "Technician is required.")]
@@ -20,7 +21,8 @@ namespace Moonmax.ViewModels
         [Required(ErrorMessage = "Due date is required.")]
         public DateTime? DueDate { get; set; }
 
-        [Required(ErrorMessage = "Cost is required.")]
+        [Required(ErrorMessage = "Job cost is required")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Job cost must be greater than 0")]
         public decimal Cost { get; set; }
 
         [Required(ErrorMessage = "Status is required.")]
@@ -31,5 +33,8 @@ namespace Moonmax.ViewModels
 
         // Add this for status dropdown
         public List<SelectListItem> StatusList { get; set; } = new();
+
+        // Add this for service type dropdown
+        public List<SelectListItem> ServiceTypes { get; set; } = new();
     }
 }

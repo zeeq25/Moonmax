@@ -107,7 +107,17 @@ namespace Moonmax.Controllers
                 StatusList = new List<SelectListItem>
                 {
                     new SelectListItem { Value = "Pending", Text = "Pending" }
-                }
+                },
+
+                ServiceTypes = new List<SelectListItem>
+        {
+                new SelectListItem { Value = "Hydraulic Hose Fabrication", Text = "Hydraulic Hose Fabrication" },
+                new SelectListItem { Value = "Turbo Repair", Text = "Turbo Repair" },
+                new SelectListItem { Value = "Metal Fabrication", Text = "Metal Fabrication" },
+                new SelectListItem { Value = "Hydraulic Pump Repair", Text = "Hydraulic Pump Repair" },
+                new SelectListItem { Value = "Machining Job", Text = "Machining Job" },
+                
+        }
             };
 
             return View(vm);
@@ -120,6 +130,9 @@ namespace Moonmax.Controllers
         {
             if (!ModelState.IsValid)
             {
+
+                
+
                 vm.Technicians = _db.Technician
                     .Select(t => new SelectListItem { Value = t.TechnicianID.ToString(), Text = t.Name })
                     .ToList();
@@ -128,6 +141,8 @@ namespace Moonmax.Controllers
                     .Select(c => new SelectListItem { Value = c.ClientID.ToString(), Text = c.Name })
                     .ToList();
 
+
+                PopulateDropdowns(vm);
                 return View(vm);
             }
 
@@ -165,6 +180,32 @@ namespace Moonmax.Controllers
 
             TempData["Success"] = "Job Order created successfully!";
             return RedirectToAction(nameof(Index));
+        }
+
+        private void PopulateDropdowns(CreateJobOrderViewModel vm)
+        {
+            vm.Technicians = _db.Technician
+                .Select(t => new SelectListItem { Value = t.TechnicianID.ToString(), Text = t.Name })
+                .ToList();
+
+            vm.Clients = _db.Client
+                .Select(c => new SelectListItem { Value = c.ClientID.ToString(), Text = c.Name })
+                .ToList();
+
+            vm.ServiceTypes = new List<SelectListItem>
+    {
+                new SelectListItem { Value = "Hydraulic Hose Fabrication", Text = "Hydraulic Hose Fabrication" },
+                new SelectListItem { Value = "Turbo Repair", Text = "Turbo Repair" },
+                new SelectListItem { Value = "Metal Fabrication", Text = "Metal Fabrication" },
+                new SelectListItem { Value = "Hydraulic Pump Repair", Text = "Hydraulic Pump Repair" },
+                new SelectListItem { Value = "Machining Job", Text = "Machining Job" },
+    };
+
+            vm.StatusList = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "Pending", Text = "Pending" },
+        new SelectListItem { Value = "In Progress", Text = "In Progress" }
+    };
         }
 
         // ADD PARTS GET

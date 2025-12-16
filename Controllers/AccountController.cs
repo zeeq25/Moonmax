@@ -6,88 +6,94 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+ 
 
-public class AccountController : Controller
+
+namespace Moonmax.Controllers
 {
-    private readonly AppDbContext _context;
-    private readonly IPasswordHasher<User> _passwordHasher;
-
-    public AccountController(AppDbContext context)
+    
+    public class AccountController : Controller
     {
-        _context = context;
-        _passwordHasher = new PasswordHasher<User>();
-    }
+        private readonly AppDbContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-    // GET: Login
-    public IActionResult Login()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string email, string password)
-    {
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        public AccountController(AppDbContext context)
         {
-            ModelState.AddModelError("", "Email and password are required.");
+            _context = context;
+            _passwordHasher = new PasswordHasher<User>();
+        }
+
+        // GET: Login
+        public IActionResult Login()
+        {
             return View();
         }
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
-        if (user == null)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string email, string password)
         {
-            ModelState.AddModelError("", "Invalid login attempt.");
-            return View();
-        }
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                ModelState.AddModelError("", "Email and password are required.");
+                return View();
+            }
 
-        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-        if (result == PasswordVerificationResult.Failed)
-        {
-            ModelState.AddModelError("", "Invalid login attempt.");
-            return View();
-        }
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return View();
+            }
 
-        // Create Claims
-        var claims = new List<Claim>
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+            if (result == PasswordVerificationResult.Failed)
+            {
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return View();
+            }
+
+            // Create Claims
+            var claims = new List<Claim>
     {
         new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
         new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
         new Claim(ClaimTypes.Role, user.Role ?? "User")
     };
 
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
-        {
-            IsPersistent = true
-        };
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true
+            };
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity), authProperties);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity), authProperties);
 
-        // **Redirect based on role**
-        if (user.Role == "Admin")
-        {
-            return RedirectToAction("Index", "Dashboard"); // Admin dashboard
+            // **Redirect based on role**
+            if (user.Role == "Admin")
+            {
+                return RedirectToAction("Index", "Dashboard"); // Admin dashboard
+            }
+            else if (user.Role == "Employee")
+            {
+                return RedirectToAction("Index", "EmployeeDashboard"); // Employee dashboard
+            }
+            else
+            {
+                return RedirectToAction("Index", "Home"); // fallback
+            }
         }
-        else if (user.Role == "Employee")
+
+
+
+        // Logout
+
+        public async Task<IActionResult> Logout()
         {
-            return RedirectToAction("Index", "EmployeeDashboard"); // Employee dashboard
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
         }
-        else
-        {
-            return RedirectToAction("Index", "Home"); // fallback
-        }
+
     }
-
-
-
-    // Logout
-    
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);       
-        return RedirectToAction("Login");
-    }
-
 }

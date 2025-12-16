@@ -45,7 +45,10 @@
             </div>
             <div>
                 <div class="kpi-title">Active Suppliers</div>
-                <div class="kpi-main">@Model.Count(s => s.Status == "Active")</div>
+                <div class="kpi-main">
+                    @Model.Select(po => po.Supplier).Where(s => s != null && s.Status.ToLower() == "active").Distinct().Count()
+                </div>
+
             </div>
         </article>
 
@@ -65,7 +68,7 @@
             </div>
             <div>
                 <div class="kpi-title">Delivered POs</div>
-                <div class="kpi-main">@Model.Count(po => po.Status.ToLower() == "intransit")</div>
+                <div class="kpi-main">@Model.Count(po => po.Status.ToLower() == "delivered")</div>
             </div>
         </article>
 
@@ -75,7 +78,7 @@
             </div>
             <div>
                 <div class="kpi-title">Total PO Value</div>
-                <div class="kpi-main">₱@Model.Sum(po => po.Items.Sum(i => i.Quantity * i.UnitPrice))</div>
+                <div class="kpi-main">₱@Model.Where(po => po.Status == "Delivered").Sum(po => po.Items.Sum(i => i.Quantity * i.UnitPrice))</div>
             </div>
         </article>
     </section>
@@ -139,12 +142,16 @@
                                     <button class="icon-btn-table btn-view" data-id="@po.PurchaseOrderID" title="View">
                                         <i class="fa-regular fa-eye"></i>
                                     </button>
-                                    <form asp-action="Receive" asp-controller="Procurement" method="post" class="receive-po-form" style="display:inline">
-                                        <input type="hidden" name="id" value="@po.PurchaseOrderID" />
-                                        <button type="submit" class="icon-btn-table btn-receive" title="Receive" @(po.Status.ToLower() == "delivered" ? "disabled" : "")>
-                                            <i class="fa-solid fa-check"></i>
-                                        </button>
-                                    </form>
+                                    @if (po.Status.ToLower() != "delivered")
+                                        {
+                                            <form asp-action="Receive" asp-controller="Procurement" method="post" class="receive-po-form" style="display:inline">
+                                                <input type="hidden" name="id" value="@po.PurchaseOrderID" />
+                                                <button type="submit" class="icon-btn-table btn-receive" title="Receive">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            </form>
+                                        }
+
                                 </div>
                             </td>
                         </tr>
@@ -178,104 +185,99 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
+            // === VARIABLES ===
+            const table = document.getElementById("poTable");
+            const allRows = Array.from(table.querySelectorAll("tbody tr"));
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
             const searchInput = document.querySelector('.proc-search-input');
-            const rows = document.querySelectorAll('.mm-table tbody tr');
 
-            if (!searchInput) return;
-
-            function applySearch() {
+            // === FUNCTION: GET FILTERED ROWS BASED ON SEARCH ===
+            function getFilteredRows() {
                 const term = (searchInput.value || '').trim().toLowerCase();
-
-                rows.forEach(row => {
+                return allRows.filter(row => {
                     const text = row.innerText.toLowerCase();
-                    row.style.display = term === '' || text.includes(term)
-                        ? ''
-                        : 'none';
+                    return term === '' || text.includes(term);
                 });
             }
 
-            searchInput.addEventListener('input', applySearch);
+            // === FUNCTION: RENDER TABLE PAGE ===
+            function renderTablePage() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
 
-         // Pre-create modal instance with no backdrop
-        const poModalEl = document.getElementById('poModal');
-        const poModal = new bootstrap.Modal(poModalEl, {
-            backdrop: false,
-            keyboard: true
-        });
-
-        // Click event for View buttons
-        document.querySelector('#poTable tbody').addEventListener('click', async function (e) {
-            const btn = e.target.closest('.btn-view');
-            if (!btn) return;
-
-            const id = btn.dataset.id;
-
-            try {
-                const response = await fetch(`/Procurement/ViewPO/${id}`);
-                if (!response.ok) throw new Error("Failed to load Purchase Order details.");
-
-                const html = await response.text();
-                poModalEl.querySelector('.modal-content').innerHTML = html;
-                poModal.show();
-            } catch (err) {
-                alert(err.message);
-                console.error(err);
-            }
-        });
-
-
-      
-
-
-        });
-
-        // Pagination
-        const rowsPerPage = 10;
-        let currentPage = 1;
-
-        function renderTablePage() {
-            const table = document.getElementById("poTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            rows.forEach((row, index) => {
-                row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage &&
-                    index < currentPage * rowsPerPage
+                filteredRows.forEach((row, index) => {
+                    row.style.display =
+                        index >= (currentPage - 1) * rowsPerPage &&
+                        index < currentPage * rowsPerPage
                         ? ""
                         : "none";
+                });
+
+                // Hide rows not in filtered set
+                allRows.forEach(row => {
+                    if (!filteredRows.includes(row)) row.style.display = "none";
+                });
+
+                document.getElementById("pageIndicator").textContent =
+                    `Page ${currentPage} of ${totalPages}`;
+                document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
+                document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
+            }
+
+            // === FUNCTION: CHANGE PAGE ===
+            function changePage(step) {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+
+                currentPage += step;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                renderTablePage();
+            }
+
+            // === SEARCH EVENT ===
+            searchInput.addEventListener('input', function() {
+                currentPage = 1; // reset to page 1 on search
+                renderTablePage();
             });
 
-            document.getElementById("pageIndicator").textContent =
-                `Page ${currentPage} of ${totalPages}`;
-            document.querySelectorAll(".pg-btn")[0].disabled = currentPage === 1;
-            document.querySelectorAll(".pg-btn")[1].disabled = currentPage === totalPages;
-        }
+            // === PAGINATION BUTTONS ===
+            document.querySelectorAll(".pg-btn")[0].addEventListener('click', () => changePage(-1));
+            document.querySelectorAll(".pg-btn")[1].addEventListener('click', () => changePage(1));
 
-        function changePage(step) {
-            const table = document.getElementById("poTable");
-            const rows = table.querySelectorAll("tbody tr");
-            const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-            currentPage += step;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
+            // === INITIAL TABLE RENDER ===
             renderTablePage();
-        }
 
-        renderTablePage();
+            // === VIEW PO MODAL ===
+            const poModalEl = document.getElementById('poModal');
+            const poModal = new bootstrap.Modal(poModalEl, { backdrop: false, keyboard: true });
 
-    </script>
+            document.querySelector('#poTable tbody').addEventListener('click', async function (e) {
+                const btn = e.target.closest('.btn-view');
+                if (!btn) return;
 
+                const id = btn.dataset.id;
 
-    <!-- Confirmation Modal -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    const response = await fetch(`/Procurement/ViewPO/${id}`);
+                    if (!response.ok) throw new Error("Failed to load Purchase Order details.");
 
+                    const html = await response.text();
+                    poModalEl.querySelector('.modal-content').innerHTML = html;
+                    poModal.show();
+                } catch (err) {
+                    alert(err.message);
+                    console.error(err);
+                }
+            });
+
+            // === RECEIVE CONFIRMATION ===
             document.querySelectorAll('.receive-po-form').forEach(form => {
                 form.addEventListener('submit', function (e) {
                     e.preventDefault(); // STOP immediate submit
@@ -300,5 +302,5 @@
 
         });
     </script>
-
 }
+

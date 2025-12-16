@@ -105,7 +105,15 @@ namespace Moonmax.Controllers
                 {
                     InvoiceID = i.InvoiceID,
                     InvoiceNumber = i.InvoiceNumber,
-                    ClientName = i.Client.Name,
+
+                    ClientName = i.Client.Name == "Walk-In"
+                    ? $"Walk-In ({i.JobOrder.ContactNumber})"
+                    : i.Client.Name,
+
+                    ContactNumber = i.Client.Name == "Walk-In"
+                    ? i.JobOrder.ContactNumber
+                    : i.Client.ContactNumber,
+
                     JobID = i.JobID,
                     Amount = i.Amount,
                     PaymentType = i.PaymentType,
@@ -113,6 +121,7 @@ namespace Moonmax.Controllers
                     DueDate = i.DueDate,
                     Status = i.Status
                 })
+
                 .ToListAsync();
 
             var inProgressJobs = await _context.JobOrders

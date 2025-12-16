@@ -293,7 +293,10 @@ namespace Moonmax.Controllers
                 QuantityInStock = i.QuantityInStock,
                 ReorderLevel = i.ReorderLevel,
                 SupplierName = i.Supplier?.SupplierName ?? "-",
-                CreatedAt = i.CreatedAt
+                //CreatedAt = i.CreatedAt,
+                UpdatedAt = i.UpdatedAt
+
+
             }).ToList();
 
             // KPIs

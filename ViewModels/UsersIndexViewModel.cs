@@ -13,8 +13,14 @@ namespace Moonmax.ViewModels
         public CreateUserViewModel CreateModel { get; set; } = new CreateUserViewModel();
         public CreateTechnicianViewModel CreateTechnicianModel { get; set; } = new CreateTechnicianViewModel();
 
+        public TechnicianEditViewModel EditTechnicianModel { get; set; } = new TechnicianEditViewModel();
+
+
 
     }
+
+    
+
 
 
 }

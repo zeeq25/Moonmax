@@ -24,8 +24,9 @@ namespace Moonmax.ViewModels
             public int QuantityInStock { get; set; }
             public int ReorderLevel { get; set; }
             public string SupplierName { get; set; }
-            public DateTime CreatedAt { get; set; }
+            // public DateTime CreatedAt { get; set; }
+
+            public DateTime? UpdatedAt {get; set;}
         }
     }
-
 }

@@ -6,6 +6,13 @@
     ViewData["AppShell"] = true;
 }
 
+@{
+    var generatedByUser = User.Identity?.IsAuthenticated == true
+        ? User.Identity.Name
+        : "Unknown User";
+}
+
+
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
@@ -116,7 +123,7 @@
                             <th>Quantity In Stock</th>
                             <th>Reorder Level</th>
                             <th>Supplier</th>
-                            <th>Created At</th>
+                            <th>Updated At</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -130,7 +137,7 @@
                                 <td>@item.QuantityInStock</td>
                                 <td>@item.ReorderLevel</td>
                                 <td>@item.SupplierName</td>
-                                <td>@item.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                <td>@item.UpdatedAt?.ToString("yyyy-MM-dd")</td>
                             </tr>
                         }
                     </tbody>
@@ -226,24 +233,32 @@
             return allRows.filter(r => r.dataset.filtered === "true");
         }
 
-        function renderTablePage(page) {
+            function renderTablePage(page) {
             const visibleRows = getVisibleRows();
-            const totalPages = Math.max(Math.ceil(visibleRows.length / rowsPerPage), 1);
+            const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
 
-            visibleRows.forEach((row, index) => {
-                row.style.display =
-                    (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage)
-                        ? ""
-                        : "none";
-            });
+            // Ensure page is within bounds
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+            currentPage = page;
 
-            document.getElementById("pageIndicator").textContent =
-                `Page ${page} of ${totalPages}`;
+            // Hide all rows first
+            allRows.forEach(r => r.style.display = "none");
 
-            document.getElementById("prevPage").disabled = page === 1;
-            document.getElementById("nextPage").disabled = page === totalPages;
+            // Show only the rows for the current page
+            const startIdx = (page - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            visibleRows.slice(startIdx, endIdx).forEach(r => r.style.display = "");
+
+            // Update page indicator
+            document.getElementById("pageIndicator").innerText =
+                `Page ${page} of ${totalPages || 1}`;
+
+            // Enable/disable buttons
+            document.getElementById("prevPage").disabled = (page <= 1);
+            document.getElementById("nextPage").disabled = (page >= totalPages);
         }
-
+       
         document.addEventListener("DOMContentLoaded", () => {
             allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
 
@@ -271,87 +286,48 @@
         const searchInput = document.getElementById('searchFilter');
         const fromDateInput = document.getElementById('reportFromDate');
         const toDateInput = document.getElementById('reportToDate');
+        const filterBtn = document.getElementById('btnApplyFilter');
 
-        function updateRowVisibility() {
+        function applyFilters() {
             const search = searchInput.value.toLowerCase().trim();
             const fromDate = fromDateInput.value ? new Date(fromDateInput.value) : null;
             const toDate = toDateInput.value ? new Date(toDateInput.value) : null;
             if (toDate) toDate.setHours(23, 59, 59, 999);
 
             allRows.forEach(row => {
-                const createdAt = new Date(row.cells[7].innerText.trim());
+                const updatedAtText = row.cells[7].innerText.trim();
+                const updatedAt = updatedAtText ? new Date(updatedAtText) : null;
+
                 const partName = row.cells[2].innerText.toLowerCase();
                 const supplier = row.cells[6].innerText.toLowerCase();
                 const category = row.cells[1].innerText.toLowerCase();
 
-                const matchesDate = (!fromDate || !toDate) || (createdAt >= fromDate && createdAt <= toDate);
-                const matchesSearch = !search || partName.includes(search) || supplier.includes(search) || category.includes(search);
+                const matchesSearch =
+                    !search ||
+                    partName.includes(search) ||
+                    supplier.includes(search) ||
+                    category.includes(search);
 
-                row.dataset.visible = (matchesDate && matchesSearch) ? "true" : "false";
+                const matchesDate =
+                    (!fromDate || !toDate || !updatedAt) ||
+                    (updatedAt >= fromDate && updatedAt <= toDate);
+
+                row.dataset.filtered = (matchesSearch && matchesDate) ? "true" : "false";
             });
 
             currentPage = 1;
             renderTablePage(currentPage);
         }
 
-        searchInput.addEventListener('input', updateRowVisibility);
-        document.getElementById('btnApplyFilter').addEventListener('click', updateRowVisibility);
-
-        function renderTablePage(page) {
-            const visibleRows = allRows.filter(r => r.dataset.visible === "true");
-            const totalPages = Math.max(Math.ceil(visibleRows.length / rowsPerPage), 1);
-
-            allRows.forEach(row => row.style.display = "none"); // hide all rows first
-            visibleRows.slice((page-1)*rowsPerPage, page*rowsPerPage).forEach(row => row.style.display = "");
-
-            document.getElementById("pageIndicator").textContent = `Page ${page} of ${totalPages}`;
-            document.getElementById("prevPage").disabled = page === 1;
-            document.getElementById("nextPage").disabled = page === totalPages;
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
-            allRows.forEach(r => r.dataset.visible = "true"); // initially visible
-
-            document.getElementById("prevPage").onclick = () => { if (currentPage > 1) { currentPage--; renderTablePage(currentPage); } };
-            document.getElementById("nextPage").onclick = () => { currentPage++; renderTablePage(currentPage); };
-
-            renderTablePage(currentPage);
-        });
+        searchInput.addEventListener('input', applyFilters);
+        filterBtn.addEventListener('click', applyFilters);
     </script>
 
 
 
-
-
-    <!-- From-To Filter -->
     <script>
-        document.getElementById('btnApplyFilter').addEventListener('click', () => {
-            const fromDate = document.getElementById('reportFromDate').value;
-            const toDate = document.getElementById('reportToDate').value;
-
-            if (!fromDate || !toDate) {
-                alert('Please select both From and To dates.');
-                return;
-            }
-
-            const from = new Date(fromDate);
-            const to = new Date(toDate);
-            to.setHours(23, 59, 59, 999);
-
-            allRows.forEach(row => {
-                const createdAt = new Date(row.cells[7].innerText.trim());
-                const isVisible = createdAt >= from && createdAt <= to;
-
-                row.dataset.filtered = isVisible ? "true" : "false";
-                row.style.display = "none"; // pagination controls visibility
-            });
-
-            currentPage = 1;
-            renderTablePage(currentPage);
-        });
+        const generatedByUser = "@generatedByUser";
     </script>
-
 
 
     <!-- Export  -->
@@ -363,7 +339,7 @@
             const rows = getVisibleRows().map(row =>
                 Array.from(row.cells).map((cell, i) => {
                     if (i === 3) {
-                        return 'P' + cell.innerText.replace(/₱/g, '').trim();
+                        return 'PHP ' + cell.innerText.replace(/₱/g, '').trim();
                     }
                     return cell.innerText.trim();
                 })
@@ -374,13 +350,22 @@
                 return;
             }
 
-            doc.setFontSize(10);
+            doc.setFontSize(12);
             doc.text("Inventory Report", 14, 15);
 
+            // Generated info
+            doc.setFontSize(9);
+            doc.text(`Generated by: ${generatedByUser}`, 10, 21);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 26);
+
+            // Divider
+            doc.setLineWidth(0.5);
+            doc.line(10, 29, 200, 29);
+
             doc.autoTable({
-                head: [['ID','Category','Part','Unit Cost','Qty In Stock','Reorder','Supplier','Created At']],
+                head: [['ID','Category','Part','Unit Cost','Qty In Stock','Reorder','Supplier','Updated At']],
                 body: rows,
-                startY: 20,
+                startY: 35,
                 theme: 'striped',
                 styles: { fontSize: 8 },
                 headStyles: { fillColor: [79,70,229], textColor: 255 },
@@ -391,10 +376,7 @@
             doc.save(`InventoryReport_${Date.now()}.pdf`);
         });
     </script>
-
-
-
-
+    
     <script>
         // Back Button
         document.getElementById('btnBack').addEventListener('click', () => {

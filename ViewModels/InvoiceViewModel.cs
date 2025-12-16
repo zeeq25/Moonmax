@@ -5,6 +5,11 @@
         public int InvoiceID { get; set; }
         public string InvoiceNumber { get; set; }
         public string ClientName { get; set; }
+
+
+        public string ContactNumber { get; set; } // ⬅️ ADD HERE
+
+
         public int JobID { get; set; }
         public decimal Amount { get; set; }
         public string PaymentType { get; set; }

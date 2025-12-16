@@ -301,6 +301,7 @@ namespace Moonmax.Controllers
                 {
                     previousQty = inventoryItem.QuantityInStock;
                     inventoryItem.QuantityInStock += item.Quantity;
+                    inventoryItem.UpdatedAt = DateTime.Now; // ✅ ADD THIS
                     newQty = inventoryItem.QuantityInStock;
                 }
                 else

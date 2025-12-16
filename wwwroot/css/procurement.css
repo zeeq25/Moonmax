@@ -527,3 +527,49 @@
         background-color: rgba(0,0,0,0.3);
         border-radius: 3px;
     }
+
+/* === FIX PO ITEM INPUT SIZES === */
+.po-item {
+    gap: 6px;
+}
+
+    .po-item input,
+    .po-item select {
+        flex: 0 0 auto !important; /* STOP stretching */
+    }
+
+        /* Individual widths */
+        .po-item input[name*="ProductName"] {
+            width: 260px;
+        }
+
+        .po-item input[name*="Quantity"] {
+            width: 120px;
+        }
+
+        .po-item input[name*="UnitPrice"] {
+            width: 120px;
+        }
+
+    .po-item select {
+        width: 160px;
+    }
+
+    .po-item .remove-item {
+        white-space: nowrap;
+    }
+
+
+/* === SUPPLIER & DATE INPUT SIZES === */
+.form-group select,
+.form-group input[type="date"] {
+    max-width: 360px;
+}
+
+/* Optional: slightly tighter on large screens */
+@media (min-width: 992px) {
+    .form-group select,
+    .form-group input[type="date"] {
+        max-width: 320px;
+    }
+}

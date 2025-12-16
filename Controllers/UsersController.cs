@@ -234,6 +234,24 @@ namespace Moonmax.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // EDIT TECHNICIAN
+        [HttpPost]
+        public IActionResult EditTechnician(TechnicianEditViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var tech = _context.Technician.FirstOrDefault(t => t.TechnicianID == model.TechnicianID);
+            if (tech == null)
+                return NotFound();
+
+            tech.Name = model.Name;
+            _context.SaveChanges();
+
+            return RedirectToAction("Index"); // reload page to reflect changes
+        }
+
+
         // ===== ADD THIS HELPER METHOD =====
         private int GetCurrentUserId()
         {
