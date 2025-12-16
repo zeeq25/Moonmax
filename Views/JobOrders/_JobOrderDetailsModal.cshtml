@@ -31,7 +31,6 @@
     </div>
 
     <hr />
-
     <!-- ================= JOB PARTS ================= -->
     <h6 class="mb-2">Job Parts</h6>
 
@@ -60,8 +59,8 @@
                     <tr>
                         <td>@part.PartName</td>
                         <td class="text-center">@part.Quantity</td>
-                        <td class="text-end">₱@part.UnitCost.ToString("N0")</td>
-                        <td class="text-end">₱@(part.Quantity* part.UnitCost).ToString("N0")</td>
+                        <td class="text-end">₱@part.UnitCost.ToString("N0")</td>                      
+                        <td class="text-end">₱@((Model.Cost + Model.Parts.Sum(p => p.Quantity * p.UnitCost)).ToString("N0"))</td>
                     </tr>
                 }
             </tbody>

@@ -94,7 +94,8 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
 
-                                @if (!string.Equals(jo.Status?.Trim(), "Completed", StringComparison.OrdinalIgnoreCase))
+                                @* Only show Add Parts for Pending jobs *@
+                                @if (string.Equals(jo.Status?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <a class="icon-btn-table btn-add-parts"
                                        asp-action="AddParts"
@@ -104,6 +105,19 @@
                                     </a>
                                 }
 
+                                @* Only show Create Invoice for In Progress jobs *@
+                                @if (string.Equals(jo.Status?.Trim(), "In Progress", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <a class="icon-btn-table btn-create-invoice"
+                                       asp-action="CreateInvoice"
+                                       asp-route-id="@jo.JobID"
+                                       title="Create Invoice"
+                                       data-job-id="@jo.JobID"
+                                       data-client="@jo.Client"
+                                       data-cost="@jo.Cost.ToString("C")">
+                                        <i class="fa-solid fa-file-invoice"></i>
+                                    </a>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -130,6 +144,9 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById("jobOrdersTable");
@@ -228,6 +245,47 @@
         });
     </script>
 
-    <partial name="_ValidationScriptsPartial" />
+    <!-- Add this script in the  Scripts block -->
+    <script>
+    // Create Invoice Confirmation
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-create-invoice').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const jobId = this.dataset.jobId;
+                const client = this.dataset.client;
+                const cost = this.dataset.cost;
+                const url = this.href;
+
+                Swal.fire({
+                    title: 'Create Invoice?',
+                    html: `
+                        <div style="text-align:left">
+                            <p><strong>Job ID:</strong> ${jobId}</p>
+                            <p><strong>Client:</strong> ${client}</p>
+                            <p><strong>Cost:</strong> ${cost}</p>
+                            <hr>
+                            <p>This will create a new invoice for this job.</p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Create Invoice',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    });
+    </script>
+
+    
 }
 

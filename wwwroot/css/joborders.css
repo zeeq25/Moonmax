@@ -534,4 +534,90 @@ button[disabled] {
     }
 
 
+.btn-create-invoice {
+    color: #10b981;
+}
+
+    .btn-create-invoice:hover {
+        color: #059669;
+        background-color: rgba(16, 185, 129, 0.1);
+    }
+
+/* Responsive form adjustments */
+.add-part-form .form-control,
+.add-part-form .form-select {
+    max-width: 100%;
+}
+
+/* Smaller input widths on larger screens */
+@@media (min-width: 768px) {
+    .add-part-form .col-md-6 .form-select {
+        max-width: 400px;
+    }
+
+    .add-part-form .col-md-3 .form-control {
+        max-width: 150px;
+    }
+}
+
+/* Button styling to match your theme */
+.btn-add-part {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .btn-add-part:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+.btn-confirm-parts {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 40px;
+    transition: all 0.3s ease;
+}
+
+    .btn-confirm-parts:hover {
+        background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+    }
+
+    .btn-confirm-parts:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+.btn-remove-part {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+    .btn-remove-part:hover {
+        background: linear-gradient(135deg, #f45c43 0%, #eb3349 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4);
+    }
+
+/* Table responsiveness */
+.added-parts-table {
+    overflow-x: auto;
+}
+
+.table-responsive-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
 

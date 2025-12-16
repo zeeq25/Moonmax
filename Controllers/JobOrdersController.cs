@@ -208,6 +208,10 @@ namespace Moonmax.Controllers
     };
         }
 
+        // ========================================
+        // COMPLETE FIXED ADDPARTS METHODS
+        // ========================================
+
         // ADD PARTS GET
         [HttpGet]
         public async Task<IActionResult> AddParts(int id)
@@ -223,11 +227,22 @@ namespace Moonmax.Controllers
                 .Where(p => p.JobID == id)
                 .ToListAsync();
 
+
+
+            // Get ALL distinct categories from inventory (ignore stock for category dropdown)
+            var categories = await _db.Inventories
+                .Where(i => !string.IsNullOrWhiteSpace(i.Category))
+                .Select(i => i.Category.Trim())
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
             var vm = new AddPartsViewModel
             {
                 JobID = job.JobID,
                 JobClient = job.ClientID == null ? $"Walk-In ({job.ContactNumber})" : job.Client!.Name,
                 ServiceType = job.ServiceType ?? "",
+                JobStatus = job.Status, // ⬅️ ADDED THIS
                 Parts = parts.Select(p => new JobPartListingVM
                 {
                     PartID = p.PartID,
@@ -236,58 +251,140 @@ namespace Moonmax.Controllers
                     UnitCost = p.UnitCost,
                     TotalCost = p.TotalCost
                 }).ToList(),
+
+                // Populate categories - make sure there's at least a placeholder if empty
+                Categories = categories.Any()
+                ? categories.Select(c => new SelectListItem { Value = c, Text = c }).ToList()
+                : new List<SelectListItem>
+                {
+                new SelectListItem { Value = "", Text = "No categories available", Disabled = true }
+                },
+
+
                 InventoryItems = await _db.Inventories
-                    .Select(i => new SelectListItem { Value = i.InventoryID.ToString(), Text = i.PartName })
+                    .Where(i => (i.QuantityInStock - i.ReservedQuantity) > 0) // Only show available items
+                    .Select(i => new SelectListItem
+                    {
+                        Value = i.InventoryID.ToString(),
+                        Text = $"{i.PartName} (Available: {i.QuantityInStock - i.ReservedQuantity})"
+                    })
                     .ToListAsync()
             };
+
+
 
             return View(vm);
         }
 
-        // ADD PARTS POST
+        // ADD PARTS POST - PRODUCTION VERSION
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddParts(AddPartsViewModel vm)
         {
+            // Validate basic requirements
+            if (vm.InventoryID <= 0)
+            {
+                ModelState.AddModelError("InventoryID", "Please select a part");
+            }
+
+            if (vm.Quantity <= 0)
+            {
+                ModelState.AddModelError("Quantity", "Quantity must be greater than 0");
+            }
+
             if (!ModelState.IsValid)
             {
+                TempData["AddPartsError"] = "Please fill in all required fields correctly.";
                 await ReloadInventoryDropdownAndParts(vm);
                 return View(vm);
             }
 
-            var inventoryItem = await _db.Inventories.FirstOrDefaultAsync(i => i.InventoryID == vm.InventoryID);
-            if (inventoryItem == null) return BadRequest("Invalid inventory item.");
+            // Get inventory item
+            var inventoryItem = await _db.Inventories
+                .FirstOrDefaultAsync(i => i.InventoryID == vm.InventoryID);
 
-            // Soft stock check for this addition
-            if (vm.Quantity > inventoryItem.QuantityInStock)
+            if (inventoryItem == null)
             {
-                TempData["Error"] = $"Insufficient stock for {inventoryItem.PartName}. " +
-                                    $"Available: {inventoryItem.QuantityInStock}, Requested: {vm.Quantity}.";
+                TempData["AddPartsError"] = "Selected part not found in inventory.";
                 await ReloadInventoryDropdownAndParts(vm);
                 return View(vm);
             }
 
-            // Add part
-            var part = new JobPart
+            // Calculate available stock (actual stock minus reserved)
+            var availableStock = inventoryItem.QuantityInStock - inventoryItem.ReservedQuantity;
+
+            // Check if we have enough stock
+            if (vm.Quantity > availableStock)
             {
-                JobID = vm.JobID,
-                InventoryID = vm.InventoryID,
-                Quantity = vm.Quantity,
-                UnitCost = inventoryItem.UnitCost
-            };
+                TempData["AddPartsError"] = $"Cannot add {vm.Quantity} units of {inventoryItem.PartName}. Only {availableStock} units available (Total Stock: {inventoryItem.QuantityInStock}, Reserved: {inventoryItem.ReservedQuantity}).";
+                await ReloadInventoryDropdownAndParts(vm);
+                return View(vm);
+            }
 
-            _db.JobParts.Add(part);
-            await _db.SaveChangesAsync();
+            // Check reorder level (BLOCKING - must maintain minimum stock)
+            const int reorderLevel = 10;
+            var stockAfterAddition = availableStock - vm.Quantity;
 
-            TempData["Success"] = "Part added successfully!";
-            return RedirectToAction(nameof(AddParts), new { id = vm.JobID });
+            if (stockAfterAddition < reorderLevel)
+            {
+                TempData["AddPartsError"] = $"❌ Cannot add {vm.Quantity} units of {inventoryItem.PartName}. This would bring stock below minimum level. Available: {availableStock}, After addition: {stockAfterAddition}, Minimum required: {reorderLevel}. Maximum you can add: {availableStock - reorderLevel} units.";
+                await ReloadInventoryDropdownAndParts(vm);
+                return View(vm);
+            }
+
+            try
+            {
+                // Create the job part
+                var part = new JobPart
+                {
+                    JobID = vm.JobID,
+                    InventoryID = vm.InventoryID,
+                    Quantity = vm.Quantity,
+                    UnitCost = inventoryItem.UnitCost
+                };
+
+                _db.JobParts.Add(part);
+                await _db.SaveChangesAsync();
+
+                // Show success message (or warning if stock is low)
+                if (string.IsNullOrEmpty(TempData["AddPartsWarning"] as string))
+                {
+                    TempData["AddPartsSuccess"] = $"Successfully added {vm.Quantity} units of {inventoryItem.PartName}!";
+                }
+
+                return RedirectToAction(nameof(AddParts), new { id = vm.JobID });
+            }
+            catch (Exception ex)
+            {
+                TempData["AddPartsError"] = $"Error adding part: {ex.Message}";
+                await ReloadInventoryDropdownAndParts(vm);
+                return View(vm);
+            }
         }
 
-        // Helper method to reload inventory dropdown and parts table
+        // RELOAD HELPER
         private async Task ReloadInventoryDropdownAndParts(AddPartsViewModel vm)
         {
+            var job = await _db.JobOrders
+                .Include(j => j.Client)
+                .FirstOrDefaultAsync(j => j.JobID == vm.JobID);
+
+            if (job != null)
+            {
+                vm.JobStatus = job.Status;
+                vm.JobClient = job.ClientID == null
+                    ? $"Walk-In ({job.ContactNumber})"
+                    : job.Client?.Name ?? "Unknown";
+                vm.ServiceType = job.ServiceType ?? "";
+            }
+
             vm.InventoryItems = await _db.Inventories
-                .Select(i => new SelectListItem { Value = i.InventoryID.ToString(), Text = i.PartName })
+                .Where(i => (i.QuantityInStock - i.ReservedQuantity) > 0)
+                .Select(i => new SelectListItem
+                {
+                    Value = i.InventoryID.ToString(),
+                    Text = $"{i.PartName} (Available: {i.QuantityInStock - i.ReservedQuantity})"
+                })
                 .ToListAsync();
 
             vm.Parts = await _db.JobParts
@@ -300,10 +397,35 @@ namespace Moonmax.Controllers
                     Quantity = p.Quantity,
                     UnitCost = p.UnitCost,
                     TotalCost = p.TotalCost
-                }).ToListAsync();
+                })
+                .ToListAsync();
+
+            var categories = await _db.Inventories
+    .Where(i => !string.IsNullOrWhiteSpace(i.Category))
+    .Select(i => i.Category.Trim())
+    .Distinct()
+    .OrderBy(c => c)
+    .ToListAsync();
+
+            vm.Categories = categories.Any()
+                ? categories.Select(c => new SelectListItem
+                {
+                    Value = c,
+                    Text = c
+                }).ToList()
+                : new List<SelectListItem>
+                {
+        new SelectListItem
+        {
+            Value = "",
+            Text = "No categories available",
+            Disabled = true
+        }
+                };
+
         }
 
-        // Confirm Parts POST
+        // CONFIRM PARTS - ALLOW ZERO PARTS (Labor-Only Jobs)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmParts(int JobID)
@@ -316,42 +438,85 @@ namespace Moonmax.Controllers
                 .Where(p => p.JobID == JobID)
                 .ToListAsync();
 
-            const int reorderLevel = 10;
-            var stockErrors = new List<string>();
-
-            foreach (var group in parts.GroupBy(p => p.InventoryID))
+            // Check if already confirmed
+            if (job.Status == "In Progress" || job.Status == "Completed")
             {
-                var inventoryItem = group.First().Inventory;
-                var totalQuantityForJob = group.Sum(p => p.Quantity);
-                var availableStock = inventoryItem.QuantityInStock - inventoryItem.ReservedQuantity;
-
-                if (availableStock - totalQuantityForJob < reorderLevel)
-                {
-                    stockErrors.Add(inventoryItem.PartName);
-                }
-            }
-
-            if (stockErrors.Any())
-            {
-                TempData["Error"] = "Parts below minimum stock - " + string.Join(", ", stockErrors);
+                TempData["AddPartsError"] = "Parts have already been confirmed for this job.";
                 return RedirectToAction(nameof(AddParts), new { id = JobID });
             }
 
+            // NEW: Allow confirmation even with no parts (labor-only jobs)
+            if (!parts.Any())
+            {
+                // Just update status, no reservation needed
+                job.Status = "In Progress";
+                await _db.SaveChangesAsync();
+
+                var clientNoparts = await _db.Client.FindAsync(job.ClientID);
+                string clientNameNoParts = clientNoparts?.Name ?? $"Walk-In ({job.ContactNumber})";
+
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "UPDATE",
+                    module: "Job Orders",
+                    description: $"Confirmed Job #{job.JobID} ({clientNameNoParts}) - Labor only, no parts",
+                    targetId: job.JobID
+                );
+
+                TempData["AddPartsSuccess"] = "✅ Job confirmed (labor only - no parts needed)";
+                return RedirectToAction(nameof(AddParts), new { id = JobID });
+            }
+
+            // EXISTING LOGIC: If parts exist, validate and reserve stock
+            var insufficientStockErrors = new List<string>();
+
+            // Check stock for each unique inventory item
             foreach (var group in parts.GroupBy(p => p.InventoryID))
             {
                 var inventoryItem = group.First().Inventory;
-                var totalQuantityForJob = group.Sum(p => p.Quantity);
-                inventoryItem.ReservedQuantity += totalQuantityForJob;
+                var totalQuantityNeeded = group.Sum(p => p.Quantity);
+                var availableStock = inventoryItem.QuantityInStock - inventoryItem.ReservedQuantity;
+
+                // Critical: Check if we have enough stock
+                if (totalQuantityNeeded > availableStock)
+                {
+                    insufficientStockErrors.Add($"{inventoryItem.PartName} (Need: {totalQuantityNeeded}, Available: {availableStock})");
+                }
             }
+
+            // Only block if insufficient stock
+            if (insufficientStockErrors.Any())
+            {
+                TempData["AddPartsError"] = "❌ Cannot confirm parts - Insufficient stock: " + string.Join(", ", insufficientStockErrors);
+                return RedirectToAction(nameof(AddParts), new { id = JobID });
+            }
+
+            // Reserve the stock (OVERBOOKING PROTECTION INTACT)
+            foreach (var group in parts.GroupBy(p => p.InventoryID))
+            {
+                var inventoryItem = group.First().Inventory;
+                var totalQuantityNeeded = group.Sum(p => p.Quantity);
+                inventoryItem.ReservedQuantity += totalQuantityNeeded;
+            }
+
+            // Update job status to In Progress
+            job.Status = "In Progress";
             await _db.SaveChangesAsync();
 
-            if (job.Status == "Pending")
-            {
-                job.Status = "In Progress";
-                await _db.SaveChangesAsync();
-            }
+            // Audit log
+            var client = await _db.Client.FindAsync(job.ClientID);
+            string clientName = client?.Name ?? $"Walk-In ({job.ContactNumber})";
 
-            TempData["Success"] = "Parts confirmed successfully!";
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "UPDATE",
+                module: "Job Orders",
+                description: $"Confirmed parts for Job #{job.JobID} ({clientName}) - Reserved {parts.Sum(p => p.Quantity)} items total",
+                targetId: job.JobID
+            );
+
+            TempData["AddPartsSuccess"] = "✅ Parts confirmed and reserved successfully!";
+
             return RedirectToAction(nameof(AddParts), new { id = JobID });
         }
 
@@ -463,20 +628,42 @@ namespace Moonmax.Controllers
             return Json(new { contactNumber = "" });
         }
 
-        // GET: JobOrders/RemovePart/5
+        // REMOVE PART
         [HttpGet]
         public async Task<IActionResult> RemovePart(int id)
         {
-            var part = await _db.JobParts.FindAsync(id);
+            var part = await _db.JobParts
+                .Include(p => p.Inventory)
+                .Include(p => p.JobOrder)
+                .FirstOrDefaultAsync(p => p.PartID == id);
+
             if (part == null)
                 return NotFound();
 
+            // Check if job is still pending (can't remove if confirmed)
+            if (part.JobOrder.Status != "Pending")
+            {
+                TempData["AddPartsError"] = "Cannot remove parts after confirmation.";
+                return RedirectToAction("AddParts", new { id = part.JobID });
+            }
+
             int jobId = part.JobID;
+            string partName = part.Inventory?.PartName ?? "Unknown Part";
+            int quantity = part.Quantity;
 
             _db.JobParts.Remove(part);
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = "Part removed successfully!";
+            // Audit log
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "DELETE",
+                module: "Job Orders",
+                description: $"Removed part '{partName}' (Qty: {quantity}) from Job #{jobId}",
+                targetId: jobId
+            );
+
+            TempData["AddPartsSuccess"] = $"Removed {quantity} units of {partName} successfully!";
             return RedirectToAction("AddParts", new { id = jobId });
         }
 
@@ -536,5 +723,117 @@ namespace Moonmax.Controllers
             return 0;
         }
         // ⬆️⬆️⬆️ END HELPER METHOD ⬆️⬆️⬆️
+
+        // ADD THIS METHOD TO JobOrdersController.cs
+
+        // GET: JobOrders/CreateInvoice/5
+        [HttpGet]
+        public async Task<IActionResult> CreateInvoice(int id)
+        {
+            var jobOrder = await _db.JobOrders
+                .Include(j => j.JobParts)
+                .Include(j => j.Client)
+                .FirstOrDefaultAsync(j => j.JobID == id);
+
+            if (jobOrder == null)
+            {
+                return NotFound();
+            }
+
+            // Check if invoice already exists for this job
+            var existingInvoice = await _db.Invoices
+                .FirstOrDefaultAsync(inv => inv.JobID == id);
+
+            if (existingInvoice != null)
+            {
+                TempData["Error"] = "Invoice already exists for this job order.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check if job is in progress
+            if (jobOrder.Status != "In Progress")
+            {
+                TempData["Error"] = "Only jobs in progress can be invoiced.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            decimal totalPartsCost = jobOrder.JobParts.Sum(p => p.TotalCost);
+            decimal totalInvoiceAmount = jobOrder.Cost + totalPartsCost;
+
+            string invoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
+
+            DateTime dateIssued = DateTime.Now;
+            DateTime? dueDate = null;
+
+            string paymentType = jobOrder.Client?.PaymentType ?? "Cash";
+
+            switch (paymentType)
+            {
+                case "PDC-15 DAYS":
+                    dueDate = dateIssued.AddDays(15);
+                    break;
+                case "PDC-30 DAYS":
+                    dueDate = dateIssued.AddDays(30);
+                    break;
+                case "PDC-60 DAYS":
+                    dueDate = dateIssued.AddDays(60);
+                    break;
+                default:
+                    dueDate = dateIssued;
+                    break;
+            }
+
+            var invoice = new Invoice
+            {
+                InvoiceNumber = invoiceNumber,
+                ClientID = jobOrder.ClientID,
+                JobID = jobOrder.JobID,
+                Amount = totalInvoiceAmount,
+                PaymentType = jobOrder.Client?.PaymentType ?? "Cash",
+                DateIssued = DateTime.Now,
+                DueDate = dueDate,
+                Status = "Pending"
+            };
+
+            _db.Invoices.Add(invoice);
+            await _db.SaveChangesAsync();
+
+            // Audit log
+            string clientName = jobOrder.Client?.Name ?? $"Walk-In ({jobOrder.ContactNumber})";
+
+            await _auditService.LogAsync(
+                userId: GetCurrentUserId(),
+                action: "CREATE",
+                module: "Job Orders",
+                description: $"Created Invoice {invoiceNumber} for {clientName} - Job #{jobOrder.JobID}, Amount: ₱{totalInvoiceAmount:N2}, Payment: {paymentType}",
+                targetId: invoice.InvoiceID
+            );
+
+            TempData["Success"] = $"Invoice {invoiceNumber} created successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        [HttpGet]
+        public async Task<JsonResult> GetPartsByCategory(string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                return Json(new List<object>());
+            }
+
+            var parts = await _db.Inventories
+                .Where(i => i.Category.Trim() == category.Trim()
+                         && (i.QuantityInStock - i.ReservedQuantity) > 0)
+                .OrderBy(i => i.PartName)
+                .Select(i => new
+                {
+                    value = i.InventoryID,
+                    text = $"{i.PartName} (Available: {i.QuantityInStock - i.ReservedQuantity})"
+                })
+                .ToListAsync();
+
+            return Json(parts);
+        }
     }
 }

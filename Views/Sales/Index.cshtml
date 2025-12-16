@@ -64,66 +64,11 @@
         </div>
     </section>
 
-    <!-- TABLE 1: IN PROGRESS JOB ORDERS -->
-    <section class="inv-table-wrap">
-        <h3 class="table-section-title">Job Orders (In Progress)</h3>
-        <div class="mm-card">
-            <table class="mm-table" id="jobOrdersTable">
-                <thead>
-                    <tr>
-                        <th>Client</th>
-                        <th>Job ID</th>
-                        <th>Cost</th>
-                        <th>Status</th>
-                        <th class="col-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var job in Model.InProgressJobs)
-                    {
-                        <tr>
-                            <td>@job.Client</td>
-                            <td>@job.JobID</td>
-                            <td>@job.Cost.ToString("C")</td>
-                            <td><span class="status status-warn">In Progress</span></td>
-                            <td class="inv-actions">
-                                <div class="sales-actions">
-                                    <!-- View Job Order Button -->
-                                    <button type="button" class="icon-btn-table btn-view-job" title="View Job Order"
-                                            data-job-id="@job.JobID">
-                                        <i class="fa-regular fa-eye"></i>
-                                    </button>
-
-                                    <!-- Create Invoice Button -->
-                                    <a asp-action="CreateInvoice"
-                                       asp-route-jobId="@job.JobID"
-                                       class="icon-btn-table btn-create"
-                                       title="Create Invoice">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- Job Orders Pagination -->
-    <div class="table-pagination" id="jobOrdersPagination">
-        <button class="pg-btn" id="jobOrdersPrev">‹</button>
-        <span id="jobOrdersPageIndicator">Page 1</span>
-        <button class="pg-btn" id="jobOrdersNext">›</button>
-    </div>
-
-    
-
     <!-- TABLE 2: INVOICES (UNCHANGED) -->
     <section class="inv-table-wrap">
         <h3 class="table-section-title">Invoices</h3>
 
-        <!-- SEARCH + FILTER / EXPORT -->
+        <!-- SEARCH + FILTER -->
         <section class="inv-filter-bar">
             <div class="inv-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -134,12 +79,7 @@
                     <option value="all">All</option>
                     <option value="paid">Paid</option>
                     <option value="pending">Pending</option>
-                </select>
-
-                <button class="btn-chip" id="btnExportPdf">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Export</span>
-                </button>
+                </select>               
             </div>
         </section>
 
@@ -411,46 +351,7 @@
             }
         });
     </script>
-
-    <script>
-        // JOB ORDERS PAGINATION
-        document.addEventListener('DOMContentLoaded', function () {
-            const jobTable = document.getElementById("jobOrdersTable");
-            const jobRows = jobTable.querySelectorAll("tbody tr");
-            const jobRowsPerPage = 5;
-            let jobCurrentPage = 1;
-
-            function renderJobTablePage() {
-                const totalPages = Math.ceil(jobRows.length / jobRowsPerPage);
-                jobRows.forEach((row, index) => {
-                    row.style.display = (index >= (jobCurrentPage - 1) * jobRowsPerPage &&
-                                         index < jobCurrentPage * jobRowsPerPage) ? "" : "none";
-                });
-                document.getElementById("jobOrdersPageIndicator").textContent =
-                    `Page ${jobCurrentPage} of ${totalPages}`;
-                document.getElementById("jobOrdersPrev").disabled = jobCurrentPage === 1;
-                document.getElementById("jobOrdersNext").disabled = jobCurrentPage === totalPages;
-            }
-
-            document.getElementById("jobOrdersPrev").addEventListener("click", function() {
-                if (jobCurrentPage > 1) {
-                    jobCurrentPage--;
-                    renderJobTablePage();
-                }
-            });
-
-            document.getElementById("jobOrdersNext").addEventListener("click", function() {
-                const totalPages = Math.ceil(jobRows.length / jobRowsPerPage);
-                if (jobCurrentPage < totalPages) {
-                    jobCurrentPage++;
-                    renderJobTablePage();
-                }
-            });
-
-            renderJobTablePage();
-        });
-    </script>
-
+    
     <!-- Confirmation Modal Receive Payment-->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -492,72 +393,8 @@
 
         });
     </script>
-
-
-    <!--View Job Order Table-->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById("invoiceModal");
-            const modalBody = document.getElementById("invoiceModalBody");
-
-            document.querySelectorAll('.btn-view-job').forEach(button => {
-                button.addEventListener('click', function () {
-                    const jobId = this.dataset.jobId;
-
-                    fetch(`/Sales/ViewJobOrderPartial/${jobId}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            modalBody.innerHTML = html;
-                            modal.style.display = "block";
-                        });
-                });
-            });
-        });
-    </script>
-
-    <!-- Confirmation Modal Create Invoice -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // Select all create invoice buttons
-            document.querySelectorAll('.btn-create').forEach(button => {
-                button.addEventListener('click', function (e) {
-                    e.preventDefault(); // prevent default link navigation
-
-                    const row = this.closest('tr'); // get the table row
-                    const jobId = row?.children[1]?.textContent.trim() || ''; // Job ID column
-                    const client = row?.children[0]?.textContent.trim() || ''; // Client column
-                    const cost = row?.children[2]?.textContent.trim() || ''; // Cost column
-                    const url = this.href;
-
-                    Swal.fire({
-                        title: 'Create Invoice?',
-                        html: `
-                            <div style="text-align:left">
-                                <p><strong>Client:</strong> ${client}</p>
-                                <p><strong>Job ID:</strong> ${jobId}</p>
-                                <p><strong>Cost:</strong> ${cost}</p>
-                                <hr>
-                                <p>This will create a new invoice for this job.</p>
-                            </div>
-                        `,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Create Invoice',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#6c757d',
-                        reverseButtons: true
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = url; // redirect to create invoice action
-                        }
-                    });
-                });
-            });
-
-        });
-    </script>
+ 
+    
 
 
 

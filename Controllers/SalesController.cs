@@ -94,7 +94,7 @@ namespace Moonmax.Controllers
             return RedirectToAction("Index", "Sales");
         }
 
-        // GET: Sales
+        // GET: Sales       
         public async Task<IActionResult> Index()
         {
             var invoices = await _context.Invoices
@@ -121,21 +121,9 @@ namespace Moonmax.Controllers
                     DueDate = i.DueDate,
                     Status = i.Status
                 })
-
                 .ToListAsync();
 
-            var inProgressJobs = await _context.JobOrders
-                .Include(j => j.Client)
-                .Where(j => j.Status == "In Progress")
-                .Where(j => !_context.Invoices.Any(inv => inv.JobID == j.JobID))
-                .Select(j => new JobOrderListingVM
-                {
-                    JobID = j.JobID,
-                    Client = j.ClientID == null ? $"Walk-In ({j.ContactNumber})" : j.Client.Name,
-                    ServiceType = j.ServiceType,
-                    Cost = j.Cost
-                })
-                .ToListAsync();
+            // REMOVED: InProgressJobs query
 
             var totalSales = invoices.Sum(i => i.Amount);
             var paidInvoices = invoices
@@ -152,7 +140,7 @@ namespace Moonmax.Controllers
             var vm = new SalesIndexViewModel
             {
                 Invoices = invoices,
-                InProgressJobs = inProgressJobs,
+                InProgressJobs = new List<JobOrderListingVM>(), // Empty list
                 TotalSales = totalSales,
                 PaidInvoices = paidInvoices,
                 PendingPDCs = pendingPDCs,

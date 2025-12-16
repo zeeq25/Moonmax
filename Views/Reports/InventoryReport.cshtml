@@ -188,6 +188,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <script>
+        // Back Button
+        document.getElementById('btnBack').addEventListener('click', () => {
+            window.history.back();
+        });
+    </script>
+}
+
+    <script>
         // Prepare chart data from ViewModel
         const stockItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.PartName)));
         const stockValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.QuantityInStock)));
@@ -377,10 +385,4 @@
         });
     </script>
     
-    <script>
-        // Back Button
-        document.getElementById('btnBack').addEventListener('click', () => {
-            window.history.back();
-        });
-    </script>
-}
+}    

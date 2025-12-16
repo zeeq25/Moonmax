@@ -100,7 +100,7 @@
                                         <td>@user.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
                                         <td>
                                             <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-primary">Edit</a>
-                                            <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger">Delete</a>
+                                            
                                         </td>
                                     </tr>
                                 }
@@ -139,7 +139,7 @@
                                                data-id="@tech.TechnicianID" data-name="@tech.Name">Edit
                                            </a>
                                             
-                                            <a asp-action="DeleteTechnician" asp-route-id="@tech.TechnicianID" class="btn btn-sm btn-danger">Delete</a>
+                                            
                                         </td>
                                     </tr>
                                 }

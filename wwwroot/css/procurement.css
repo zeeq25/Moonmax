@@ -573,3 +573,63 @@
         max-width: 320px;
     }
 }
+
+
+/* ============================= */
+/* Compact PO Item Row           */
+/* ============================= */
+
+.po-item {
+    gap: 6px;
+}
+
+    /* Make inputs compact */
+    .po-item .form-control,
+    .po-item select {
+        height: 34px;
+        padding: 4px 8px;
+        font-size: 0.875rem;
+    }
+
+    /* Reduce margin spacing */
+    .po-item .me-1 {
+        margin-right: 6px !important;
+    }
+
+    /* Compact remove button */
+    .po-item .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+/* Supplier & Date compact */
+.form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
+.form-group .form-control {
+    height: 34px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+}
+
+/* ============================= */
+/* Mobile stacking (still tight) */
+/* ============================= */
+@media (max-width: 768px) {
+    .po-item {
+        flex-wrap: wrap;
+    }
+
+        .po-item input,
+        .po-item select {
+            flex: 1 1 48%;
+        }
+
+            .po-item input[name*="ProductName"],
+            .po-item select {
+                flex: 1 1 100%;
+            }
+}
+

@@ -9,6 +9,125 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        /* Responsive form adjustments */
+        .add-part-form .form-control,
+        .add-part-form .form-select {
+            max-width: 100%;
+        }
+
+        /* Smaller input widths on larger screens */
+        @@media (min-width: 768px) {
+            .add-part-form .col-md-6 .form-select {
+                max-width: 400px;
+            }
+
+            .add-part-form .col-md-3 .form-control {
+                max-width: 150px;
+            }
+        }
+
+        /* Button styling to match your theme */
+        .btn-add-part {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .btn-add-part:hover {
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
+
+        .btn-confirm-parts {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 40px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-confirm-parts:hover {
+                background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+            }
+
+            .btn-confirm-parts:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .btn-remove-part {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+            .btn-remove-part:hover {
+                background: linear-gradient(135deg, #f45c43 0%, #eb3349 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4);
+            }
+
+        /* Table responsiveness */
+        .added-parts-table {
+            overflow-x: auto;
+        }
+
+        .table-responsive-wrapper {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* Mobile adjustments */
+        @@media (max-width: 767px) {
+            .add-part-form .row {
+                gap: 1rem !important;
+            }
+
+            .add-part-form .col-md-3,
+            .add-part-form .col-md-6 {
+                width: 100%;
+            }
+
+            .btn-add-part {
+                width: 100% !important;
+                margin-top: 0.5rem;
+            }
+
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .btn-confirm-parts {
+                width: 100%;
+                padding: 12px 20px;
+            }
+
+            .dash-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        /* Info message styling */
+        .info-message {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+    </style>
 }
 
 <div class="page page-add-parts">
@@ -26,128 +145,255 @@
         </div>
     </header>
 
-   
-
     <!-- FORM TO ADD PART -->
-    <section class="add-part-form mt-3 mb-5">
-        <form asp-action="AddParts" method="post">
-            <input type="hidden" asp-for="JobID" />
+    @if (Model.JobStatus == "Pending")
+    {
+        <section class="add-part-form mt-3 mb-5">
+            <form asp-action="AddParts" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="JobID" />
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Select Part</label>
-                    <select asp-for="InventoryID" class="form-select" asp-items="Model.InventoryItems">
-                        <option value="">-- Select Part --</option>
-                    </select>
-                    <span asp-validation-for="InventoryID" class="text-danger"></span>
-                </div>
+                <div class="row g-3 align-items-end">
+                    <!-- Category Dropdown -->
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-semibold">Category</label>
+                        <select asp-for="SelectedCategory"
+                                class="form-select"
+                                id="categoryDropdown"
+                                asp-items="Model.Categories"
+                                required>
+                            <option value="">-- Select Category --</option>
+                        </select>
+                        <span asp-validation-for="SelectedCategory" class="text-danger"></span>
+                    </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Quantity</label>
-                    <input asp-for="Quantity" class="form-control" type="number" min="1" />
-                    <span asp-validation-for="Quantity" class="text-danger"></span>
-                </div>
+                    <!-- Part Dropdown (filtered by category) -->
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-semibold">Select Part</label>
+                        <select asp-for="InventoryID"
+                                class="form-select"
+                                id="partDropdown"
+                                required
+                                disabled>
+                            <option value="">-- Select Category First --</option>
+                        </select>
+                        <span asp-validation-for="InventoryID" class="text-danger"></span>
+                    </div>
 
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Add Part</button>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Quantity</label>
+                        <input asp-for="Quantity" class="form-control" type="number" min="1" required />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-6 col-md-2">
+                        <button type="submit" class="btn btn-add-part w-100">
+                            <i class="fa-solid fa-plus"></i> Add Part
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
-    </section>
+            </form>
+        </section>
+    }
 
     <!-- TABLE OF ADDED PARTS -->
     <section class="added-parts-table">
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Part Name</th>
-                    <th>Quantity</th>
-                    <th>Unit Cost</th>
-                    <th>Total Cost</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Parts != null && Model.Parts.Any())
-                {
-                    foreach (var part in Model.Parts)
+        <h5 class="mb-3 fw-semibold">Added Parts</h5>
+        <div class="table-responsive-wrapper">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Part Name</th>
+                        <th>Quantity</th>
+                        <th>Unit Cost</th>
+                        <th>Total Cost</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Parts != null && Model.Parts.Any())
+                    {
+                        foreach (var part in Model.Parts)
+                        {
+                            <tr>
+                                <td>@part.PartName</td>
+                                <td>@part.Quantity</td>
+                                <td>₱@part.UnitCost.ToString("N2")</td>
+                                <td>₱@part.TotalCost.ToString("N2")</td>
+                                <td>
+                                    @if (Model.JobStatus == "Pending")
+                                    {
+                                        <a asp-action="RemovePart" asp-route-id="@part.PartID"
+                                           class="btn btn-sm btn-remove-part"
+                                           onclick="return confirm('Are you sure you want to remove this part?');">
+                                            <i class="fa-solid fa-trash"></i> Remove
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fa-solid fa-lock"></i> Confirmed
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        <tr class="table-info fw-semibold">
+                            <td colspan="3" class="text-end">Total Parts Cost:</td>
+                            <td colspan="2">₱@Model.Parts.Sum(p => p.TotalCost).ToString("N2")</td>
+                        </tr>
+                    }
+                    else
                     {
                         <tr>
-                            <td>@part.PartName</td>
-                            <td>@part.Quantity</td>
-                            <td>₱@part.UnitCost.ToString("N2")</td>
-                            <td>₱@part.TotalCost.ToString("N2")</td>
-                            <td>
-                                <a asp-action="RemovePart" asp-route-id="@part.PartID" class="btn btn-sm btn-danger">
-                                    <i class="fa-solid fa-trash"></i> Remove
-                                </a>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-box-open fa-2x mb-2 d-block"></i>
+                                No parts added yet.
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="5" class="text-center">No parts added yet.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </section>
 
-    <section class="confirm-parts mt-3">
-        <form asp-action="ConfirmParts" method="post">
-            <input type="hidden" asp-for="JobID" />
-            <section class="confirm-parts mt-3 text-end">
-                <form asp-action="ConfirmParts" method="post" class="d-inline-block">
-                    <input type="hidden" asp-for="JobID" />
-                    <button type="submit" class="btn btn-success px-5 py-2">
-                        Confirm Parts
-                    </button>
-                </form>
-            </section>
-        </form>
+    <!-- CONFIRM PARTS SECTION -->
+    <section class="confirm-parts mt-4 text-end">
+        @if (Model.JobStatus == "Pending")
+        {
+            <form asp-action="ConfirmParts" method="post" class="d-inline-block">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="JobID" value="@Model.JobID" />
+                <button type="submit" class="btn btn-confirm-parts"
+                        onclick="return confirm('@(Model.Parts != null && Model.Parts.Any() ? "Confirm all parts and reserve stock?" : "Confirm this job with no parts (labor only)?")');">
+                    <i class="fa-solid fa-check"></i>
+                    @(Model.Parts != null && Model.Parts.Any() ? "Confirm Parts" : "Confirm Job (Labor Only)")
+                </button>
+            </form>
+            @if (Model.Parts == null || !Model.Parts.Any())
+            {
+                <div class="info-message">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <strong>Labor-Only Job:</strong> No parts added. This will be a service-only job.
+                </div>
+            }
+        }
+        else
+        {
+            <button type="button" class="btn btn-secondary px-5 py-2" disabled>
+                <i class="fa-solid fa-lock"></i> Already Confirmed
+            </button>
+        }
     </section>
-
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-
-        @if (TempData["Success"] != null)
+        // SUCCESS MESSAGE
+        @if (TempData["AddPartsSuccess"] != null)
         {
+                var successMsg = TempData["AddPartsSuccess"].ToString();
                 <text>
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: '@TempData["Success"]',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'OK'
-                    });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '@Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMsg).Trim('"'))',
+                    confirmButtonColor: '#1e3a8a',
+                    confirmButtonText: 'OK'
+                });
                 </text>
         }
 
-            @if (TempData["Error"] != null)
+        // WARNING MESSAGE
+        @if (TempData["AddPartsWarning"] != null)
         {
-                var errorMessage = TempData["Error"].ToString().Replace("\n", "\\n");
+                var warningMsg = TempData["AddPartsWarning"].ToString();
                 <text>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Stock Alert',
-                        text: '@errorMessage',
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: 'OK'
-                    });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Low Stock Warning',
+                    html: '@Html.Raw(System.Text.Json.JsonSerializer.Serialize(warningMsg).Trim('"'))',
+                    confirmButtonColor: '#f39c12',
+                    confirmButtonText: 'OK'
+                });
+                </text>
+        }
+
+        // ERROR MESSAGE
+        @if (TempData["AddPartsError"] != null)
+        {
+                var errorMsg = TempData["AddPartsError"].ToString();
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Stock Alert',
+                    html: '@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errorMsg).Trim('"'))',
+                    confirmButtonColor: '#eb3349',
+                    confirmButtonText: 'OK'
+                });
                 </text>
         }
     </script>
 
-    
+    <script>
+        // Cascading dropdown logic
+        $(document).ready(function() {
+            const categoryDropdown = $('#categoryDropdown');
+            const partDropdown = $('#partDropdown');
 
+            // When category changes, load parts for that category
+            categoryDropdown.on('change', function() {
+                const selectedCategory = $(this).val();
+
+                console.log('Category selected:', selectedCategory); // DEBUG
+
+                // Clear and disable parts dropdown
+                partDropdown.html('<option value="">-- Loading... --</option>');
+                partDropdown.prop('disabled', true);
+
+                if (selectedCategory) {
+                    // Fetch parts for selected category
+                    $.ajax({
+                        url: '@Url.Action("GetPartsByCategory", "JobOrders")',
+                        type: 'GET',
+                        data: { category: selectedCategory },
+                        success: function(data) {
+                            console.log('Parts received:', data); // DEBUG
+
+                            partDropdown.html('<option value="">-- Select Part --</option>');
+
+                            if (data && data.length > 0) {
+                                // Populate parts dropdown
+                                $.each(data, function(index, item) {
+                                    partDropdown.append(
+                                        $('<option></option>')
+                                            .val(item.value)
+                                            .text(item.text)
+                                    );
+                                });
+                                partDropdown.prop('disabled', false);
+                            } else {
+                                partDropdown.html('<option value="">No parts available in this category</option>');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', status, error); // DEBUG
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to load parts for selected category'
+                            });
+                            partDropdown.html('<option value="">Error loading parts</option>');
+                        }
+                    });
+                } else {
+                    partDropdown.html('<option value="">-- Select Category First --</option>');
+                }
+            });
+        });
+    </script>
 }
-
