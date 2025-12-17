@@ -14,6 +14,9 @@ namespace Moonmax.ViewModels
         public decimal Cost { get; set; }
         public string Status { get; set; }
         public int TechnicianID { get; set; }
+
+        // In JobOrderListingVM (ViewModels)
+        public bool HasInvoice { get; set; }
     }
 
     public class JobOrdersIndexViewModel

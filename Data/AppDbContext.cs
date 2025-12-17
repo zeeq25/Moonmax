@@ -31,12 +31,15 @@ namespace Moonmax.Data
 
         //SALES
         public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         //STOCK MOVEMENT
         public DbSet<StockMovement> StockMovement { get; set; }
 
         //AUDIT LOGS
         public DbSet<AuditLog> AuditLogs { get; set; }
+
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

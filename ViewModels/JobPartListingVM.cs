@@ -10,5 +10,7 @@
 
         // Make TotalCost assignable if controller sets it
         public decimal TotalCost { get; set; }
+
+
     }
 }

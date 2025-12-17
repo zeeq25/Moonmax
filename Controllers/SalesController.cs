@@ -1,14 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Moonmax.Data;
 using Moonmax.Models;
-using Moonmax.ViewModels;
 using Moonmax.Services;  // ⬅️ ADD THIS
+using Moonmax.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Security.Claims;  // ⬅️ ADD THIS
+using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
@@ -179,7 +181,7 @@ namespace Moonmax.Controllers
         // GET: Sales/CreateCustomer
         public IActionResult CreateCustomer()
         {
-            ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
+            ViewBag.PaymentTypes = new[] { "Cash", "PDC" };
             return View();
         }
 
@@ -190,8 +192,22 @@ namespace Moonmax.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
+                ViewBag.PaymentTypes = new[] { "Cash", "PDC" };
                 return View(model);
+            }
+
+            // 🔒 Prevent duplicate Walk-In customer
+            if (model.ClientType == "Walk-In")
+            {
+                bool walkInExists = await _context.Client
+                    .AnyAsync(c => c.ClientType == "Walk-In");
+
+                if (walkInExists)
+                {
+                    ModelState.AddModelError("ClientType", "Walk-In customer already exists.");
+                    ViewBag.PaymentTypes = new[] { "Cash", "PDC" };
+                    return View(model);
+                }
             }
 
             var client = new Client
@@ -199,18 +215,19 @@ namespace Moonmax.Controllers
                 Name = model.Name,
                 Email = model.Email,
                 ContactNumber = model.Phone,
-                PaymentType = model.PaymentType
+                PaymentType = model.PaymentType,
+                ClientType = model.ClientType ?? "MainClient" // ✅ default safety
             };
 
             _context.Client.Add(client);
             await _context.SaveChangesAsync();
 
-            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
+            // ⬇️⬇️⬇️ AUDIT LOG ⬇️⬇️⬇️
             await _auditService.LogAsync(
                 userId: GetCurrentUserId(),
                 action: "CREATE",
                 module: "Sales & Billing",
-                description: $"Created new customer: {client.Name} - Payment Terms: {client.PaymentType}",
+                description: $"Created customer: {client.Name} | Type: {client.ClientType} | Payment: {client.PaymentType}",
                 targetId: client.ClientID
             );
             // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
@@ -218,105 +235,47 @@ namespace Moonmax.Controllers
             return RedirectToAction("CustomerList");
         }
 
-        // POST: Sales/ReceivePayment
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReceivePayment(int id)
-        {
-            var invoice = await _context.Invoices
-                .Include(i => i.Client)
-                .Include(i => i.JobOrder)
-                .ThenInclude(j => j.JobParts)
-                .FirstOrDefaultAsync(i => i.InvoiceID == id);
-
-            if (invoice == null)
-                return NotFound();
-
-            // Mark invoice as Paid
-            invoice.Status = "Paid";
-
-            // Reduce inventory for all job parts
-            if (invoice.JobOrder != null)
-            {
-                foreach (var part in invoice.JobOrder.JobParts)
-                {
-                    var inventoryItem = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.InventoryID == part.InventoryID);
-
-                    if (inventoryItem != null)
-                    {
-                        int previousQty = inventoryItem.QuantityInStock;
-
-                        inventoryItem.QuantityInStock -= part.Quantity;
-                        if (inventoryItem.QuantityInStock < 0)
-                            inventoryItem.QuantityInStock = 0;
-
-                        inventoryItem.ReservedQuantity -= part.Quantity;
-                        if (inventoryItem.ReservedQuantity < 0)
-                            inventoryItem.ReservedQuantity = 0;
-
-                        int newQty = inventoryItem.QuantityInStock;
-
-                        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                        int parsedUserId = int.Parse(userId);
-
-                        var movement = new StockMovement
-                        {
-                            InventoryID = inventoryItem.InventoryID,
-                            MovementType = "OUT",
-                            Quantity = part.Quantity,
-                            PreviousQuantity = previousQty,
-                            NewQuantity = newQty,
-                            JobOrderID = invoice.JobID,
-                            UserID = parsedUserId,
-                            MovementDate = DateTime.Now
-                        };
-
-                        _context.StockMovement.Add(movement);
-                    }
-                }
-
-                invoice.JobOrder.Status = "Completed";
-            }
-
-            await _context.SaveChangesAsync();
-
-            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
-            string clientName = invoice.Client?.Name ?? "Unknown";
-            int totalParts = invoice.JobOrder?.JobParts?.Count ?? 0;
-
-            await _auditService.LogAsync(
-                userId: GetCurrentUserId(),
-                action: "PAYMENT_RECEIVED",
-                module: "Sales & Billing",
-                description: $"Payment received for Invoice {invoice.InvoiceNumber} - Client: {clientName}, Amount: ₱{invoice.Amount:N2}, Job #{invoice.JobID} completed, {totalParts} parts deducted from inventory",
-                targetId: invoice.InvoiceID
-            );
-            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
-
-            return RedirectToAction("Index");
-        }
 
         // GET: Sales/EditCustomer/5
         public async Task<IActionResult> EditCustomer(int id)
         {
+            // First, fetch the client
             var client = await _context.Client.FindAsync(id);
             if (client == null)
                 return NotFound();
 
+            // Create the Customer Type select list
+            var customerTypes = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "MainClient", Text = "Main Client" },
+        new SelectListItem
+        {
+            Value = "Walk-In",
+            Text = "Walk-In (system reserved)",
+            Disabled = client.ClientType != "Walk-In"
+        }
+    };
+
+            // ✅ Pass the list to the view
+            ViewBag.CustomerTypes = customerTypes;
+
             var model = new CustomerFormViewModel
             {
-                ClientID = client.ClientID,
+                ClientID = client.ClientID, // make sure ClientID is included for POST
                 Name = client.Name,
                 Email = client.Email,
                 Phone = client.ContactNumber,
-                PaymentType = client.PaymentType
+                PaymentType = client.PaymentType,
+                ClientType = client.ClientType
             };
 
-            ViewBag.PaymentTypes = new[] { "Cash", "PDC-15 DAYS", "PDC-30 DAYS", "PDC-60 DAYS" };
+            ViewBag.PaymentTypes = new[] { "Cash", "PDC" };
 
             return View(model);
         }
+
+
+
 
         // POST: Sales/EditCustomer
         [HttpPost]
@@ -418,5 +377,200 @@ namespace Moonmax.Controllers
             return 0;
         }
         // ⬆️⬆️⬆️ END HELPER METHOD ⬆️⬆️⬆️
+
+
+
+        // POST: Sales/ProcessPayment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProcessPayment(PaymentFormViewModel model)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== PAYMENT FORM SUBMITTED ===");
+            System.Diagnostics.Debug.WriteLine($"InvoiceID: {model.InvoiceID}");
+            System.Diagnostics.Debug.WriteLine($"PaymentMethod: {model.PaymentMethod}");
+            System.Diagnostics.Debug.WriteLine($"AmountPaid: {model.AmountPaid}");
+            System.Diagnostics.Debug.WriteLine($"PaymentDate: {model.PaymentDate}");
+            System.Diagnostics.Debug.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var key in ModelState.Keys)
+                {
+                    var state = ModelState[key];
+                    foreach (var error in state.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Validation Error - {key}: {error.ErrorMessage}");
+                    }
+                }
+
+                TempData["Error"] = "Invalid payment data. Please check all required fields.";
+                return RedirectToAction("Index");
+            }
+
+            try
+            {
+                var invoice = await _context.Invoices
+                    .Include(i => i.Client)
+                    .Include(i => i.JobOrder)
+                        .ThenInclude(j => j.JobParts)
+                            .ThenInclude(p => p.Inventory) // ⬅️ IMPORTANT: Include Inventory
+                    .Include(i => i.Payments)
+                    .FirstOrDefaultAsync(i => i.InvoiceID == model.InvoiceID);
+
+                if (invoice == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Invoice not found: {model.InvoiceID}");
+                    TempData["Error"] = "Invoice not found.";
+                    return RedirectToAction("Index");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Found invoice: {invoice.InvoiceNumber}");
+
+                // VALIDATE: For Cash payments, don't require check fields
+                if (model.PaymentMethod == "Cash")
+                {
+                    model.CheckNumber = null;
+                    model.BankName = null;
+                    model.CheckDate = null;
+                }
+                // VALIDATE: For Check payments, require check fields
+                else if (model.PaymentMethod == "Check")
+                {
+                    if (string.IsNullOrWhiteSpace(model.CheckNumber) ||
+                        string.IsNullOrWhiteSpace(model.BankName) ||
+                        !model.CheckDate.HasValue)
+                    {
+                        TempData["Error"] = "For check payments, Check Number, Bank Name, and Check Date are required.";
+                        return RedirectToAction("Index");
+                    }
+                }
+
+                // Create Payment record
+                var payment = new Payment
+                {
+                    InvoiceID = invoice.InvoiceID,
+                    PaymentMethod = model.PaymentMethod,
+                    AmountPaid = model.AmountPaid,
+                    PaymentDate = model.PaymentDate,
+                    CheckNumber = model.CheckNumber ?? "",
+                    BankName = model.BankName ?? "",
+                    CheckDate = model.CheckDate,
+                    ReferenceNumber = model.ReferenceNumber ?? "",
+                    Notes = model.Notes ?? "",
+                    ProcessedByUserID = GetCurrentUserId(),
+                    PDCStatus = model.PaymentMethod == "Check" ? "Received" : null,
+                    BounceReason = "",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Payments.Add(payment);
+
+                // Update Invoice Status
+                var totalPaid = invoice.Payments.Sum(p => p.AmountPaid) + model.AmountPaid;
+
+                string oldStatus = invoice.Status; // Track old status
+
+                if (totalPaid >= invoice.Amount)
+                {
+                    invoice.Status = "Paid";
+
+                    // ⬇️⬇️⬇️ ADD STOCK DEDUCTION WHEN FULLY PAID ⬇️⬇️⬇️
+                    if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Processing stock deduction for Job #{invoice.JobOrder.JobID}");
+
+                        foreach (var part in invoice.JobOrder.JobParts)
+                        {
+                            if (part.Inventory != null)
+                            {
+                                int previousQty = part.Inventory.QuantityInStock;
+
+                                // Deduct from reserved quantity
+                                part.Inventory.ReservedQuantity -= part.Quantity;
+                                if (part.Inventory.ReservedQuantity < 0)
+                                    part.Inventory.ReservedQuantity = 0;
+
+                                // Deduct from actual stock
+                                part.Inventory.QuantityInStock -= part.Quantity;
+                                if (part.Inventory.QuantityInStock < 0)
+                                    part.Inventory.QuantityInStock = 0;
+
+                                int newQty = part.Inventory.QuantityInStock;
+
+                                System.Diagnostics.Debug.WriteLine($"Stock deduction: {part.Inventory.PartName} | Previous: {previousQty} | Deducted: {part.Quantity} | New: {newQty}");
+
+                                // Create stock movement record
+                                var movement = new StockMovement
+                                {
+                                    InventoryID = part.Inventory.InventoryID,
+                                    MovementType = "OUT",
+                                    Quantity = part.Quantity,
+                                    PreviousQuantity = previousQty,
+                                    NewQuantity = newQty,
+                                    JobOrderID = invoice.JobID,
+                                    UserID = GetCurrentUserId(),
+                                    MovementDate = DateTime.Now
+                                };
+
+                                _context.StockMovement.Add(movement);
+                            }
+                        }
+
+                        // Mark job as completed
+                        invoice.JobOrder.Status = "Completed";
+
+                        System.Diagnostics.Debug.WriteLine($"Job #{invoice.JobOrder.JobID} marked as Completed");
+                    }
+                    // ⬆️⬆️⬆️ END STOCK DEDUCTION ⬆️⬆️⬆️
+                }
+                else
+                {
+                    invoice.Status = "Partially Paid";
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Saving payment... Total paid: {totalPaid}, Invoice amount: {invoice.Amount}");
+
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine("Payment saved successfully!");
+
+                // ⬇️⬇️⬇️ ENHANCED AUDIT LOG ⬇️⬇️⬇️
+                string clientName = invoice.Client?.Name ?? $"Walk-In ({invoice.JobOrder?.ContactNumber})";
+                int totalParts = invoice.JobOrder?.JobParts?.Count ?? 0;
+
+                string auditDescription = $"Payment received for Invoice {invoice.InvoiceNumber} - Client: {clientName}, Amount: ₱{model.AmountPaid:N2}, Method: {model.PaymentMethod}";
+
+                if (invoice.Status == "Paid" && oldStatus != "Paid")
+                {
+                    auditDescription += $", Job #{invoice.JobID} completed, {totalParts} parts deducted from inventory";
+                }
+
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "PAYMENT_RECEIVED",
+                    module: "Sales & Billing",
+                    description: auditDescription,
+                    targetId: invoice.InvoiceID
+                );
+                // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
+
+                TempData["Success"] = $"Payment of ₱{model.AmountPaid:N2} processed successfully!" +
+                                     (invoice.Status == "Paid" ? " Invoice is now fully paid and job completed." : "");
+
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                TempData["Error"] = $"Error processing payment: {ex.Message}";
+                return RedirectToAction("Index");
+            }
+        }
     }
+
+
+
+
+    
 }

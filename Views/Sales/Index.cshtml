@@ -22,6 +22,13 @@
         </div>
     </header>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success" style="background:#d4edda;color:#155724;padding:12px;border-radius:6px;margin-bottom:20px;border:1px solid #c3e6cb;">
+            <i class="fa-solid fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+
     <!-- KPI CARDS -->
     <section class="dash-kpis">
         <article class="dash-card kpi">
@@ -65,8 +72,7 @@
     </section>
 
     <!-- TABLE 2: INVOICES (UNCHANGED) -->
-    <section class="inv-table-wrap">
-        <h3 class="table-section-title">Invoices</h3>
+    <section class="inv-table-wrap">        
 
         <!-- SEARCH + FILTER -->
         <section class="inv-filter-bar">
@@ -105,7 +111,7 @@
                             <td>@invoice.InvoiceNumber</td>
                             <td>@invoice.ClientName</td>
                             <td>@invoice.JobID</td>
-                            <td>@invoice.Amount.ToString("C")</td>
+                            <td>₱@invoice.Amount.ToString("N2")</td>
                             <td>@invoice.PaymentType</td>
                             <td>@invoice.DateIssued.ToString("yyyy-MM-dd")</td>
                             <td>@(invoice.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
@@ -124,21 +130,17 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
 
-                                    <!-- Receive Payment Button: Only render if invoice is NOT paid -->
-                                @if (invoice.Status.ToLower() != "paid")
-                                    {
-                                        <form asp-action="ReceivePayment"
-                                              asp-route-id="@invoice.InvoiceID"
-                                              method="post"
-                                              class="receive-payment-form"
-                                              style="display:inline;">
-                                            <button type="submit"
+                                    <!--Process Payment Button-->                                
+                                        @if (invoice.Status.ToLower() != "paid")
+                                        {
+                                            <button type="button"
                                                     class="icon-btn-table btn-receive"
-                                                    title="Receive payment">
+                                                    title="Process payment"
+                                                    data-invoice-id="@invoice.InvoiceID">
                                                 <i class="fa-solid fa-check"></i>
                                             </button>
-                                        </form>
-                                    }
+                                        }
+
                                 </div>
                             </td>
 
@@ -165,11 +167,121 @@
             <div id="invoiceModalBody"></div>
         </div>
     </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close" id="paymentModalClose">&times;</span>
+            <h2 style="margin-bottom: 20px;">Process Payment</h2>
+
+            <form id="paymentForm" method="post" asp-action="ProcessPayment" asp-controller="Sales">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="invoiceIdInput" name="InvoiceID" />
+
+                <!-- Invoice Summary -->
+                <div class="invoice-summary" style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;">
+                    <div><strong>Invoice No:</strong> <span id="summaryInvoiceNo">-</span></div>
+                    <div><strong>Client:</strong> <span id="summaryClient">-</span></div>
+                    <div><strong>Job ID:</strong> <span id="summaryJobId">-</span></div>
+                    <div><strong>Amount:</strong> <span id="summaryAmount">-</span></div>
+                    <div><strong>Payment Type:</strong> <span id="summaryPaymentType">-</span></div>
+                </div>
+
+                <!-- Payment Method -->
+                <div style="margin-bottom:20px;">
+                    <label for="paymentMethod">Payment Method *</label>
+                    <select id="paymentMethod" name="PaymentMethod" required style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                        <option value="">-- Select Payment Method --</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Check">Check (PDC)</option>
+                    </select>
+                </div>
+
+                <!-- Amount Paid -->
+                <div style="margin-bottom:20px;">
+                    <label for="amountPaid">Amount Paid *</label>
+                    <input type="number"
+                           step="0.01"
+                           min="0"
+                           id="amountPaid"
+                           name="AmountPaid"
+                           required
+                           placeholder="0.00"
+                           style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;" />
+                </div>
+
+                <!-- Check Fields -->
+                <div id="checkFields" style="display:none; background:#fff8e1; padding:15px;border-radius:8px;margin-bottom:20px;">
+                    <div style="margin-bottom:15px;">
+                        <label for="checkNumber">Check Number *</label>
+                        <input type="text"
+                               name="CheckNumber"
+                               id="checkNumber"
+                               placeholder="123456"
+                               style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label for="bankName">Bank Name *</label>
+                        <input type="text"
+                               name="BankName"
+                               id="bankName"
+                               placeholder="BDO, BPI"
+                               style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                    </div>
+                    <div>
+                        <label for="checkDate">Check Date *</label>
+                        <input type="date"
+                               name="CheckDate"
+                               id="checkDate"
+                               style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                    </div>
+                </div>
+
+                <!-- Payment Date -->
+                <div style="margin-bottom:20px;">
+                    <label for="paymentDate">Payment Date *</label>
+                    <input type="date"
+                           name="PaymentDate"
+                           id="paymentDate"
+                           required
+                           style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                </div>
+
+                <!-- Reference Number & Notes -->
+                <div style="margin-bottom:20px;">
+                    <label for="referenceNumber">Reference Number</label>
+                    <input type="text"
+                           name="ReferenceNumber"
+                           id="referenceNumber"
+                           placeholder="Receipt/Transaction No"
+                           style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label for="paymentNotes">Notes</label>
+                    <textarea name="Notes"
+                              id="paymentNotes"
+                              rows="3"
+                              placeholder="Additional notes..."
+                              style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button"
+                            id="cancelPaymentBtn"
+                            style="padding:10px 20px; background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            style="padding:10px 30px; background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;">
+                        Process Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
-
-
-
-
 
 @section Scripts {
 
@@ -292,65 +404,6 @@
         });
     </script>
 
-    <script>
-        // EXPORT PDF
-        document.getElementById('btnExportPdf').addEventListener('click', async () => {
-            const { jsPDF } = window.jspdf;
-            const table = document.getElementById('salesTable');
-            if (!table) return;
-
-            const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(row => row.style.display = ''); // show all
-
-            const tableClone = table.cloneNode(true);
-            tableClone.querySelectorAll('thead th.col-actions, tbody td.col-actions').forEach(el => el.remove());
-
-            const hiddenDiv = document.createElement('div');
-            hiddenDiv.style.position = 'absolute';
-            hiddenDiv.style.left = '-9999px';
-            hiddenDiv.appendChild(tableClone);
-            document.body.appendChild(hiddenDiv);
-
-            try {
-                const pdf = new jsPDF('l', 'pt', 'a4');
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                let yOffset = 20;
-
-                const header = tableClone.querySelector('thead');
-                const bodyRows = Array.from(tableClone.querySelectorAll('tbody tr'));
-
-                const headerCanvas = await html2canvas(header, { scale: 2 });
-                const headerImg = headerCanvas.toDataURL('image/png');
-                const headerWidth = pageWidth - 40;
-                const headerHeight = (headerCanvas.height * headerWidth) / headerCanvas.width;
-                pdf.addImage(headerImg, 'PNG', 20, yOffset, headerWidth, headerHeight);
-                yOffset += headerHeight + 10;
-
-                for (let row of bodyRows) {
-                    const rowCanvas = await html2canvas(row, { scale: 2 });
-                    const rowImg = rowCanvas.toDataURL('image/png');
-                    const rowHeight = (rowCanvas.height * headerWidth) / rowCanvas.width;
-
-                    if (yOffset + rowHeight > pageHeight - 20) {
-                        pdf.addPage();
-                        yOffset = 20;
-                        pdf.addImage(headerImg, 'PNG', 20, yOffset, headerWidth, headerHeight);
-                        yOffset += headerHeight + 10;
-                    }
-
-                    pdf.addImage(rowImg, 'PNG', 20, yOffset, headerWidth, rowHeight);
-                    yOffset += rowHeight + 5;
-                }
-
-                pdf.save(`Sales_${new Date().toISOString().slice(0,10)}.pdf`);
-            } catch (err) {
-                console.error('PDF export failed:', err);
-            } finally {
-                document.body.removeChild(hiddenDiv);
-            }
-        });
-    </script>
     
     <!-- Confirmation Modal Receive Payment-->
     <script>
@@ -393,11 +446,184 @@
 
         });
     </script>
- 
-    
 
+    <script>
 
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentModal = document.getElementById('paymentModal');
+            const paymentForm = document.getElementById('paymentForm');
+            const invoiceIdInput = document.getElementById('invoiceIdInput');
+            const paymentMethod = document.getElementById('paymentMethod');
+            const checkFields = document.getElementById('checkFields');
+            const checkNumber = document.getElementById('checkNumber');
+            const bankName = document.getElementById('bankName');
+            const checkDate = document.getElementById('checkDate');
+            const referenceNumber = document.getElementById('referenceNumber');
+            const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+            const paymentModalClose = document.getElementById('paymentModalClose');
 
+            // Payment Method change listener
+            paymentMethod.addEventListener('change', function() {
+                if (this.value === 'Check') {
+                    checkFields.style.display = 'block';
+                    checkNumber.setAttribute('required', 'required');
+                    bankName.setAttribute('required', 'required');
+                    checkDate.setAttribute('required', 'required');
+                    referenceNumber.value = '';
+                } else if (this.value === 'Cash') {
+                    checkFields.style.display = 'none';
+                    checkNumber.removeAttribute('required');
+                    bankName.removeAttribute('required');
+                    checkDate.removeAttribute('required');
+                    checkNumber.value = '';
+                    bankName.value = '';
+                    checkDate.value = '';
 
+                    // Auto-fill reference for cash
+                    const now = new Date();
+                    const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+                    referenceNumber.value = `CASH-${dateStr}`;
+                } else {
+                    checkFields.style.display = 'none';
+                    checkNumber.removeAttribute('required');
+                    bankName.removeAttribute('required');
+                    checkDate.removeAttribute('required');
+                    referenceNumber.value = '';
+                }
+            });
+
+            // Close modal functions
+            paymentModalClose.addEventListener('click', () => paymentModal.style.display = 'none');
+            cancelPaymentBtn.addEventListener('click', () => paymentModal.style.display = 'none');
+            window.addEventListener('click', e => {
+                if (e.target === paymentModal) paymentModal.style.display = 'none';
+            });
+
+            // Form submission handler with validation
+            paymentForm.addEventListener('submit', function(e) {
+                const method = paymentMethod.value;
+
+                console.log('=== FORM SUBMISSION ===');
+                console.log('Payment Method:', method);
+                console.log('Invoice ID:', invoiceIdInput.value);
+                console.log('Amount Paid:', document.getElementById('amountPaid').value);
+                console.log('Payment Date:', document.getElementById('paymentDate').value);
+
+                // Validate required fields
+                if (!method) {
+                    e.preventDefault();
+                    alert('Please select a payment method');
+                    return false;
+                }
+
+                if (!document.getElementById('amountPaid').value) {
+                    e.preventDefault();
+                    alert('Please enter the amount paid');
+                    return false;
+                }
+
+                if (!document.getElementById('paymentDate').value) {
+                    e.preventDefault();
+                    alert('Please select the payment date');
+                    return false;
+                }
+
+                // If Cash payment, ensure check fields are cleared
+                if (method === 'Cash') {
+                    checkNumber.value = '';
+                    bankName.value = '';
+                    checkDate.value = '';
+                    console.log('Cash payment - cleared check fields');
+                }
+
+                // If Check payment, validate check fields
+                if (method === 'Check') {
+                    if (!checkNumber.value || !bankName.value || !checkDate.value) {
+                        e.preventDefault();
+                        alert('Please fill in all check details (Check Number, Bank Name, and Check Date).');
+                        return false;
+                    }
+                    console.log('Check payment - validation passed');
+                }
+
+                console.log('Form validation passed, submitting...');
+            });
+
+            // Receive Payment button click handler
+            document.querySelectorAll('.btn-receive').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const row = btn.closest('tr');
+                    const invoiceId = btn.dataset.invoiceId;
+
+                    // Extract data from table row
+                    const invoiceNo = row.children[0].textContent.trim();
+                    const client = row.children[1].textContent.trim();
+                    const jobId = row.children[2].textContent.trim();
+                    const amountText = row.children[3].textContent.trim();
+                    const payType = row.children[4].textContent.trim();
+
+                    // Parse amount (remove ₱ and commas)
+                    const amount = parseFloat(amountText.replace(/[₱,]/g, ''));
+
+                    console.log('=== OPENING PAYMENT MODAL ===');
+                    console.log('Invoice ID:', invoiceId);
+                    console.log('Amount:', amount);
+
+                    // Fill modal fields
+                    invoiceIdInput.value = invoiceId;
+                    document.getElementById('summaryInvoiceNo').textContent = invoiceNo;
+                    document.getElementById('summaryClient').textContent = client;
+                    document.getElementById('summaryJobId').textContent = jobId;
+                    document.getElementById('summaryAmount').textContent = amountText;
+                    document.getElementById('summaryPaymentType').textContent = payType;
+
+                    // Pre-select payment method based on payment type
+                    if (payType.includes('PDC') || payType.includes('Check')) {
+                        paymentMethod.value = 'Check';
+                        checkFields.style.display = 'block';
+                        checkNumber.setAttribute('required', 'required');
+                        bankName.setAttribute('required', 'required');
+                        checkDate.setAttribute('required', 'required');
+                    } else {
+                        paymentMethod.value = 'Cash';
+                        checkFields.style.display = 'none';
+                        checkNumber.removeAttribute('required');
+                        bankName.removeAttribute('required');
+                        checkDate.removeAttribute('required');
+                    }
+
+                    // Set amount paid to invoice amount
+                    document.getElementById('amountPaid').value = amount.toFixed(2);
+
+                    // Clear check fields
+                    checkNumber.value = '';
+                    bankName.value = '';
+                    checkDate.value = '';
+
+                    // Set today's date
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const todayString = `${year}-${month}-${day}`;
+                    document.getElementById('paymentDate').value = todayString;
+
+                    // Clear optional fields
+                    referenceNumber.value = '';
+                    document.getElementById('paymentNotes').value = '';
+
+                    // Trigger change event to auto-fill reference for cash
+                    paymentMethod.dispatchEvent(new Event('change'));
+
+                    // Show modal
+                    paymentModal.style.display = 'block';
+                });
+            });
+        });
+    </script>
+
+      
 }
 

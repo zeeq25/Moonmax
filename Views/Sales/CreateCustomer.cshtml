@@ -47,6 +47,16 @@
                 <span asp-validation-for="PaymentType" class="text-danger"></span>
             </div>
 
+            <div class="form-group">
+                <label>Customer Type</label>
+                <select asp-for="ClientType" class="form-control">
+                    <option value="MainClient">Main Client</option>
+                    <option value="Walk-In">Walk-In</option>
+                </select>
+                <span asp-validation-for="ClientType" class="text-danger"></span>
+            </div>
+
+
             <button type="submit" class="btn-pill btn-primary-mm">Add Customer</button>
         </form>
     </div>

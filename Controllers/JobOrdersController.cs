@@ -83,8 +83,20 @@ namespace Moonmax.Controllers
                     DueDate = j.DueDate,
                     Cost = j.Cost,
                     Status = j.Status,
-                    TechnicianID = j.TechnicianID
-                }).ToList()
+                    TechnicianID = j.TechnicianID,
+                    HasInvoice = _db.Invoices.Any(i => i.JobID == j.JobID) // ⬅️ ADD THIS
+
+
+                })
+                // ⬇️⬇️⬇️ CORRECTED: OrderByDescending on the COLLECTION ⬇️⬇️⬇️
+                .OrderByDescending(j => j.Status == "In Progress" && !j.HasInvoice)
+                .ThenByDescending(j => j.Status == "Pending")
+                .ThenByDescending(j => j.Created)
+                // ⬆️⬆️⬆️ END SORTING ⬆️⬆️⬆️
+                .ToList()
+
+
+
             };
 
             return View(vm);
@@ -123,16 +135,12 @@ namespace Moonmax.Controllers
             return View(vm);
         }
 
-        // CREATE - POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateJobOrderViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-
-                
-
                 vm.Technicians = _db.Technician
                     .Select(t => new SelectListItem { Value = t.TechnicianID.ToString(), Text = t.Name })
                     .ToList();
@@ -141,18 +149,52 @@ namespace Moonmax.Controllers
                     .Select(c => new SelectListItem { Value = c.ClientID.ToString(), Text = c.Name })
                     .ToList();
 
-
                 PopulateDropdowns(vm);
                 return View(vm);
             }
 
+            int clientId;
+
+            
+
+            // Handle Walk-In customer (when ClientID is null or 0 in the ViewModel)
+            if (!vm.ClientID.HasValue || vm.ClientID.Value <= 0)
+            {
+                // Find the generic "Walk-In Customer" client
+                var walkInClient = await _db.Client
+                    .FirstOrDefaultAsync(c => c.Name == "Walk-In Customer" && c.ClientType == "Walk-In");
+
+                if (walkInClient == null)
+                {
+                    // Create the generic Walk-In customer if it doesn't exist
+                    walkInClient = new Client
+                    {
+                        Name = "Walk-In Customer",
+                        ContactNumber = "N/A",
+                        ClientType = "Walk-In",
+                        CreatedAt = DateTime.Now,
+                        PaymentType = "Cash"
+                    };
+
+                    _db.Client.Add(walkInClient);
+                    await _db.SaveChangesAsync();
+                }
+
+                clientId = walkInClient.ClientID;
+            }
+            else
+            {
+                clientId = vm.ClientID.Value;
+            }
+
+            // ✅ Create Job Order
             var jobOrder = new JobOrder
             {
-                ClientID = vm.ClientID,
-                ContactNumber = vm.ContactNumber,
+                ClientID = clientId,
+                ContactNumber = vm.ContactNumber ?? "N/A", // Store the specific contact number
                 TechnicianID = vm.TechnicianID,
                 ServiceType = vm.ServiceType,
-                CreatedAt = System.DateTime.Now,
+                CreatedAt = DateTime.Now,
                 DueDate = vm.DueDate,
                 Cost = vm.Cost,
                 Status = "Pending"
@@ -161,10 +203,11 @@ namespace Moonmax.Controllers
             _db.JobOrders.Add(jobOrder);
             await _db.SaveChangesAsync();
 
-            // ⬇️⬇️⬇️ ADD AUDIT LOG HERE ⬇️⬇️⬇️
-            // Get client name for better description
-            var client = await _db.Client.FindAsync(vm.ClientID);
-            string clientName = client != null ? client.Name : $"Walk-In ({vm.ContactNumber})";
+            // ✅ Audit log
+            var client = await _db.Client.FindAsync(clientId);
+            string clientName = client?.ClientType == "Walk-In"
+                ? $"Walk-In ({vm.ContactNumber})"
+                : client?.Name ?? "Unknown";
 
             var technician = await _db.Technician.FindAsync(vm.TechnicianID);
             string technicianName = technician?.Name ?? "Unassigned";
@@ -176,11 +219,12 @@ namespace Moonmax.Controllers
                 description: $"Created Job Order #{jobOrder.JobID} for {clientName} - Service: {jobOrder.ServiceType}, Technician: {technicianName}, Cost: ₱{jobOrder.Cost:N2}",
                 targetId: jobOrder.JobID
             );
-            // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
 
             TempData["Success"] = "Job Order created successfully!";
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private void PopulateDropdowns(CreateJobOrderViewModel vm)
         {
@@ -722,97 +766,132 @@ namespace Moonmax.Controllers
 
             return 0;
         }
-        // ⬆️⬆️⬆️ END HELPER METHOD ⬆️⬆️⬆️
 
-        // ADD THIS METHOD TO JobOrdersController.cs
 
-        // GET: JobOrders/CreateInvoice/5
         [HttpGet]
         public async Task<IActionResult> CreateInvoice(int id)
         {
-            var jobOrder = await _db.JobOrders
-                .Include(j => j.JobParts)
-                .Include(j => j.Client)
-                .FirstOrDefaultAsync(j => j.JobID == id);
-
-            if (jobOrder == null)
+            try
             {
-                return NotFound();
-            }
+                // Step 1: Get the job order with all related data
+                var jobOrder = await _db.JobOrders
+                    .Include(j => j.JobParts)
+                        .ThenInclude(p => p.Inventory)
+                    .Include(j => j.Client)
+                    .FirstOrDefaultAsync(j => j.JobID == id);
 
-            // Check if invoice already exists for this job
-            var existingInvoice = await _db.Invoices
-                .FirstOrDefaultAsync(inv => inv.JobID == id);
+                if (jobOrder == null)
+                {
+                    TempData["Error"] = $"Job Order #{id} not found.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            if (existingInvoice != null)
-            {
-                TempData["Error"] = "Invoice already exists for this job order.";
+                // Step 2: Check if invoice already exists
+                var existingInvoice = await _db.Invoices
+                    .FirstOrDefaultAsync(inv => inv.JobID == id);
+
+                if (existingInvoice != null)
+                {
+                    TempData["Error"] = $"Invoice already exists for this job: {existingInvoice.InvoiceNumber}";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Step 3: Check job status - must be "In Progress"
+                if (jobOrder.Status != "In Progress")
+                {
+                    TempData["Error"] = $"Only jobs in progress can be invoiced. Current status: {jobOrder.Status}";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Step 4: Get ClientID
+                int clientId = jobOrder.ClientID;
+
+                // Step 5: Verify client exists
+                var client = await _db.Client.FindAsync(clientId);
+                if (client == null)
+                {
+                    TempData["Error"] = $"Client #{clientId} not found in database.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Step 6: Calculate totals
+                decimal totalPartsCost = jobOrder.JobParts?.Sum(p => p.TotalCost) ?? 0;
+                decimal totalInvoiceAmount = jobOrder.Cost + totalPartsCost;
+
+                // Step 7: Generate invoice number
+                string invoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
+
+                // Step 8: Calculate due date based on payment type
+                DateTime dateIssued = DateTime.Now;
+                DateTime dueDate = dateIssued; // NOT NULLABLE - use DateTime instead of DateTime?
+                string paymentType = !string.IsNullOrWhiteSpace(client.PaymentType)
+                    ? client.PaymentType
+                    : "Cash"; // ENSURE NOT NULL
+
+                switch (paymentType)
+                {
+                    case "PDC-15 DAYS":
+                        dueDate = dateIssued.AddDays(15);
+                        break;
+                    case "PDC-30 DAYS":
+                        dueDate = dateIssued.AddDays(30);
+                        break;
+                    case "PDC-60 DAYS":
+                        dueDate = dateIssued.AddDays(60);
+                        break;
+                    default:
+                        dueDate = dateIssued;
+                        break;
+                }
+
+                // Step 9: Create invoice - ENSURE ALL REQUIRED FIELDS ARE SET
+                var invoice = new Invoice
+                {
+                    InvoiceNumber = invoiceNumber,
+                    ClientID = clientId,
+                    JobID = jobOrder.JobID,
+                    Amount = totalInvoiceAmount,
+                    PaymentType = paymentType, // GUARANTEED NOT NULL
+                    DateIssued = dateIssued,
+                    DueDate = dueDate, // NOT NULLABLE
+                    Status = "Pending", // GUARANTEED NOT NULL
+                    Payments = new List<Payment>() // INITIALIZE COLLECTION
+                };
+
+                _db.Invoices.Add(invoice);
+                await _db.SaveChangesAsync();
+
+                // Step 10: Audit log
+                string clientName = client.ClientType == "Walk-In"
+                    ? $"Walk-In ({jobOrder.ContactNumber})"
+                    : client.Name;
+
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "CREATE",
+                    module: "Invoices",
+                    description: $"Created Invoice {invoiceNumber} for {clientName} - Job #{jobOrder.JobID}, Amount: ₱{totalInvoiceAmount:N2}, Payment: {paymentType}",
+                    targetId: invoice.InvoiceID
+                );
+
+                TempData["Success"] = $"Invoice {invoiceNumber} created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-
-            // Check if job is in progress
-            if (jobOrder.Status != "In Progress")
+            catch (Exception ex)
             {
-                TempData["Error"] = "Only jobs in progress can be invoiced.";
+                // Detailed error logging
+                System.Diagnostics.Debug.WriteLine($"CreateInvoice Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
+                TempData["Error"] = $"Error creating invoice: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
-
-            decimal totalPartsCost = jobOrder.JobParts.Sum(p => p.TotalCost);
-            decimal totalInvoiceAmount = jobOrder.Cost + totalPartsCost;
-
-            string invoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
-
-            DateTime dateIssued = DateTime.Now;
-            DateTime? dueDate = null;
-
-            string paymentType = jobOrder.Client?.PaymentType ?? "Cash";
-
-            switch (paymentType)
-            {
-                case "PDC-15 DAYS":
-                    dueDate = dateIssued.AddDays(15);
-                    break;
-                case "PDC-30 DAYS":
-                    dueDate = dateIssued.AddDays(30);
-                    break;
-                case "PDC-60 DAYS":
-                    dueDate = dateIssued.AddDays(60);
-                    break;
-                default:
-                    dueDate = dateIssued;
-                    break;
-            }
-
-            var invoice = new Invoice
-            {
-                InvoiceNumber = invoiceNumber,
-                ClientID = jobOrder.ClientID,
-                JobID = jobOrder.JobID,
-                Amount = totalInvoiceAmount,
-                PaymentType = jobOrder.Client?.PaymentType ?? "Cash",
-                DateIssued = DateTime.Now,
-                DueDate = dueDate,
-                Status = "Pending"
-            };
-
-            _db.Invoices.Add(invoice);
-            await _db.SaveChangesAsync();
-
-            // Audit log
-            string clientName = jobOrder.Client?.Name ?? $"Walk-In ({jobOrder.ContactNumber})";
-
-            await _auditService.LogAsync(
-                userId: GetCurrentUserId(),
-                action: "CREATE",
-                module: "Job Orders",
-                description: $"Created Invoice {invoiceNumber} for {clientName} - Job #{jobOrder.JobID}, Amount: ₱{totalInvoiceAmount:N2}, Payment: {paymentType}",
-                targetId: invoice.InvoiceID
-            );
-
-            TempData["Success"] = $"Invoice {invoiceNumber} created successfully!";
-            return RedirectToAction(nameof(Index));
         }
-
 
         [HttpGet]
         public async Task<JsonResult> GetPartsByCategory(string category)

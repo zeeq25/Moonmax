@@ -1,7 +1,5 @@
 ﻿@model Moonmax.ViewModels.CustomerFormViewModel
 
-
-
 @{
     ViewData["Title"] = "Edit Customer";
     ViewData["Nav"] = "Sales";
@@ -20,7 +18,14 @@
 
         <div class="mb-3">
             <label class="form-label">Name</label>
-            <input asp-for="Name" class="form-control" />
+            @if (Model.ClientType == "Walk-In")
+            {
+                <input asp-for="Name" class="form-control" readonly />
+            }
+            else
+            {
+                <input asp-for="Name" class="form-control" />
+            }
         </div>
 
         <div class="mb-3">
@@ -32,6 +37,12 @@
             <label class="form-label">Phone</label>
             <input asp-for="Phone" class="form-control" />
         </div>
+
+        <div class="mb-3">
+            <label class="form-label">Customer Type</label>
+            <select asp-for="ClientType" class="form-control" asp-items="ViewBag.CustomerTypes"></select>
+        </div>
+
 
         <div class="mb-3">
             <label class="form-label">Payment Type</label>

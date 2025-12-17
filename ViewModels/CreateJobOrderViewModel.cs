@@ -7,9 +7,9 @@ namespace Moonmax.ViewModels
 {
     public class CreateJobOrderViewModel
     {   
-        [Required(ErrorMessage = "Client is required.")]
-        [Range(1, int.MaxValue, ErrorMessage = "Client is required.")]  // ⬅️ Must be > 0
-        public int ClientID { get; set; } 
+       
+         
+        public int? ClientID { get; set; } // Nullable for Walk-In
         public string ContactNumber { get; set; }
 
         [Required(ErrorMessage = "Technician is required.")]

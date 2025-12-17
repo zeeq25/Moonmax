@@ -16,5 +16,9 @@ namespace Moonmax.ViewModels
 
         [Required]
         public string PaymentType { get; set; }
+
+        // ✅ NEW
+        [Required]
+        public string ClientType { get; set; } = "MainClient";
     }
 }
