@@ -354,42 +354,68 @@
                 return matchesStatus && matchesDate;
             });
 
-            // ===============================
-            // 🔥 STEP 2: FILTER-AWARE SUMMARY
-            // ===============================
-            let totalRevenueValue = 0;
-            let serviceTotals = {};
-            let invoiceCount = filteredRows.length;
+        // ===============================
+        // FILTER-AWARE SUMMARY
+        // ===============================
+        let totalRevenueValue = 0;
+        let serviceTotals = {};
+        let clientTotals = {}; // track revenue by client
+        let paymentTotals = {}; // track count by payment method
+        let invoiceCount = filteredRows.length;
 
-            filteredRows.forEach(row => {
-                const amount = parseFloat(
-                    row.cells[3].textContent.replace('₱', '').replace(/,/g, '')
-                ) || 0;
+        filteredRows.forEach(row => {
+            const amount = parseFloat(
+                row.cells[3].textContent.replace('₱', '').replace(/,/g, '')
+            ) || 0;
 
-                const serviceType = row.cells[2].textContent.trim();
+            const serviceType = row.cells[2].textContent.trim();
+            const client = row.cells[1].textContent.trim();
+            const paymentType = row.cells[4].textContent.trim();
 
-                totalRevenueValue += amount;
-                serviceTotals[serviceType] = (serviceTotals[serviceType] || 0) + amount;
-            });
+            totalRevenueValue += amount;
+            serviceTotals[serviceType] = (serviceTotals[serviceType] || 0) + amount;
+            clientTotals[client] = (clientTotals[client] || 0) + amount;
+            paymentTotals[paymentType] = (paymentTotals[paymentType] || 0) + 1;
+        });
 
-            const avgInvoiceValueValue = invoiceCount
-                ? totalRevenueValue / invoiceCount
-                : 0;
+        const avgInvoiceValueValue = invoiceCount ? totalRevenueValue / invoiceCount : 0;
 
-            let topServiceType = "N/A";
-            let maxRevenue = 0;
-
-            for (const service in serviceTotals) {
-                if (serviceTotals[service] > maxRevenue) {
-                    maxRevenue = serviceTotals[service];
-                    topServiceType = service;
-                }
+        // Top Service Type
+        let topServiceType = "N/A";
+        let maxRevenue = 0;
+        for (const service in serviceTotals) {
+            if (serviceTotals[service] > maxRevenue) {
+                maxRevenue = serviceTotals[service];
+                topServiceType = service;
             }
+        }
 
-            const totalRevenue = `PHP ${totalRevenueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            const invoicesIssued = invoiceCount.toString();
-            const avgInvoiceValue = `PHP ${avgInvoiceValueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            const jobsCompleted = filteredRows.filter(r => r.cells[7].textContent.trim() === 'Paid').length;
+        // Top Client
+        let topClient = "N/A";
+        let maxClientRevenue = 0;
+        for (const client in clientTotals) {
+            if (clientTotals[client] > maxClientRevenue) {
+                maxClientRevenue = clientTotals[client];
+                topClient = client;
+            }
+        }
+
+        // Top Payment Method
+        let topPaymentMethod = "N/A";
+        let maxPaymentCount = 0;
+        for (const method in paymentTotals) {
+            if (paymentTotals[method] > maxPaymentCount) {
+                maxPaymentCount = paymentTotals[method];
+                topPaymentMethod = method;
+            }
+        }
+
+        // Formatted strings
+        const totalRevenue = `PHP ${totalRevenueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        const invoicesIssued = invoiceCount.toString();
+        const avgInvoiceValue = `PHP ${avgInvoiceValueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+
 
             // ===============================
             // HEADER
@@ -430,7 +456,7 @@
 
         const kpiY = startY + 15;
         const col = 63;
-
+               
         doc.setFontSize(9);
         doc.text("Total Revenue (PHP):", 15, kpiY);
         doc.setFontSize(11);
@@ -441,10 +467,11 @@
         doc.setFontSize(11);
         doc.text(invoicesIssued, 15 + col, kpiY + 5);
 
+        // Top Client
         doc.setFontSize(9);
-        doc.text("Jobs Completed:", 15 + col * 2, kpiY);
+        doc.text("Top Client:", 15 + col * 2, kpiY);
         doc.setFontSize(11);
-        doc.text(jobsCompleted.toString(), 15 + col * 2, kpiY + 5);
+        doc.text(topClient, 15 + col * 2, kpiY + 5);
 
         const row2Y = kpiY + 18;
         doc.setFontSize(9);
@@ -456,6 +483,14 @@
         doc.text("Top Service Type:", 15 + col, row2Y);
         doc.setFontSize(11);
         doc.text(topServiceType, 15 + col, row2Y + 5);
+
+        // Top Payment Method
+        doc.setFontSize(9);
+        doc.text("Top Payment Method:", 15 + col * 2, row2Y);
+        doc.setFontSize(11);
+        doc.text(topPaymentMethod, 15 + col * 2, row2Y + 5);
+
+
 
         startY += 65;
 

@@ -1,113 +1,112 @@
 ﻿@model Moonmax.ViewModels.ReceiptViewModel
 
-<div class="receipt-print-area" style="background:white; padding:40px; border-radius:8px;">
+<div class="receipt-print-area" style="background:white; padding:48px; max-width:600px; margin:0 auto;">
+
     <!-- Header -->
-    <div style="text-align:center; margin-bottom:30px; border-bottom:2px solid #2563eb; padding-bottom:20px;">
-        <h1 style="color:#2563eb; margin:0; font-size:32px;">OFFICIAL RECEIPT</h1>
-        <p style="margin:10px 0 5px 0; font-size:16px; font-weight:bold;">Moonmax Company</p>
-        <p style="margin:5px 0; font-size:13px; color:#666;">123 Business Street, Davao City, Philippines</p>
-        <p style="margin:5px 0; font-size:13px; color:#666;">Phone: (+63) 912-345-6789 | Email: info@moonmax.com</p>
+    <div style="margin-bottom:40px;">
+        <h1 style="color:#18181b; margin:0 0 8px 0; font-size:28px; font-weight:600; letter-spacing:-0.5px;">Receipt</h1>
+        <p style="margin:0; font-size:14px; color:#71717a;">Moonmax Company</p>
     </div>
 
-    <!-- Receipt Info -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:30px; padding:15px; background:#f8f9fa; border-radius:8px;">
+    <!-- Receipt & Customer Info Grid -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:40px; padding-bottom:32px; border-bottom:1px solid #e4e4e7;">
+
+        <!-- Left Column -->
         <div>
-            <p style="margin:5px 0; font-size:14px;"><strong>Receipt No:</strong> <span class="receipt-number">RCT-@Model.InvoiceNumber</span></p>
-            <p style="margin:5px 0; font-size:14px;"><strong>Invoice No:</strong> @Model.InvoiceNumber</p>
-            <p style="margin:5px 0; font-size:14px;"><strong>Date Issued:</strong> @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Receipt Number</p>
+            <p style="margin:0 0 16px 0; font-size:15px; color:#18181b; font-weight:500;">RCT-@Model.InvoiceNumber</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Invoice Number</p>
+            <p style="margin:0 0 16px 0; font-size:15px; color:#18181b; font-weight:500;">@Model.InvoiceNumber</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Date Issued</p>
+            <p style="margin:0; font-size:15px; color:#18181b; font-weight:500;">@DateTime.Now.ToString("MMM dd, yyyy")</p>
         </div>
-        <div style="text-align:right;">
-            <p style="margin:5px 0; font-size:14px;"><strong>Status:</strong> <span style="color:#059669; font-weight:bold; background:#d1fae5; padding:4px 12px; border-radius:4px;"></span>PAID</p>
-            <p style="margin:5px 0; font-size:14px;"><strong>Payment Date:</strong> @Model.PaymentDate.ToString("MMMM dd, yyyy")</p>
+
+        <!-- Right Column -->
+        <div>
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Received From</p>
+            <p style="margin:0 0 16px 0; font-size:15px; color:#18181b; font-weight:500;">@Model.ClientName</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Job ID</p>
+            <p style="margin:0 0 16px 0; font-size:15px; color:#18181b; font-weight:500;">@Model.JobID</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.5px;">Payment Date</p>
+            <p style="margin:0; font-size:15px; color:#18181b; font-weight:500;">@Model.PaymentDate.ToString("MMM dd, yyyy")</p>
         </div>
     </div>
 
-    <!-- Customer Info -->
-    <div style="background:#f0f9ff; padding:20px; border-radius:8px; margin-bottom:30px; border-left:4px solid #2563eb;">
-        <h3 style="margin:0 0 15px 0; color:#2563eb; font-size:18px;">Received From:</h3>
-        <p style="margin:5px 0; font-size:15px; font-weight:bold;">@Model.ClientName</p>
-        <p style="margin:5px 0; font-size:14px; color:#666;">Job ID: @Model.JobID</p>
+    <!-- Payment Details -->
+    <div style="margin-bottom:32px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+            <p style="margin:0; font-size:14px; color:#52525b;">Payment for Invoice @Model.InvoiceNumber</p>
+            <p style="margin:0; font-size:15px; color:#18181b; font-weight:500;">₱@Model.AmountPaid.ToString("N2")</p>
+        </div>
+        <p style="margin:0; font-size:13px; color:#a1a1aa;">@Model.PaymentMethod</p>
     </div>
 
-    <!-- Payment Details Table -->
-    <table style="width:100%; margin-bottom:30px; border-collapse:collapse; border:1px solid #e5e7eb;">
-        <thead>
-            <tr style="background:#2563eb; color:white;">
-                <th style="padding:15px; text-align:left; font-size:14px; border:1px solid #1e40af;">Description</th>
-                <th style="padding:15px; text-align:right; border:1px solid #1e40af; width:180px;">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr style="background:#fff;">
-                <td style="padding:15px; border:1px solid #e5e7eb; font-size:14px;">
-                    <strong>Payment for Invoice @Model.InvoiceNumber</strong><br>
-                    <span style="font-size:13px; color:#666;">Job ID: @Model.JobID - @Model.PaymentMethod</span>
-                </td>
-                <td style="padding:15px; text-align:right; border:1px solid #e5e7eb; font-size:15px; font-weight:500;">₱@Model.AmountPaid.ToString("N2")</td>
-            </tr>
-            <tr style="background:#f9fafb;">
-                <td style="padding:18px; border:1px solid #e5e7eb; text-align:right; font-weight:bold; font-size:16px;">TOTAL AMOUNT PAID:</td>
-                <td style="padding:18px; border:1px solid #e5e7eb; text-align:right; font-weight:bold; font-size:20px; color:#059669;">₱@Model.AmountPaid.ToString("N2")</td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- Total -->
+    <div style="background:#fafafa; padding:20px; border-radius:8px; margin-bottom:32px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <p style="margin:0; font-size:13px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px;">Total Paid</p>
+            <p style="margin:0; font-size:28px; color:#18181b; font-weight:600; letter-spacing:-0.5px;">₱@Model.AmountPaid.ToString("N2")</p>
+        </div>
+    </div>
 
-    <!-- Payment Method Info -->
-    <div style="background:#fef3c7; padding:20px; border-radius:8px; margin-bottom:30px; border-left:4px solid #f59e0b;">
-        <h4 style="margin:0 0 12px 0; color:#92400e; font-size:15px;">Payment Information</h4>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div>
-                <p style="margin:5px 0; font-size:14px;"><strong>Payment Method:</strong></p>
-                <p style="margin:5px 0; font-size:14px; color:#666;">@Model.PaymentMethod</p>
-            </div>
+    <!-- Payment Method Details (if applicable) -->
+    @if (!string.IsNullOrEmpty(Model.CheckNumber) || !string.IsNullOrEmpty(Model.BankName) || !string.IsNullOrEmpty(Model.ReferenceNumber))
+    {
+        <div style="margin-bottom:32px; padding:20px; background:#fafafa; border-radius:8px;">
+            <p style="margin:0 0 12px 0; font-size:12px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px;">Payment Details</p>
 
             @if (!string.IsNullOrEmpty(Model.CheckNumber))
             {
-                <div>
-                    <p style="margin:5px 0; font-size:14px;"><strong>Check Number:</strong></p>
-                    <p style="margin:5px 0; font-size:14px; color:#666;">@Model.CheckNumber</p>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:14px; color:#71717a;">Check Number</span>
+                    <span style="font-size:14px; color:#18181b; font-weight:500;">@Model.CheckNumber</span>
                 </div>
             }
 
             @if (!string.IsNullOrEmpty(Model.BankName))
             {
-                <div>
-                    <p style="margin:5px 0; font-size:14px;"><strong>Bank Name:</strong></p>
-                    <p style="margin:5px 0; font-size:14px; color:#666;">@Model.BankName</p>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:14px; color:#71717a;">Bank</span>
+                    <span style="font-size:14px; color:#18181b; font-weight:500;">@Model.BankName</span>
                 </div>
             }
 
             @if (Model.CheckDate.HasValue)
             {
-                <div>
-                    <p style="margin:5px 0; font-size:14px;"><strong>Check Date:</strong></p>
-                    <p style="margin:5px 0; font-size:14px; color:#666;">@Model.CheckDate.Value.ToString("MMMM dd, yyyy")</p>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:14px; color:#71717a;">Check Date</span>
+                    <span style="font-size:14px; color:#18181b; font-weight:500;">@Model.CheckDate.Value.ToString("MMM dd, yyyy")</span>
                 </div>
             }
 
             @if (!string.IsNullOrEmpty(Model.ReferenceNumber))
             {
-                <div>
-                    <p style="margin:5px 0; font-size:14px;"><strong>Reference Number:</strong></p>
-                    <p style="margin:5px 0; font-size:14px; color:#666;">@Model.ReferenceNumber</p>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:14px; color:#71717a;">Reference Number</span>
+                    <span style="font-size:14px; color:#18181b; font-weight:500;">@Model.ReferenceNumber</span>
                 </div>
             }
         </div>
+    }
 
-        @if (!string.IsNullOrEmpty(Model.Notes))
-        {
-            <div style="margin-top:12px; padding-top:12px; border-top:1px solid #fde68a;">
-                <p style="margin:5px 0; font-size:14px;"><strong>Notes:</strong></p>
-                <p style="margin:5px 0; font-size:14px; color:#666;">@Model.Notes</p>
-            </div>
-        }
-    </div>
+    <!-- Notes -->
+    @if (!string.IsNullOrEmpty(Model.Notes))
+    {
+        <div style="margin-bottom:32px; padding:16px; background:#fafafa; border-radius:8px; border-left:3px solid #18181b;">
+            <p style="margin:0 0 6px 0; font-size:12px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px;">Notes</p>
+            <p style="margin:0; font-size:14px; color:#52525b; line-height:1.6;">@Model.Notes</p>
+        </div>
+    }
 
     <!-- Footer -->
-    <div style="text-align:center; padding-top:30px; border-top:2px solid #e5e7eb; color:#666;">
-        <p style="margin:10px 0; font-size:15px; font-weight:500; color:#2563eb;">Thank you for your business!</p>
-        <p style="margin:8px 0; font-size:13px;">This is a computer-generated receipt and is valid without signature.</p>
-        <p style="margin:15px 0 5px 0; font-size:11px; color:#9ca3af;">Generated on @DateTime.Now.ToString("MMMM dd, yyyy hh:mm tt")</p>
-        <p style="margin:5px 0; font-size:11px; color:#9ca3af;">For inquiries, please contact us at info@moonmax.com</p>
+    <div style="padding-top:32px; border-top:1px solid #e4e4e7;">
+        <p style="margin:0 0 8px 0; font-size:13px; color:#52525b;">Thank you for your business</p>
+        <p style="margin:0; font-size:12px; color:#a1a1aa;">123 Business Street, Davao City, Philippines</p>
+        <p style="margin:4px 0 0 0; font-size:12px; color:#a1a1aa;">info@moonmax.com • (+63) 912-345-6789</p>
     </div>
+
 </div>

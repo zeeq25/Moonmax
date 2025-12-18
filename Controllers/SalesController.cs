@@ -181,26 +181,33 @@ namespace Moonmax.Controllers
         public async Task<IActionResult> CustomerList()
         {
             var clients = await _context.Client
-                .Select(c => new CustomerViewModel
-                {
-                    ClientID = c.ClientID,
-                    Name = c.Name,
-                    Email = c.Email,
-                    Phone = c.ContactNumber,
-                    PaymentType = c.PaymentType,
-                    TotalTransactions = c.Invoices.Count(),
+            .Include(c => c.Invoices)
+            .ThenInclude(i => i.Payments)
+            .ToListAsync();
 
-                    TotalRevenue = c.Invoices
-                        .Where(i => i.Status == "Paid")
-                        .Sum(i => i.Amount),
+            var clientVMs = clients.Select(c => new CustomerViewModel
+            {
+                ClientID = c.ClientID,
+                Name = c.Name,
+                Email = c.Email,
+                Phone = c.ContactNumber,
+                PaymentType = c.PaymentType,
+                TotalTransactions = c.Invoices.Count(),
 
-                    Outstanding = c.Invoices
-                        .Where(i => i.Status != "Paid")
-                        .Sum(i => i.Amount)
-                })
-                .ToListAsync();
+                TotalRevenue = c.Invoices
+                    .Where(i => i.Status == "Paid")
+                    .Sum(i => i.Amount),
 
-            return View(clients);
+                Outstanding = c.Invoices
+                    .Sum(i => i.Amount - i.Payments.Sum(p => p.AmountPaid))
+            })
+            .ToList();
+
+            return View(clientVMs);
+
+
+
+
         }
 
         // GET: Sales/CreateCustomer

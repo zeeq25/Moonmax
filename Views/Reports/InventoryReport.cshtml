@@ -72,6 +72,9 @@
     <section class="section-block">
         <h2 class="section-title">Inventory Reports</h2>
 
+
+        
+        
         <!-- DATE RANGE & EXPORT -->
         <section class="section-block filters-export">
             <div class="filters modern-filters">
@@ -188,201 +191,229 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <script>
-        // Back Button
-        document.getElementById('btnBack').addEventListener('click', () => {
-            window.history.back();
-        });
-    </script>
-}
-
-    <script>
-        // Prepare chart data from ViewModel
-        const stockItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.PartName)));
-        const stockValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.QuantityInStock)));
-
-        const usageDates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UsageDates));
-        const usageValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UsageQuantities));
-
-        function generateColors(length) {
-            const palette = ['#4F46E5','#FACC15','#10B981','#EF4444','#1F2937','#8B5CF6','#F472B6','#0EA5E9'];
-            return Array.from({length}, (_, i) => palette[i % palette.length]);
-        }
-
-        function createChart(ctxId, type, labels, data, options={}) {
-            const canvas = document.getElementById(ctxId);
-            if (!canvas || !labels.length || !data.length) return;
-            return new Chart(canvas, { type, data: { labels, datasets:[{ data, backgroundColor: generateColors(labels.length) }] }, options: { responsive:true, maintainAspectRatio:false, ...options } });
-        }
-
-        // Stock Balance chart
-        createChart('stockBalanceChart','bar',stockItems,stockValues, { plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } });
-        
-        // Top 5 consumed items chart
-        createChart(
-            'materialUsageChart',
-            'bar', // change from 'line' to 'bar'
-            usageDates,   // now contains top 5 item names
-            usageValues,  // corresponding consumed quantities
-            {
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        );
-        
-    </script>
-
-    <!-- Pagination -->
-    <script>
-        let currentPage = 1;
-        const rowsPerPage = 10;
-        let allRows = [];
-
-        function getVisibleRows() {
-            return allRows.filter(r => r.dataset.filtered === "true");
-        }
-
-            function renderTablePage(page) {
-            const visibleRows = getVisibleRows();
-            const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
-
-            // Ensure page is within bounds
-            if (page < 1) page = 1;
-            if (page > totalPages && totalPages > 0) page = totalPages;
-            currentPage = page;
-
-            // Hide all rows first
-            allRows.forEach(r => r.style.display = "none");
-
-            // Show only the rows for the current page
-            const startIdx = (page - 1) * rowsPerPage;
-            const endIdx = startIdx + rowsPerPage;
-            visibleRows.slice(startIdx, endIdx).forEach(r => r.style.display = "");
-
-            // Update page indicator
-            document.getElementById("pageIndicator").innerText =
-                `Page ${page} of ${totalPages || 1}`;
-
-            // Enable/disable buttons
-            document.getElementById("prevPage").disabled = (page <= 1);
-            document.getElementById("nextPage").disabled = (page >= totalPages);
-        }
-       
         document.addEventListener("DOMContentLoaded", () => {
-            allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
 
-            // initially all rows are visible
-            allRows.forEach(r => r.dataset.filtered = "true");
 
-            document.getElementById("prevPage").onclick = () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderTablePage(currentPage);
-                }
-            };
+         
+            const generatedByUser = "@generatedByUser";
 
-            document.getElementById("nextPage").onclick = () => {
-                currentPage++;
-                renderTablePage(currentPage);
-            };
+            // Prevent multiple bindings
+            const exportBtn = document.getElementById('btnExportPdf');
+            exportBtn.replaceWith(exportBtn.cloneNode(true));
+            const btnExportPdf = document.getElementById('btnExportPdf');
 
-            renderTablePage(currentPage);
-        });
-    </script>
-
-    <!--Search filter-->
-    <script>
-        const searchInput = document.getElementById('searchFilter');
-        const fromDateInput = document.getElementById('reportFromDate');
-        const toDateInput = document.getElementById('reportToDate');
-        const filterBtn = document.getElementById('btnApplyFilter');
-
-        function applyFilters() {
-            const search = searchInput.value.toLowerCase().trim();
-            const fromDate = fromDateInput.value ? new Date(fromDateInput.value) : null;
-            const toDate = toDateInput.value ? new Date(toDateInput.value) : null;
-            if (toDate) toDate.setHours(23, 59, 59, 999);
-
-            allRows.forEach(row => {
-                const updatedAtText = row.cells[7].innerText.trim();
-                const updatedAt = updatedAtText ? new Date(updatedAtText) : null;
-
-                const partName = row.cells[2].innerText.toLowerCase();
-                const supplier = row.cells[6].innerText.toLowerCase();
-                const category = row.cells[1].innerText.toLowerCase();
-
-                const matchesSearch =
-                    !search ||
-                    partName.includes(search) ||
-                    supplier.includes(search) ||
-                    category.includes(search);
-
-                const matchesDate =
-                    (!fromDate || !toDate || !updatedAt) ||
-                    (updatedAt >= fromDate && updatedAt <= toDate);
-
-                row.dataset.filtered = (matchesSearch && matchesDate) ? "true" : "false";
+            // ------------------------------
+            // BACK BUTTON
+            // ------------------------------
+            document.getElementById('btnBack').addEventListener('click', () => {
+                window.history.back();
             });
 
-            currentPage = 1;
-            renderTablePage(currentPage);
-        }
+            // ------------------------------
+            // TABLE & PAGINATION
+            // ------------------------------
+            let currentPage = 1;
+            const rowsPerPage = 10;
+            let allRows = Array.from(document.querySelectorAll("#inventoryTable tbody tr"));
+            allRows.forEach(r => r.dataset.filtered = "true");
 
-        searchInput.addEventListener('input', applyFilters);
-        filterBtn.addEventListener('click', applyFilters);
-    </script>
-
-
-
-    <script>
-        const generatedByUser = "@generatedByUser";
-    </script>
-
-
-    <!-- Export  -->
-    <script>
-        document.getElementById('btnExportPdf').addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const rows = getVisibleRows().map(row =>
-                Array.from(row.cells).map((cell, i) => {
-                    if (i === 3) {
-                        return 'PHP ' + cell.innerText.replace(/₱/g, '').trim();
-                    }
-                    return cell.innerText.trim();
-                })
-            );
-
-            if (rows.length === 0) {
-                alert("No data to export.");
-                return;
+            function getVisibleRows() {
+                return allRows.filter(r => r.dataset.filtered === "true");
             }
 
-            doc.setFontSize(12);
-            doc.text("Inventory Report", 14, 15);
+            function renderTablePage(page) {
+                const visibleRows = getVisibleRows();
+                const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
+                if (page < 1) page = 1;
+                if (page > totalPages && totalPages > 0) page = totalPages;
+                currentPage = page;
 
-            // Generated info
-            doc.setFontSize(9);
-            doc.text(`Generated by: ${generatedByUser}`, 10, 21);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 26);
+                allRows.forEach(r => r.style.display = "none");
 
-            // Divider
-            doc.setLineWidth(0.5);
-            doc.line(10, 29, 200, 29);
+                const startIdx = (page - 1) * rowsPerPage;
+                const endIdx = startIdx + rowsPerPage;
+                visibleRows.slice(startIdx, endIdx).forEach(r => r.style.display = "");
 
+                document.getElementById("pageIndicator").innerText = `Page ${page} of ${totalPages || 1}`;
+                document.getElementById("prevPage").disabled = (page <= 1);
+                document.getElementById("nextPage").disabled = (page >= totalPages);
+            }
+
+            document.getElementById("prevPage").onclick = () => renderTablePage(currentPage - 1);
+            document.getElementById("nextPage").onclick = () => renderTablePage(currentPage + 1);
+            renderTablePage(currentPage);
+
+            // ------------------------------
+            // SEARCH & FILTER
+            // ------------------------------
+            const searchInput = document.getElementById('searchFilter');
+            const fromDateInput = document.getElementById('reportFromDate');
+            const toDateInput = document.getElementById('reportToDate');
+            const filterBtn = document.getElementById('btnApplyFilter');
+
+            function applyFilters() {
+                const search = searchInput.value.toLowerCase().trim();
+                const fromDate = fromDateInput.value ? new Date(fromDateInput.value) : null;
+                const toDate = toDateInput.value ? new Date(toDateInput.value) : null;
+                if (toDate) toDate.setHours(23, 59, 59, 999);
+
+                allRows.forEach(row => {
+                    const updatedAtText = row.cells[7].innerText.trim();
+                    const updatedAt = updatedAtText ? new Date(updatedAtText) : null;
+                    const partName = row.cells[2].innerText.toLowerCase();
+                    const supplier = row.cells[6].innerText.toLowerCase();
+                    const category = row.cells[1].innerText.toLowerCase();
+
+                    const matchesSearch = !search || partName.includes(search) || supplier.includes(search) || category.includes(search);
+                    let matchesDate = true;
+                    if (updatedAt) {
+                        if (fromDate && updatedAt < fromDate) matchesDate = false;
+                        if (toDate && updatedAt > toDate) matchesDate = false;
+                    } else matchesDate = false;
+
+                    row.dataset.filtered = (matchesSearch && matchesDate) ? "true" : "false";
+                });
+
+                renderTablePage(1);
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            filterBtn.addEventListener('click', applyFilters);
+
+            // ------------------------------
+            // CHARTS
+            // ------------------------------
+            const stockItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.PartName)));
+            const stockValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Inventories.Select(i => i.QuantityInStock)));
+            const usageDates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UsageDates));
+            const usageValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UsageQuantities));
+
+            function generateColors(length) {
+                const palette = ['#4F46E5','#FACC15','#10B981','#EF4444','#1F2937','#8B5CF6','#F472B6','#0EA5E9'];
+                return Array.from({length}, (_, i) => palette[i % palette.length]);
+            }
+
+            function createChart(ctxId, type, labels, data, options={}) {
+                const canvas = document.getElementById(ctxId);
+                if (!canvas || !labels.length || !data.length) return;
+                return new Chart(canvas, { type, data: { labels, datasets:[{ data, backgroundColor: generateColors(labels.length) }] }, options: { responsive:true, maintainAspectRatio:false, ...options } });
+            }
+
+            createChart('stockBalanceChart','bar',stockItems,stockValues,{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } });
+            createChart('materialUsageChart','bar',usageDates,usageValues,{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } });
+
+            // ------------------------------
+            // EXPORT PDF (fixed)
+            // ------------------------------
+                        btnExportPdf.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            const filteredRows = getVisibleRows();
+            if (!filteredRows.length) return alert("No data to export.");
+
+            // COUNT PARTS & SUPPLIERS
+            const partCounts = {}, supplierCounts = {};
+            filteredRows.forEach(row => {
+                const part = row.cells[2].innerText.trim();
+                partCounts[part] = (partCounts[part] || 0) + 1;
+                const supplier = row.cells[6].innerText.trim();
+                supplierCounts[supplier] = (supplierCounts[supplier] || 0) + 1;
+            });
+
+            // Get Top 3 parts (names only)
+            const topPartsArr = Object.keys(partCounts)
+                .sort((a, b) => partCounts[b] - partCounts[a])
+                .slice(0, 3);
+
+            // Top supplier
+            const topSupplier = Object.keys(supplierCounts)
+                .sort((a, b) => supplierCounts[b] - supplierCounts[a])[0] || "N/A";
+
+            // Extract table data
+            const tableBody = filteredRows.map(row =>
+                Array.from(row.cells).map((cell, i) =>
+                    i === 3 ? 'PHP ' + cell.innerText.replace(/₱/g, '').trim() : cell.innerText.trim()
+                )
+            );
+
+            // KPIs
+            let totalStockValue = 0, lowStockCount = 0;
+            filteredRows.forEach(row => {
+                const qty = parseFloat(row.cells[4].innerText) || 0;
+                const unitCost = parseFloat(row.cells[3].innerText.replace(/₱/g, '').replace(/,/g, '')) || 0;
+                const reorder = parseInt(row.cells[5].innerText) || 0;
+                totalStockValue += qty * unitCost;
+                if (qty <= reorder) lowStockCount++;
+            });
+
+            // REPORT PERIOD
+            const fromDate = document.getElementById('reportFromDate').value;
+            const toDate = document.getElementById('reportToDate').value;
+            const formattedFromDate = fromDate ? new Date(fromDate).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : "N/A";
+            const formattedToDate = toDate ? new Date(toDate).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : "N/A";
+
+            // -------------------- HEADER --------------------
+            doc.setFont('helvetica','bold'); doc.setFontSize(18);
+            doc.text("INVENTORY REPORT", 105, 20, { align: 'center' });
+
+            doc.setFont('helvetica','normal'); doc.setFontSize(10);
+            doc.text(`Generated by: ${generatedByUser}`, 10, 28);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 33);
+            doc.text(`Report Period: ${formattedFromDate} - ${formattedToDate}`, 10, 38);
+            doc.line(10, 41, 200, 41);
+
+            // -------------------- SUMMARY BOX --------------------
+            let startY = 45;
+            doc.setFillColor(245,247,250);
+            doc.roundedRect(10, startY, 190, 45, 3, 3, 'F');
+            const col = 95;
+
+            doc.setFontSize(9); doc.text("Top Supplier:", 15, startY + 8);
+            doc.setFontSize(11); doc.text(topSupplier, 15, startY + 13);
+
+            doc.setFontSize(9); doc.text("Top Parts:", 15 + col, startY + 8);
+            doc.setFontSize(11); doc.text(topPartsArr.join(", ") || "N/A", 15 + col, startY + 13);
+
+            doc.setFontSize(9); doc.text("Total Stock Value (PHP):", 15, startY + 23);
+            doc.setFontSize(11); doc.text(`PHP ${totalStockValue.toLocaleString('en-US',{minimumFractionDigits:2})}`, 15, startY + 28);
+
+            doc.setFontSize(9); doc.text("Low Stock Items:", 15 + col, startY + 23);
+            doc.setFontSize(11); doc.text(`${lowStockCount}`, 15 + col, startY + 28);
+
+            doc.setFontSize(9); doc.text("Number of Items Listed:", 15 + col, startY + 33);
+            doc.setFontSize(11); doc.text(`${filteredRows.length}`, 15 + col, startY + 38);
+
+            startY += 55;
+
+            // -------------------- TABLE --------------------
             doc.autoTable({
+                startY,
                 head: [['ID','Category','Part','Unit Cost','Qty In Stock','Reorder','Supplier','Updated At']],
-                body: rows,
-                startY: 35,
+                body: tableBody,
                 theme: 'striped',
-                styles: { fontSize: 8 },
                 headStyles: { fillColor: [79,70,229], textColor: 255 },
+                styles: { fontSize: 8 },
                 showHead: 'everyPage',
                 margin: { left: 7, right: 7 }
             });
 
-            doc.save(`InventoryReport_${Date.now()}.pdf`);
+            // -------------------- SAVE PDF --------------------
+            doc.save(`InventoryReport_${fromDate || 'all'}_to_${toDate || 'all'}.pdf`);
+        });
+
+
         });
     </script>
+}
+
+
     
-}    
+
+
+
+
+
+
+    
+   
