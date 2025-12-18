@@ -11,84 +11,102 @@
     <link rel="stylesheet" href="~/css/joborders.css" asp-append-version="true" />
 }
 
-<div class="container mt-4">
-    <h2>Create Job Order</h2>
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7 col-sm-10">
 
-    <!-- ⬇️⬇️⬇️ ADD DEBUG CODE HERE ⬇️⬇️⬇️ -->
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <div class="alert alert-danger">
-            <h4>Validation Errors:</h4>
-            <ul>
-                @foreach (var key in ViewData.ModelState.Keys)
-                {
-                    var state = ViewData.ModelState[key];
-                    foreach (var error in state.Errors)
-                    {
-                        <li><strong>@key:</strong> @error.ErrorMessage</li>
-                    }
-                }
-            </ul>
+        <div class="mm-card p-4 rounded-3">
+
+            <!-- Card Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-semibold">Create Job Order</h5>
+
+                <!-- Card Header Back Button -->
+                <a asp-action="Index" class="btn btn-secondary-mm btn-rect btn-sm">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back
+                </a>
+            </div>
+
+            <!-- Debug: validation errors -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <h6>Validation Errors:</h6>
+                    <ul>
+                        @foreach (var key in ViewData.ModelState.Keys)
+                        {
+                            var state = ViewData.ModelState[key];
+                            foreach (var error in state.Errors)
+                            {
+                                <li><strong>@key:</strong> @error.ErrorMessage</li>
+                            }
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form asp-action="Create" method="post">
+
+                <div class="mb-3">
+                    <label class="form-label">Client Type</label>
+                    <select asp-for="ClientID" id="ClientID" class="form-select" asp-items="Model.Clients">
+                        <option value="">-- Choose Clients --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact Number</label>
+                    <input asp-for="ContactNumber" class="form-control" id="ContactNumber" />
+                    <span asp-validation-for="ContactNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Technician</label>
+                    <select asp-for="TechnicianID" class="form-select" asp-items="Model.Technicians">
+                        <option value="">-- Select Technician --</option>
+                    </select>
+                    <span asp-validation-for="TechnicianID" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Service Type</label>
+                    <select asp-for="ServiceType" class="form-select" asp-items="Model.ServiceTypes">
+                        <option value="">--Select Service Type--</option>
+                    </select>
+                    <span asp-validation-for="ServiceType" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Due Date</label>
+                    <input asp-for="DueDate" type="date" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Job Cost</label>
+                    <input asp-for="Cost" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="Cost" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Status</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="Pending">Pending</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+
+                <!-- Form Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary-mm btn-rect">Create Job Order</button>
+                    <a asp-action="Index" class="btn btn-secondary-mm btn-rect">Cancel</a>
+                </div>
+
+
+            </form>
+
         </div>
-    }
-    <!-- ⬆️⬆️⬆️ END DEBUG CODE ⬆️⬆️⬆️ -->
-
-    <hr/>
-
-    <form asp-action="Create" method="post">
-        <div class="mb-3">
-            <label class="form-label">Client Type</label>
-            <select asp-for="ClientID" id="ClientID" class="form-select" asp-items="Model.Clients">
-                <option value="">-- Choose Clients --</option>
-            </select>
-
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Contact Number</label>
-            <input asp-for="ContactNumber" class="form-control" />
-            <span asp-validation-for="ContactNumber" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Technician</label>
-            <select asp-for="TechnicianID" class="form-select" asp-items="Model.Technicians">
-                <option value="">-- Select Technician --</option>
-            </select>
-            <span asp-validation-for="TechnicianID" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Service Type</label>
-            <select asp-for="ServiceType" class="form-select" asp-items="Model.ServiceTypes">
-                <option value="">--Select Service Type--</option>
-            </select>
-            <span asp-validation-for="ServiceType" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Due Date</label>
-            <input asp-for="DueDate" type="date" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Job Cost</label>
-            <input asp-for="Cost" type="number" step="0.01" class="form-control" />
-            <span asp-validation-for="Cost" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select asp-for="Status" class="form-select">
-                <option value="Pending">Pending</option>                
-            </select>
-            <span asp-validation-for="Status" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Create Job Order</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

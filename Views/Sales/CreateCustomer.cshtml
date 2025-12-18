@@ -10,55 +10,69 @@
     <link rel="stylesheet" href="~/css/sales.css" asp-append-version="true" />
 }
 
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7 col-sm-10">
 
-<div class="page page-sales">
-    <header class="dash-header">
-        <h1 class="dash-title">Add Customer</h1>
-        <a asp-action="CustomerList" class="btn-pill btn-secondary-mm">
-            <i class="fa-solid fa-arrow-left"></i> Back
-        </a>
-    </header>
+        <div class="mm-card p-4 rounded-3">
 
-    <div class="mm-card">
-        <form asp-action="CreateCustomer" method="post">
-            <div class="form-group">
-                <label>Name</label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+            <!-- Card Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-semibold">Add Customer</h5>
+
+                <a asp-action="CustomerList"
+                   class="btn-pill btn-secondary-mm btn-sm">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back
+                </a>
             </div>
 
-            <div class="form-group">
-                <label>Email</label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
+            <form asp-action="CreateCustomer" method="post">
 
-            <div class="form-group">
-                <label>Phone</label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label>Payment Type</label>
-                <select asp-for="PaymentType" class="form-control" asp-items="@(new SelectList(ViewBag.PaymentTypes))">
-                    <option value="">-- Select Payment Type --</option>
-                </select>
-                <span asp-validation-for="PaymentType" class="text-danger"></span>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label>Customer Type</label>
-                <select asp-for="ClientType" class="form-control">
-                    <option value="MainClient">Main Client</option>
-                    <option value="Walk-In">Walk-In</option>
-                </select>
-                <span asp-validation-for="ClientType" class="text-danger"></span>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Payment Type</label>
+                    <select asp-for="PaymentType"
+                            class="form-control"
+                            asp-items="@(new SelectList(ViewBag.PaymentTypes))">
+                        <option value="">-- Select Payment Type --</option>
+                    </select>
+                    <span asp-validation-for="PaymentType" class="text-danger"></span>
+                </div>
 
-            <button type="submit" class="btn-pill btn-primary-mm">Add Customer</button>
-        </form>
+                <div class="mb-4">
+                    <label class="form-label">Customer Type</label>
+                    <select asp-for="ClientType" class="form-control">
+                        <option value="MainClient">Main Client</option>
+                        <option value="Walk-In">Walk-In</option>
+                    </select>
+                    <span asp-validation-for="ClientType" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn-pill btn-primary-mm">
+                        Add Customer
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
     </div>
 </div>
 

@@ -620,4 +620,10 @@ button[disabled] {
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
+/* Rectangular buttons with subtle rounding */
+.btn-rect {
+    border-radius: 0.25rem; /* moderate rounding */
+    padding: 0.45rem 1rem; /* adjust height/width */
+    font-size: 0.9rem;
+}
 

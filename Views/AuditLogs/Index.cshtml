@@ -9,44 +9,111 @@
 <div class="container mt-4">
     <h2>Audit Logs</h2>
 
-    <div class="mb-3">
-        <a asp-action="Index" class="btn btn-secondary btn-sm">All</a>
-        <a asp-action="Index" asp-route-module="User Management" class="btn btn-secondary btn-sm">User Management</a>
+    
+    <!-- Filter Buttons -->
+    <div class="mb-3 d-flex flex-wrap gap-2">
+
+        <a asp-action="Index"
+           class="btn btn-secondary btn-sm rounded-3">
+            All
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="User Management"
+           class="btn btn-secondary btn-sm rounded-3">
+            User Management
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Sales & Billing"
+           class="btn btn-secondary btn-sm rounded-3">
+            Sales & Billing
+        </a>
+
+        
+        <a asp-action="Index"
+           asp-route-module="Payments"
+           class="btn btn-secondary btn-sm rounded-3">
+            Payments
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Accounts Receivable"
+           class="btn btn-secondary btn-sm rounded-3">
+            Invoices
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Job Orders"
+           class="btn btn-secondary btn-sm rounded-3">
+            Job Orders
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Inventory"
+           class="btn btn-secondary btn-sm rounded-3">
+            Inventory
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Procurement"
+           class="btn btn-secondary btn-sm rounded-3">
+            Procurement
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Reports"
+           class="btn btn-secondary btn-sm rounded-3">
+            Reports
+        </a>
+
+        <a asp-action="Index"
+           asp-route-module="Audit Logs"
+           class="btn btn-secondary btn-sm rounded-3">
+            Audit Logs
+        </a>
+
     </div>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Date & Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Module</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var log in Model)
-            {
-                <tr>
-                    <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                    <td>@(log.User != null ? $"{log.User.FirstName} {log.User.LastName}" : "Unknown")</td>
-                    <td>
-                        <span class="badge bg-@GetActionColor(log.Action)">
-                            @log.Action
-                        </span>
-                    </td>
-                    <td>@log.Module</td>
-                    <td>@log.Description</td>
-                </tr>
-            }
-        </tbody>
-    </table>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">No audit logs found.</div>
-    }
-</div>
+
+    <!--Audit Logs Table-->
+    <div class="table-responsive">
+        <table class="table table-striped mb-0" id="auditLogsTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Module</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@(log.User != null ? $"{log.User.FirstName} {log.User.LastName}" : "Unknown")</td>
+                        <td>
+                            <span class="badge bg-@GetActionColor(log.Action) rounded-pill px-3">
+                                @log.Action
+                            </span>
+                        </td>
+                        <td>@log.Module</td>
+                        <td>@log.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3 d-flex justify-content-center align-items-center gap-3">
+        <button id="prevPage" class="btn btn-sm btn-secondary">Previous</button>
+        <span id="currentPageDisplay" class="fw-semibold"></span>
+        <button id="nextPage" class="btn btn-sm btn-secondary">Next</button>
+    </div>
+
 
 @functions {
     string GetActionColor(string action)
@@ -59,4 +126,56 @@
             _ => "secondary"
         };
     }
+
+  
 }
+
+
+@section Scripts {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const rowsPerPage = 10; // Change this number as needed
+                const table = document.getElementById("auditLogsTable");
+                const tbody = table.querySelector("tbody");
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+
+                const prevBtn = document.getElementById("prevPage");
+                const nextBtn = document.getElementById("nextPage");
+                const pageDisplay = document.getElementById("currentPageDisplay");
+
+                let currentPage = 1;
+                const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+                function renderTablePage(page) {
+                    tbody.innerHTML = "";
+                    const start = (page - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+                    rows.slice(start, end).forEach(r => tbody.appendChild(r));
+
+                    pageDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+
+                    // Disable buttons at boundaries
+                    prevBtn.disabled = currentPage === 1;
+                    nextBtn.disabled = currentPage === totalPages;
+                }
+
+                prevBtn.addEventListener("click", () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTablePage(currentPage);
+                    }
+                });
+
+                nextBtn.addEventListener("click", () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderTablePage(currentPage);
+                    }
+                });
+
+                // Initial render
+                renderTablePage(currentPage);
+            });
+        </script>
+}
+

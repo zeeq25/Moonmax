@@ -170,24 +170,45 @@
                 <h2>Today’s Summary</h2>
             </header>
 
-            <div class="summary-row">
-                <span class="summary-label">New Work Orders</span>
-                <span class="summary-value">@Model.NewWorkOrders</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Completed Jobs</span>
-                <span class="summary-value">@Model.CompletedJobsToday</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Invoices Sent</span>
-                <span class="summary-value">@Model.InvoicesSent</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Pending Payments</span>
-                <span class="summary-value">₱@Model.PendingPayments.ToString("N0")</span>
-            </div>
+            <ul class="summary-list">
 
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-clipboard-list summary-icon"></i>
+                        <span class="summary-label">New Work Orders</span>
+                    </div>
+                    <span class="summary-value">@Model.NewWorkOrders</span>
+                </li>
+
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-check summary-icon green"></i>
+                        <span class="summary-label">Completed Jobs</span>
+                    </div>
+                    <span class="summary-value">@Model.CompletedJobsToday</span>
+                </li>
+
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-paper-plane summary-icon blue"></i>
+                        <span class="summary-label">Invoices Sent</span>
+                    </div>
+                    <span class="summary-value">@Model.InvoicesSent</span>
+                </li>
+
+                <li class="summary-item highlight">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-clock summary-icon orange"></i>
+                        <span class="summary-label">Pending Payments</span>
+                    </div>
+                    <span class="summary-value">
+                        ₱@Model.PendingPayments.ToString("N0")
+                    </span>
+                </li>
+
+            </ul>
         </article>
+
 
         <!-- Company Est -->
         <article class="company-card">
@@ -267,7 +288,7 @@
             <!-- Inventory Value -->
             <article class="chart-card">
                 <header class="chart-header">
-                    <h3>Inventory Value (₱)</h3>
+                    <h3>Inventory Stock Levels (Qty)</h3>
                 </header>
                 <div class="chart-body chart-body--small">
                     <canvas id="inventoryValueChart"></canvas>

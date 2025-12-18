@@ -611,3 +611,209 @@
         background: rgba(255, 255, 255, 0.3);
     }
 
+/* Chart Cards - Unified Border Radius */
+.chart-card {
+    background: white;
+    border-radius: 16px; /* Consistent radius for all charts */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden; /* Ensures content respects border radius */
+}
+
+.chart-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+    .chart-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+.chart-body {
+    padding: 24px;
+    position: relative;
+}
+
+.chart-body--small {
+    padding: 20px;
+}
+
+/* Quick Links Card */
+.quick-card {
+    border-radius: 16px; /* Same radius */
+}
+
+.quick-body {
+    padding: 16px;
+}
+
+.quick-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f3f4f6;
+    border-radius: 12px; /* Slightly smaller radius for inner elements */
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+    .quick-link-btn:hover {
+        background: #e5e7eb;
+        transform: translateX(4px);
+        color: #1f2937;
+    }
+
+    .quick-link-btn i {
+        font-size: 18px;
+        color: #3b82f6;
+    }
+
+/* Chart Container Consistency */
+canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px; /* Optional: subtle radius for the canvas itself */
+}
+
+/* Ensure all panel cards have consistent radius too */
+.panel-card,
+.activity-card,
+.summary-card,
+.company-card {
+    border-radius: 16px; /* Match chart card radius */
+    overflow: hidden;
+}
+
+/* KPI Cards */
+.dash-card.kpi {
+    border-radius: 16px; /* Match everything else */
+}
+
+/* Low Stock Banner */
+.low-stock-banner {
+    border-radius: 16px; /* Match for consistency */
+}
+
+/* Today's Summary Card - Matching Quick Links Style */
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.panel-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.panel-card-header--blue {
+    background: #f9fafb;
+}
+
+.panel-card-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Summary List - Matching Quick Links */
+.summary-list {
+    list-style: none;
+    padding: 16px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+    .summary-item:hover {
+        background: #e5e7eb;
+        transform: translateX(2px);
+    }
+
+    .summary-item.highlight {
+        background: #fef3c7;
+        border-left: 3px solid #f59e0b;
+    }
+
+        .summary-item.highlight:hover {
+            background: #fde68a;
+        }
+
+.summary-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.summary-icon {
+    font-size: 18px;
+    color: #3b82f6;
+    min-width: 20px;
+    text-align: center;
+}
+
+    .summary-icon.green {
+        color: #10b981;
+    }
+
+    .summary-icon.blue {
+        color: #3b82f6;
+    }
+
+    .summary-icon.orange {
+        color: #f59e0b;
+    }
+
+.summary-label {
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.summary-value {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 4px 12px;
+    background: white;
+    border-radius: 8px;
+}
+
+.summary-item.highlight .summary-value {
+    background: white;
+    color: #f59e0b;
+}
+
+/* Remove old summary-row styles if they exist */
+.summary-row {
+    display: none; /* This will hide any old styling */
+}

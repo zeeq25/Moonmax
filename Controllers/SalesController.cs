@@ -155,7 +155,7 @@ namespace Moonmax.Controllers
                 .Where(i => i.Status.ToLower() == "paid")
                 .Sum(i => i.Amount);
             var pendingPDCs = invoiceVMs
-                .Where(i => i.Status.ToLower() == "unpaid")
+                .Where(i => i.Status.ToLower() == "partially paid")
                 .Sum(i => i.Amount);
             var activeCustomers = invoiceVMs
                 .Select(i => i.ClientName)
@@ -415,10 +415,6 @@ namespace Moonmax.Controllers
             System.Diagnostics.Debug.WriteLine($"PaymentMethod: '{model.PaymentMethod}'");
             System.Diagnostics.Debug.WriteLine($"AmountPaid: {model.AmountPaid}");
             System.Diagnostics.Debug.WriteLine($"PaymentDate: {model.PaymentDate}");
-            System.Diagnostics.Debug.WriteLine($"CheckNumber: '{model.CheckNumber}'");
-            System.Diagnostics.Debug.WriteLine($"BankName: '{model.BankName}'");
-            System.Diagnostics.Debug.WriteLine($"CheckDate: {model.CheckDate}");
-            System.Diagnostics.Debug.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
 
             if (!ModelState.IsValid)
             {
@@ -429,14 +425,9 @@ namespace Moonmax.Controllers
                     foreach (var error in state.Errors)
                     {
                         System.Diagnostics.Debug.WriteLine($"ERROR - {key}: {error.ErrorMessage}");
-                        if (error.Exception != null)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  Exception: {error.Exception.Message}");
-                        }
                     }
                 }
 
-                // Show error to user
                 var errors = string.Join("; ", ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage));
@@ -449,8 +440,6 @@ namespace Moonmax.Controllers
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"Looking for invoice {model.InvoiceID}...");
-
                 var invoice = await _context.Invoices
                     .Include(i => i.Client)
                     .Include(i => i.JobOrder)
@@ -461,18 +450,13 @@ namespace Moonmax.Controllers
 
                 if (invoice == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ERROR: Invoice not found: {model.InvoiceID}");
                     TempData["Error"] = "Invoice not found.";
                     return RedirectToAction("Index");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Found invoice: {invoice.InvoiceNumber}");
-                System.Diagnostics.Debug.WriteLine($"Client: {invoice.Client?.Name ?? "Walk-In"}");
-
-                // VALIDATE: For Cash payments, don't require check fields
+                // VALIDATE: For Cash payments, clear check fields
                 if (model.PaymentMethod == "Cash")
                 {
-                    System.Diagnostics.Debug.WriteLine("Cash payment - clearing check fields");
                     model.CheckNumber = null;
                     model.BankName = null;
                     model.CheckDate = null;
@@ -480,18 +464,14 @@ namespace Moonmax.Controllers
                 // VALIDATE: For Check payments, require check fields
                 else if (model.PaymentMethod == "Check")
                 {
-                    System.Diagnostics.Debug.WriteLine("Check payment - validating check fields");
                     if (string.IsNullOrWhiteSpace(model.CheckNumber) ||
                         string.IsNullOrWhiteSpace(model.BankName) ||
                         !model.CheckDate.HasValue)
                     {
-                        System.Diagnostics.Debug.WriteLine("ERROR: Missing check fields");
                         TempData["Error"] = "For check payments, Check Number, Bank Name, and Check Date are required.";
                         return RedirectToAction("Index");
                     }
                 }
-
-                System.Diagnostics.Debug.WriteLine("Creating payment record...");
 
                 // Create Payment record
                 var payment = new Payment
@@ -511,17 +491,13 @@ namespace Moonmax.Controllers
                     CreatedAt = DateTime.Now
                 };
 
-                System.Diagnostics.Debug.WriteLine($"Payment record created. ProcessedByUserID: {payment.ProcessedByUserID}");
-
                 _context.Payments.Add(payment);
 
                 // Update Invoice Status
                 var totalPaid = invoice.Payments.Sum(p => p.AmountPaid) + model.AmountPaid;
                 string oldStatus = invoice.Status;
 
-                System.Diagnostics.Debug.WriteLine($"Total paid: {totalPaid}, Invoice amount: {invoice.Amount}");
-
-                // ✅ NEW LOGIC FOR PDC WORKFLOW
+                // ✅ PDC WORKFLOW LOGIC
                 if (model.PaymentMethod == "Check")
                 {
                     // For PDC/Check payments, mark as Partially Paid (waiting for clearance)
@@ -536,11 +512,9 @@ namespace Moonmax.Controllers
                         invoice.Status = "Paid";
                         System.Diagnostics.Debug.WriteLine("Invoice marked as Paid (Cash)");
 
-                        // Stock deduction for cash payments only
+                        // Stock deduction for cash payments
                         if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
                         {
-                            System.Diagnostics.Debug.WriteLine($"Processing stock deduction for Job #{invoice.JobOrder.JobID}");
-
                             foreach (var part in invoice.JobOrder.JobParts)
                             {
                                 if (part.Inventory != null)
@@ -556,8 +530,6 @@ namespace Moonmax.Controllers
                                         part.Inventory.QuantityInStock = 0;
 
                                     int newQty = part.Inventory.QuantityInStock;
-
-                                    System.Diagnostics.Debug.WriteLine($"Deducted: {part.Inventory.PartName} | Prev: {previousQty} | Deduct: {part.Quantity} | New: {newQty}");
 
                                     var movement = new StockMovement
                                     {
@@ -576,7 +548,6 @@ namespace Moonmax.Controllers
                             }
 
                             invoice.JobOrder.Status = "Completed";
-                            System.Diagnostics.Debug.WriteLine($"Job #{invoice.JobOrder.JobID} marked as Completed");
                         }
                     }
                     else
@@ -586,61 +557,6 @@ namespace Moonmax.Controllers
                     }
                 }
 
-                if (totalPaid >= invoice.Amount)
-                {
-                    invoice.Status = "Paid";
-                    System.Diagnostics.Debug.WriteLine("Invoice marked as Paid");
-
-                    // Stock deduction logic
-                    if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Processing stock deduction for Job #{invoice.JobOrder.JobID}");
-
-                        foreach (var part in invoice.JobOrder.JobParts)
-                        {
-                            if (part.Inventory != null)
-                            {
-                                int previousQty = part.Inventory.QuantityInStock;
-
-                                part.Inventory.ReservedQuantity -= part.Quantity;
-                                if (part.Inventory.ReservedQuantity < 0)
-                                    part.Inventory.ReservedQuantity = 0;
-
-                                part.Inventory.QuantityInStock -= part.Quantity;
-                                if (part.Inventory.QuantityInStock < 0)
-                                    part.Inventory.QuantityInStock = 0;
-
-                                int newQty = part.Inventory.QuantityInStock;
-
-                                System.Diagnostics.Debug.WriteLine($"Deducted: {part.Inventory.PartName} | Prev: {previousQty} | Deduct: {part.Quantity} | New: {newQty}");
-
-                                var movement = new StockMovement
-                                {
-                                    InventoryID = part.Inventory.InventoryID,
-                                    MovementType = "OUT",
-                                    Quantity = part.Quantity,
-                                    PreviousQuantity = previousQty,
-                                    NewQuantity = newQty,
-                                    JobOrderID = invoice.JobID,
-                                    UserID = GetCurrentUserId(),
-                                    MovementDate = DateTime.Now
-                                };
-
-                                _context.StockMovement.Add(movement);
-                            }
-                        }
-
-                        invoice.JobOrder.Status = "Completed";
-                        System.Diagnostics.Debug.WriteLine($"Job #{invoice.JobOrder.JobID} marked as Completed");
-                    }
-                }
-                else
-                {
-                    invoice.Status = "Partially Paid";
-                    System.Diagnostics.Debug.WriteLine("Invoice marked as Partially Paid");
-                }
-
-                System.Diagnostics.Debug.WriteLine("Saving changes to database...");
                 await _context.SaveChangesAsync();
                 System.Diagnostics.Debug.WriteLine("✅ Payment saved successfully!");
 
@@ -670,9 +586,7 @@ namespace Moonmax.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ EXCEPTION OCCURRED ❌");
-                System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"❌ EXCEPTION: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");

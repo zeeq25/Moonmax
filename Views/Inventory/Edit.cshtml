@@ -26,54 +26,70 @@
         </div>
     </header>
 
-    <div class="mm-card mm-card-form">
-        <form asp-action="Edit" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="InventoryID" />
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
 
-            <div class="form-group">
-                <label asp-for="PartName"></label>
-                <input asp-for="PartName" class="form-control" />
-                <span asp-validation-for="PartName" class="text-danger"></span>
+            <div class="mm-card mm-card-form">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="InventoryID" />
+
+                    <div class="mb-3">
+                        <label asp-for="PartName" class="form-label"></label>
+                        <input asp-for="PartName" class="form-control" />
+                        <span asp-validation-for="PartName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label"></label>
+                        <select asp-for="Category"
+                                asp-items="Model.Categories"
+                                class="form-control">
+                        </select>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="QuantityInStock" class="form-label"></label>
+                        <input asp-for="QuantityInStock" class="form-control" />
+                        <span asp-validation-for="QuantityInStock" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="UnitCost" class="form-label"></label>
+                        <input asp-for="UnitCost" class="form-control" />
+                        <span asp-validation-for="UnitCost" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SupplierID" class="form-label"></label>
+                        <select asp-for="SupplierID"
+                                asp-items="Model.Suppliers"
+                                class="form-control">
+                        </select>
+                        <span asp-validation-for="SupplierID" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ReorderLevel" class="form-label"></label>
+                        <input asp-for="ReorderLevel" class="form-control" />
+                        <span asp-validation-for="ReorderLevel" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn-pill btn-primary-mm">
+                            <i class="fa-solid fa-save"></i> Update Item
+                        </button>
+                    </div>
+
+                </form>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Category"></label>
-                <select asp-for="Category" asp-items="Model.Categories" class="form-control"></select>
-                <span asp-validation-for="Category" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="QuantityInStock"></label>
-                <input asp-for="QuantityInStock" class="form-control" />
-                <span asp-validation-for="QuantityInStock" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="UnitCost"></label>
-                <input asp-for="UnitCost" class="form-control" />
-                <span asp-validation-for="UnitCost" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="SupplierID"></label>
-                <select asp-for="SupplierID" asp-items="Model.Suppliers" class="form-control"></select>
-                <span asp-validation-for="SupplierID" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="ReorderLevel"></label>
-                <input asp-for="ReorderLevel" class="form-control" />
-                <span asp-validation-for="ReorderLevel" class="text-danger"></span>
-            </div>
-
-            <button type="submit" class="btn-pill btn-primary-mm">
-                <i class="fa-solid fa-save"></i> Update Item
-            </button>
-        </form>
+        </div>
     </div>
 
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
