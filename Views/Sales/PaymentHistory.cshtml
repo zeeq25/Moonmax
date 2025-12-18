@@ -100,6 +100,18 @@
             <tbody>
                 @foreach (var payment in Model)
                 {
+                    var showReceipt = false;
+                    if (payment.PaymentMethod == "Cash")
+                    {
+                        showReceipt = true; // Always show for cash (Completed status)
+                    }
+                    else if (payment.PaymentMethod == "Check" &&
+                    !string.IsNullOrEmpty(payment.PDCStatus) &&
+                    payment.PDCStatus.ToLower() == "cleared")
+                    {
+                        showReceipt = true; // Only show for PDC if status is "Cleared"
+                    }
+
                     <tr>
                         <td>@payment.PaymentDate.ToString("yyyy-MM-dd")</td>
                         <td>@payment.InvoiceNumber</td>
@@ -180,11 +192,15 @@
                                     <i class="fa-solid fa-circle-info"></i>
                                 </button>
 
-                                <button type="button"
-                                        class="icon-btn-table btn-receipt"
-                                        data-payment-id="@payment.PaymentID">
-                                    <i class="fa-solid fa-receipt"></i>
-                                </button>
+                                @if (showReceipt)
+                                {
+                                    <button type="button"
+                                            class="icon-btn-table btn-receipt"
+                                            data-payment-id="@payment.PaymentID"
+                                            title="View Receipt">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </button>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -193,14 +209,12 @@
         </table>
     </div>
 
-
     <div class="table-pagination" id="paymentPagination">
         <button class="pg-btn" id="paymentPrev">‹</button>
         <span id="paymentPageIndicator">Page 1</span>
         <button class="pg-btn" id="paymentNext">›</button>
     </div>
 
-    <!-- View Payment Details Modal -->
     <div class="modal fade" id="paymentDetailsModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -208,22 +222,14 @@
                     <h5 class="modal-title">Payment Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
-                <div class="modal-body" id="paymentDetailsBody">
-                    <!-- Filled by JS -->
-                </div>
-
+                <div class="modal-body" id="paymentDetailsBody"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Close
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!--Receipt Modal-->
     <div class="modal fade" id="receiptModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -231,13 +237,9 @@
                     <h5 class="modal-title">Official Receipt</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
                 <div class="modal-body" id="receiptModalBody">
-                    <div class="text-center text-muted">
-                        Loading receipt...
-                    </div>
+                    <div class="text-center text-muted">Loading receipt...</div>
                 </div>
-
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button class="btn btn-primary" id="btnPrintReceipt">
@@ -246,26 +248,20 @@
                     <button class="btn btn-success" id="btnExportPDF">
                         <i class="fa-solid fa-file-pdf"></i> Export PDF
                     </button>
-
                 </div>
             </div>
         </div>
     </div>
 
-
-
 </div>
 
-<!-- Modals and scripts remain the same as your original code, already fixed to handle nulls and reference numbers -->
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-            
     <script>
-                document.addEventListener('DOMContentLoaded', function () {
-
-            // ===== PAYMENT DETAILS =====
+        document.addEventListener('DOMContentLoaded', function () {
+            // Payment Details
             document.querySelectorAll('.btn-payment-details').forEach(btn => {
                 btn.addEventListener('click', function () {
                     const d = this.dataset;
@@ -292,65 +288,165 @@
                 });
             });
 
-            // ===== RECEIPT BUTTONS =====
+            // Receipt Buttons (with disabled state)
             document.querySelectorAll('.btn-receipt').forEach(btn => {
                 btn.addEventListener('click', function () {
+                    // Disable button immediately
+                    this.disabled = true;
+                    this.style.opacity = '0.6';
+                    this.style.cursor = 'not-allowed';
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
                     const paymentId = this.dataset.paymentId;
+                    const buttonRef = this;
 
                     fetch(`/Sales/ViewReceiptPartial/${paymentId}`)
                         .then(res => res.text())
                         .then(html => {
                             document.getElementById('receiptModalBody').innerHTML = html;
-
-                            const modal = new bootstrap.Modal(
-                                document.getElementById('receiptModal')
-                            );
+                            const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
                             modal.show();
 
-                            // ===== PRINT BUTTON inside modal =====
+                            // Re-enable button
+                            buttonRef.disabled = false;
+                            buttonRef.style.opacity = '1';
+                            buttonRef.style.cursor = 'pointer';
+                            buttonRef.innerHTML = originalHTML;
+
+                            // Print button
                             const printBtn = document.getElementById('btnPrintReceipt');
                             if (printBtn) {
                                 printBtn.onclick = function () {
                                     const printContents = document.getElementById('receiptModalBody').innerHTML;
                                     const originalContents = document.body.innerHTML;
-
                                     document.body.innerHTML = printContents;
                                     window.print();
                                     document.body.innerHTML = originalContents;
                                     location.reload();
                                 };
                             }
+                        })
+                        .catch(err => {
+                            // Re-enable button on error
+                            buttonRef.disabled = false;
+                            buttonRef.style.opacity = '1';
+                            buttonRef.style.cursor = 'pointer';
+                            buttonRef.innerHTML = originalHTML;
+                            alert('Error loading receipt. Please try again.');
+                            console.error(err);
                         });
                 });
-
-
             });
-                //===== EXPORT PDF BUTTON =====//
-                    document.getElementById('btnExportPDF').addEventListener('click', function () {
-            const { jsPDF } = window.jspdf;
 
-            const receiptElement = document.getElementById('receiptModalBody');
+            // Export PDF Button
+            document.getElementById('btnExportPDF').addEventListener('click', function () {
+                const { jsPDF } = window.jspdf;
+                const receiptElement = document.getElementById('receiptModalBody');
 
-            html2canvas(receiptElement).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                // Disable button during export
+                this.disabled = true;
+                this.style.opacity = '0.6';
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
+                const buttonRef = this;
 
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                html2canvas(receiptElement).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save('Receipt.pdf');
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save('Receipt.pdf');
+                    // Re-enable button
+                    buttonRef.disabled = false;
+                    buttonRef.style.opacity = '1';
+                    buttonRef.innerHTML = originalText;
+                }).catch(err => {
+                    // Re-enable button on error
+                    buttonRef.disabled = false;
+                    buttonRef.style.opacity = '1';
+                    buttonRef.innerHTML = originalText;
+                    alert('Error exporting PDF. Please try again.');
+                    console.error(err);
+                });
             });
+
+            // Pagination (add if needed)
+            const table = document.getElementById('paymentHistoryTable');
+            const searchInput = document.getElementById('paymentSearchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const rowsPerPage = 10;
+            let currentPage = 1;
+            let currentFilter = 'all';
+
+            function getFilteredRows() {
+                const term = (searchInput.value || '').trim().toLowerCase();
+                return Array.from(table.querySelectorAll('tbody tr')).filter(row => {
+                    const statusEl = row.querySelector('.status');
+                    const statusText = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
+                    const matchesStatus = currentFilter === 'all' || statusText.includes(currentFilter);
+                    const rowText = Array.from(row.querySelectorAll('td')).slice(0, 9).map(td => td.textContent.toLowerCase()).join(' ');
+                    const matchesSearch = rowText.includes(term);
+                    return matchesStatus && matchesSearch;
+                });
+            }
+            // ========== ADD THIS NEW FUNCTION HERE ==========
+            function sortTableByReceipt() {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                rows.sort((a, b) => {
+                    const aHasReceipt = a.querySelector('.btn-receipt') !== null;
+                    const bHasReceipt = b.querySelector('.btn-receipt') !== null;
+
+                    // Rows with receipt button come first
+                    if (aHasReceipt && !bHasReceipt) return -1;
+                    if (!aHasReceipt && bHasReceipt) return 1;
+                    return 0;
+                });
+
+                // Re-append rows in sorted order
+                rows.forEach(row => tbody.appendChild(row));
+            }
+            // ========== END OF NEW FUNCTION ==========
+
+            function renderTablePage() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+                table.querySelectorAll('tbody tr').forEach(r => r.style.display = 'none');
+                filteredRows.forEach((row, index) => {
+                    if (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) {
+                        row.style.display = '';
+                    }
+                });
+                document.getElementById('paymentPageIndicator').textContent = `Page ${currentPage} of ${totalPages}`;
+                document.getElementById('paymentPrev').disabled = currentPage === 1;
+                document.getElementById('paymentNext').disabled = currentPage === totalPages;
+            }
+
+            document.getElementById('paymentPrev').addEventListener('click', () => {
+                if (currentPage > 1) { currentPage--; renderTablePage(); }
+            });
+
+            document.getElementById('paymentNext').addEventListener('click', () => {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+                if (currentPage < totalPages) { currentPage++; renderTablePage(); }
+            });
+
+            searchInput.addEventListener('input', () => { currentPage = 1; renderTablePage(); });
+            statusFilter.addEventListener('change', function() {
+                currentFilter = this.value;
+                currentPage = 1;
+                renderTablePage();
+            });
+
+            sortTableByReceipt();
+
+            renderTablePage();
         });
-
-
-        });
-
     </script>
-
-    
-
-
-
 }

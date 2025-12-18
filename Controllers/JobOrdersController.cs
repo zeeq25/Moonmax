@@ -12,7 +12,7 @@ using System.Security.Claims;  // ⬅️ ADD THIS
 
 namespace Moonmax.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="Admin, Employee")]
     public class JobOrdersController : Controller
     {
         private readonly AppDbContext _db;

@@ -37,6 +37,8 @@ namespace Moonmax.ViewModels
         public List<string> InventoryItems { get; set; } = new();     // Inventory names
         public List<int> InventoryValues { get; set; } = new();       // Inventory quantity/value
 
+        public List<LowStockItem> LowStockItems { get; set; }
+
     }
 
     public class DashboardActivityItem
@@ -46,5 +48,13 @@ namespace Moonmax.ViewModels
         public string TimeAgo { get; set; }
         public string Icon { get; set; }
         public string IconColor { get; set; }
+    }
+
+    public class LowStockItem
+    {
+        public string ItemName { get; set; }
+        public int Quantity { get; set; }
+        public int CriticalLevel { get; set; }
+        public int ReorderLevel { get; set; }
     }
 }

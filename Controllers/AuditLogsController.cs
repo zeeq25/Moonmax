@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class AuditLogsController : Controller
     {
         private readonly AppDbContext _context;

@@ -13,6 +13,58 @@
 
 <div class="page page-dashboard">
 
+    <!-- LOW STOCK ALERT BANNER -->
+    @if (Model.LowStockItems != null && Model.LowStockItems.Any())
+    {
+        <div class="low-stock-banner" id="lowStockBanner">
+            <div class="low-stock-header">
+                <div class="low-stock-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="low-stock-title">
+                    <h3>Low Stock Alert</h3>
+                    <p>@Model.LowStockItems.Count item(s) need attention</p>
+                </div>
+                <button class="low-stock-dismiss" onclick="dismissLowStockBanner()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <ul class="low-stock-list">
+                @foreach (var item in Model.LowStockItems)
+                {
+                    <li class="low-stock-item">
+                        <div class="low-stock-item-info">
+                            <div class="low-stock-item-name">@item.ItemName</div>
+                            <div class="low-stock-item-qty">
+                                @item.Quantity units remaining
+                            </div>
+                        </div>
+                        @if (item.Quantity <= item.CriticalLevel)
+                        {
+                            <span class="low-stock-badge critical">CRITICAL</span>
+                        }
+                        else
+                        {
+                            <span class="low-stock-badge">LOW</span>
+                        }
+                    </li>
+                }
+            </ul>
+
+            <div class="low-stock-actions">
+                <a asp-controller="Inventory" asp-action="Index" class="low-stock-btn low-stock-btn-primary">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    View Inventory
+                </a>
+                <a asp-controller="Procurement" asp-action="CreatePurchaseOrder" class="low-stock-btn low-stock-btn-secondary">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    Create Purchase Order
+                </a>
+            </div>
+        </div>
+    }
+
     <!-- PAGE HEADER -->
     <header class="dash-header">
         <div>
@@ -279,6 +331,43 @@
             },
             options: { responsive: true, plugins: { legend: { display: false } } }
         });
+    </script>
+
+    <script>
+                function dismissLowStockBanner() {
+            const banner = document.getElementById('lowStockBanner');
+            banner.style.animation = 'slideUp 0.3s ease-out';
+
+            setTimeout(() => {
+                banner.style.display = 'none';
+                // Store dismissal in session storage (reappears on page reload)
+                sessionStorage.setItem('lowStockDismissed', 'true');
+            }, 300);
+        }
+
+        // Check if banner was dismissed in this session
+        window.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('lowStockBanner');
+            if (banner && sessionStorage.getItem('lowStockDismissed') === 'true') {
+                banner.style.display = 'none';
+            }
+        });
+
+        // Add slideUp animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @@keyframes slideUp {
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 }
 

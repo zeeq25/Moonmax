@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Moonmax.Controllers
 {
 
-    [Authorize]
+    [Authorize(Roles ="Admin, Employee")]
     public class InventoryController : Controller
     {
         private readonly AppDbContext _db;

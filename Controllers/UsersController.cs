@@ -10,7 +10,7 @@ using System.Security.Claims;  // ADD THIS
 
 namespace Moonmax.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;

@@ -10,7 +10,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Moonmax.Controllers
 {
 
-    [Authorize]
+    [Authorize(Roles = "Admin, Employee")]
     public class ReportsController : Controller
     {
         private readonly AppDbContext _context;

@@ -9,12 +9,9 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/sales.css" asp-append-version="true" />
-
 }
 
 <div class="page page-sales">
-
-    <!-- PAGE HEADER -->
     <header class="dash-header">
         <div>
             <h1 class="dash-title">Sales &amp; Billing</h1>
@@ -29,7 +26,6 @@
         </div>
     }
 
-    <!-- KPI CARDS -->
     <section class="dash-kpis">
         <article class="dash-card kpi">
             <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
@@ -61,9 +57,6 @@
         </article>
     </section>
 
-
-
-    <!-- TABS -->
     <section class="inv-tabs-bar">
         <div class="inv-tabs">
             <a asp-controller="Sales" asp-action="Index" class="inv-tab inv-tab--active">Transactions</a>
@@ -72,23 +65,22 @@
         </div>
     </section>
 
-    <!-- TABLE 2: INVOICES (UNCHANGED) -->
-    <section class="inv-table-wrap">        
-
-        <!-- SEARCH + FILTER -->
+    <section class="inv-table-wrap">
         <section class="inv-filter-bar">
             <div class="inv-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input class="inv-search-input" type="text" placeholder="Search by invoice, customer, or job ID..." />
             </div>
             <div class="inv-filter-actions">
-                <select id="statusFilter" class="btn-chip">
-                    <option value="all">All</option>
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Partially Paid</option>
-                    <option value="pending">Failed</option>                      
-                </select>               
+                <div class="inv-filter-actions">
+                    <select id="statusFilter" class="btn-chip">
+                        <option value="all">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partially paid">Partially Paid</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
             </div>
         </section>
 
@@ -120,8 +112,8 @@
                             <td>@(invoice.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
                             <td>
                                 <span class="status @(invoice.Status.ToLower() == "pending" ? "status-pending" :
-                                      invoice.Status.ToLower() == "paid" ? "status-paid" :
-                                                   "status-warn")">
+                                                                            invoice.Status.ToLower() == "paid" ? "status-paid" :
+                                                                                         "status-warn")">
                                 @invoice.Status
                             </span>
                         </td>
@@ -132,33 +124,36 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
 
-                                @if (invoice.Status.ToLower() != "paid")
+                                    @if     (invoice.Status.ToLower() != "paid" && invoice.Status.ToLower() != "partially paid")
                                     {
-                                        <button type="button" class="icon-btn-table btn-receive" title="Process payment"
+                                            <button type="button" class="icon-btn-table btn-receive" title="Process payment"
                                                 data-invoice-id="@invoice.InvoiceID">
                                             <i class="fa-solid fa-check"></i>
+                                            </button>
+                                    }
+                                    @if (invoice.Status.ToLower() == "partially paid" && invoice.PaymentType.Contains("PDC"))
+                                    {
+                                        <button type="button" class="icon-btn-table btn-clear-check" title="Clear check"
+                                                data-invoice-id="@invoice.InvoiceID"
+                                                style="background:#0891b2; border: 1px solid #0e7490;">
+                                            <i class="fa-solid fa-stamp"></i>
                                         </button>
                                     }
                                 </div>
                             </td>
-
-                    </tr>
-               }
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Invoice Pagination -->
     <div class="table-pagination" id="invoicePagination">
         <button class="pg-btn" id="invoicePrev">‹</button>
         <span id="invoicePageIndicator">Page 1</span>
         <button class="pg-btn" id="invoiceNext">›</button>
     </div>
 
-    
-
-    <!-- Invoice Modal (unchanged) -->
     <div id="invoiceModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -166,7 +161,6 @@
         </div>
     </div>
 
-    <!-- Payment Modal -->
     <div id="paymentModal" class="modal">
         <div class="modal-content" style="max-width: 600px;">
             <span class="close" id="paymentModalClose">&times;</span>
@@ -176,7 +170,6 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" id="invoiceIdInput" name="InvoiceID" />
 
-                <!-- Invoice Summary -->
                 <div class="invoice-summary" style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;">
                     <div><strong>Invoice No:</strong> <span id="summaryInvoiceNo">-</span></div>
                     <div><strong>Client:</strong> <span id="summaryClient">-</span></div>
@@ -185,7 +178,6 @@
                     <div><strong>Payment Type:</strong> <span id="summaryPaymentType">-</span></div>
                 </div>
 
-                <!-- Payment Method -->
                 <div style="margin-bottom:20px;">
                     <label for="paymentMethod">Payment Method *</label>
                     <select id="paymentMethod" name="PaymentMethod" required style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
@@ -195,7 +187,6 @@
                     </select>
                 </div>
 
-                <!-- Amount Paid -->
                 <div style="margin-bottom:20px;">
                     <label for="amountPaid">Amount Paid *</label>
                     <input type="number"
@@ -208,7 +199,6 @@
                            style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;" />
                 </div>
 
-                <!-- Check Fields -->
                 <div id="checkFields" style="display:none; background:#fff8e1; padding:15px;border-radius:8px;margin-bottom:20px;">
                     <div style="margin-bottom:15px;">
                         <label for="checkNumber">Check Number *</label>
@@ -235,7 +225,6 @@
                     </div>
                 </div>
 
-                <!-- Payment Date -->
                 <div style="margin-bottom:20px;">
                     <label for="paymentDate">Payment Date *</label>
                     <input type="date"
@@ -245,7 +234,6 @@
                            style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;">
                 </div>
 
-                <!-- Reference Number & Notes -->
                 <div style="margin-bottom:20px;">
                     <label for="referenceNumber">Reference Number</label>
                     <input type="text"
@@ -263,7 +251,6 @@
                               style="width:100%;padding:10px;border-radius:6px;border:1px solid #ddd;"></textarea>
                 </div>
 
-                <!-- Action Buttons -->
                 <div style="display:flex; gap:10px; justify-content:flex-end;">
                     <button type="button"
                             id="cancelPaymentBtn"
@@ -271,28 +258,80 @@
                         Cancel
                     </button>
                     <button type="submit"
+                            id="submitPaymentBtn"
                             style="padding:10px 30px; background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;">
-                        Process Payment
+                        <span class="btn-text">Process Payment</span>
+                        <span class="btn-spinner" style="display:none;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Processing...
+                        </span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
-
 </div>
 
 @section Scripts {
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-    <!-- View Modal Pop up -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.btn-clear-check').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const invoiceId = this.dataset.invoiceId;
+                    const row = this.closest('tr');
+                    const invoiceNo = row.children[0].textContent.trim();
+                    const client = row.children[1].textContent.trim();
 
+                    Swal.fire({
+                        title: 'Clear Check Payment?',
+                        html: `
+                            <div style="text-align:left; color:#333;">
+                                <p><strong>Invoice:</strong> ${invoiceNo}</p>
+                                <p><strong>Client:</strong> ${client}</p>
+                                <hr>
+                                <p>This will mark the check as <b>CLEARED</b> and complete the payment.</p>
+                            </div>
+                        `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Clear Check',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#0891b2',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '/Sales/ClearCheck';
+
+                            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                            const tokenInput = document.createElement('input');
+                            tokenInput.type = 'hidden';
+                            tokenInput.name = '__RequestVerificationToken';
+                            tokenInput.value = token;
+
+                            const invoiceInput = document.createElement('input');
+                            invoiceInput.type = 'hidden';
+                            invoiceInput.name = 'invoiceId';
+                            invoiceInput.value = invoiceId;
+
+                            form.appendChild(tokenInput);
+                            form.appendChild(invoiceInput);
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById("invoiceModal");
             const modalBody = document.getElementById("invoiceModalBody");
             const closeBtn = modal.querySelector(".close");
@@ -300,7 +339,6 @@
             document.querySelectorAll('.btn-view').forEach(button => {
                 button.addEventListener('click', function () {
                     const invoiceId = this.dataset.invoiceId;
-
                     fetch(`/Sales/ViewInvoicePartial/${invoiceId}`)
                         .then(response => response.text())
                         .then(html => {
@@ -310,22 +348,12 @@
                 });
             });
 
-            closeBtn.onclick = function () {
-                modal.style.display = "none";
-            };
-
-            window.onclick = function (event) {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
-            };
-
+            closeBtn.onclick = () => modal.style.display = "none";
+            window.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
         });
     </script>
 
-
     <script>
-        // INVOICE PAGINATION WITH SEARCH & FILTER
         document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById('salesTable');
             const searchInput = document.querySelector('.inv-search-input');
@@ -340,11 +368,7 @@
                     const statusEl = row.querySelector('.status');
                     const statusText = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
                     const matchesStatus = currentFilter === 'all' || statusText === currentFilter;
-
-                    const rowText = Array.from(row.querySelectorAll('td'))
-                                         .slice(0, 7)
-                                         .map(td => td.textContent.toLowerCase())
-                                         .join(' ');
+                    const rowText = Array.from(row.querySelectorAll('td')).slice(0, 7).map(td => td.textContent.toLowerCase()).join(' ');
                     const matchesSearch = rowText.includes(term);
                     return matchesStatus && matchesSearch;
                 });
@@ -353,101 +377,39 @@
             function renderTablePage() {
                 const filteredRows = getFilteredRows();
                 const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
-
                 table.querySelectorAll('tbody tr').forEach(r => r.style.display = 'none');
-
                 filteredRows.forEach((row, index) => {
-                    if (index >= (currentPage - 1) * rowsPerPage &&
-                        index < currentPage * rowsPerPage) {
+                    if (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) {
                         row.style.display = '';
                     }
                 });
-
                 document.getElementById('invoicePageIndicator').textContent = `Page ${currentPage} of ${totalPages}`;
                 document.getElementById('invoicePrev').disabled = currentPage === 1;
                 document.getElementById('invoiceNext').disabled = currentPage === totalPages;
             }
 
-            // Pagination buttons
-            document.getElementById('invoicePrev').addEventListener('click', function() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderTablePage();
-                }
+            document.getElementById('invoicePrev').addEventListener('click', () => {
+                if (currentPage > 1) { currentPage--; renderTablePage(); }
             });
 
-            document.getElementById('invoiceNext').addEventListener('click', function() {
+            document.getElementById('invoiceNext').addEventListener('click', () => {
                 const filteredRows = getFilteredRows();
                 const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderTablePage();
-                }
+                if (currentPage < totalPages) { currentPage++; renderTablePage(); }
             });
 
-            // Search input
-            searchInput.addEventListener('input', function() {
-                currentPage = 1;
-                renderTablePage();
-            });
-
-            // Dropdown filter
+            searchInput.addEventListener('input', () => { currentPage = 1; renderTablePage(); });
             statusFilter.addEventListener('change', function() {
                 currentFilter = this.value;
                 currentPage = 1;
                 renderTablePage();
             });
 
-            // initial render
             renderTablePage();
         });
     </script>
 
-    
-    <!-- Confirmation Modal Receive Payment-->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-
-            document.querySelectorAll('.receive-payment-form').forEach(form => {
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault(); // STOP immediate submit
-
-                    const row = form.closest('tr');
-                    const invoiceNo = row?.children[0]?.textContent ?? '';
-                    const client = row?.children[1]?.textContent ?? '';
-                    const amount = row?.children[3]?.textContent ?? '';
-
-                    Swal.fire({
-                        title: 'Receive Payment?',
-                        html: `
-                            <div style="text-align:left">
-                                <p><strong>Invoice:</strong> ${invoiceNo}</p>
-                                <p><strong>Client:</strong> ${client}</p>
-                                <p><strong>Amount:</strong> ${amount}</p>
-                                <hr>
-                                <p>This invoice will be marked as <b>PAID</b>.</p>
-                            </div>
-                        `,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Receive Payment',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#6c757d',
-                        reverseButtons: true
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit(); // ✅ REAL submit only here
-                        }
-                    });
-                });
-            });
-
-        });
-    </script>
-
-    <script>
-
         document.addEventListener('DOMContentLoaded', function () {
             const paymentModal = document.getElementById('paymentModal');
             const paymentForm = document.getElementById('paymentForm');
@@ -458,10 +420,8 @@
             const bankName = document.getElementById('bankName');
             const checkDate = document.getElementById('checkDate');
             const referenceNumber = document.getElementById('referenceNumber');
-            const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
-            const paymentModalClose = document.getElementById('paymentModalClose');
+            const submitBtn = document.getElementById('submitPaymentBtn');
 
-            // Payment Method change listener
             paymentMethod.addEventListener('change', function() {
                 if (this.value === 'Check') {
                     checkFields.style.display = 'block';
@@ -477,8 +437,6 @@
                     checkNumber.value = '';
                     bankName.value = '';
                     checkDate.value = '';
-
-                    // Auto-fill reference for cash
                     const now = new Date();
                     const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
                     referenceNumber.value = `CASH-${dateStr}`;
@@ -491,24 +449,13 @@
                 }
             });
 
-            // Close modal functions
-            paymentModalClose.addEventListener('click', () => paymentModal.style.display = 'none');
-            cancelPaymentBtn.addEventListener('click', () => paymentModal.style.display = 'none');
-            window.addEventListener('click', e => {
-                if (e.target === paymentModal) paymentModal.style.display = 'none';
-            });
+            document.getElementById('paymentModalClose').addEventListener('click', () => paymentModal.style.display = 'none');
+            document.getElementById('cancelPaymentBtn').addEventListener('click', () => paymentModal.style.display = 'none');
+            window.addEventListener('click', e => { if (e.target === paymentModal) paymentModal.style.display = 'none'; });
 
-            // Form submission handler with validation
             paymentForm.addEventListener('submit', function(e) {
                 const method = paymentMethod.value;
 
-                console.log('=== FORM SUBMISSION ===');
-                console.log('Payment Method:', method);
-                console.log('Invoice ID:', invoiceIdInput.value);
-                console.log('Amount Paid:', document.getElementById('amountPaid').value);
-                console.log('Payment Date:', document.getElementById('paymentDate').value);
-
-                // Validate required fields
                 if (!method) {
                     e.preventDefault();
                     alert('Please select a payment method');
@@ -527,50 +474,50 @@
                     return false;
                 }
 
-                // If Cash payment, ensure check fields are cleared
                 if (method === 'Cash') {
                     checkNumber.value = '';
                     bankName.value = '';
                     checkDate.value = '';
-                    console.log('Cash payment - cleared check fields');
+                    checkNumber.disabled = true;
+                    bankName.disabled = true;
+                    checkDate.disabled = true;
                 }
 
-                // If Check payment, validate check fields
                 if (method === 'Check') {
                     if (!checkNumber.value || !bankName.value || !checkDate.value) {
                         e.preventDefault();
-                        alert('Please fill in all check details (Check Number, Bank Name, and Check Date).');
+                        alert('Please fill in all check details.');
                         return false;
                     }
-                    console.log('Check payment - validation passed');
                 }
 
-                console.log('Form validation passed, submitting...');
+                // Disable button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.style.cursor = 'not-allowed';
+                submitBtn.querySelector('.btn-text').style.display = 'none';
+                submitBtn.querySelector('.btn-spinner').style.display = 'inline';
             });
 
-            // Receive Payment button click handler
             document.querySelectorAll('.btn-receive').forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
-
                     const row = btn.closest('tr');
                     const invoiceId = btn.dataset.invoiceId;
-
-                    // Extract data from table row
                     const invoiceNo = row.children[0].textContent.trim();
                     const client = row.children[1].textContent.trim();
                     const jobId = row.children[2].textContent.trim();
                     const amountText = row.children[3].textContent.trim();
                     const payType = row.children[4].textContent.trim();
-
-                    // Parse amount (remove ₱ and commas)
                     const amount = parseFloat(amountText.replace(/[₱,]/g, ''));
 
-                    console.log('=== OPENING PAYMENT MODAL ===');
-                    console.log('Invoice ID:', invoiceId);
-                    console.log('Amount:', amount);
+                    // Reset form state
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    submitBtn.querySelector('.btn-text').style.display = 'inline';
+                    submitBtn.querySelector('.btn-spinner').style.display = 'none';
 
-                    // Fill modal fields
                     invoiceIdInput.value = invoiceId;
                     document.getElementById('summaryInvoiceNo').textContent = invoiceNo;
                     document.getElementById('summaryClient').textContent = client;
@@ -578,7 +525,6 @@
                     document.getElementById('summaryAmount').textContent = amountText;
                     document.getElementById('summaryPaymentType').textContent = payType;
 
-                    // Pre-select payment method based on payment type
                     if (payType.includes('PDC') || payType.includes('Check')) {
                         paymentMethod.value = 'Check';
                         checkFields.style.display = 'block';
@@ -593,34 +539,20 @@
                         checkDate.removeAttribute('required');
                     }
 
-                    // Set amount paid to invoice amount
                     document.getElementById('amountPaid').value = amount.toFixed(2);
-
-                    // Clear check fields
                     checkNumber.value = '';
                     bankName.value = '';
                     checkDate.value = '';
 
-                    // Set today's date
                     const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const todayString = `${year}-${month}-${day}`;
+                    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                     document.getElementById('paymentDate').value = todayString;
-
-                    // Clear optional fields
                     referenceNumber.value = '';
                     document.getElementById('paymentNotes').value = '';
-
-                    // Trigger change event to auto-fill reference for cash
                     paymentMethod.dispatchEvent(new Event('change'));
-
-                    // Show modal
                     paymentModal.style.display = 'block';
                 });
             });
         });
-    </script>      
+    </script>
 }
-

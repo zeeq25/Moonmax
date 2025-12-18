@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Moonmax.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
@@ -33,12 +33,15 @@ namespace Moonmax.Controllers
             {
                 if (!payments.Any()) return "Pending";
 
+                // If all payments are either Cash or Cleared checks
                 if (payments.All(p => p.PaymentMethod == "Cash" || p.PDCStatus == "Cleared"))
                     return "Paid";
 
+                // If any check bounced
                 if (payments.Any(p => p.PDCStatus == "Bounced"))
                     return "Bounced";
 
+                // If there are received checks (not yet cleared)
                 if (payments.Any(p => p.PDCStatus == "Received"))
                     return "Partially Paid";
 
@@ -409,48 +412,67 @@ namespace Moonmax.Controllers
         {
             System.Diagnostics.Debug.WriteLine($"=== PAYMENT FORM SUBMITTED ===");
             System.Diagnostics.Debug.WriteLine($"InvoiceID: {model.InvoiceID}");
-            System.Diagnostics.Debug.WriteLine($"PaymentMethod: {model.PaymentMethod}");
+            System.Diagnostics.Debug.WriteLine($"PaymentMethod: '{model.PaymentMethod}'");
             System.Diagnostics.Debug.WriteLine($"AmountPaid: {model.AmountPaid}");
             System.Diagnostics.Debug.WriteLine($"PaymentDate: {model.PaymentDate}");
+            System.Diagnostics.Debug.WriteLine($"CheckNumber: '{model.CheckNumber}'");
+            System.Diagnostics.Debug.WriteLine($"BankName: '{model.BankName}'");
+            System.Diagnostics.Debug.WriteLine($"CheckDate: {model.CheckDate}");
             System.Diagnostics.Debug.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
 
             if (!ModelState.IsValid)
             {
+                System.Diagnostics.Debug.WriteLine("=== VALIDATION ERRORS ===");
                 foreach (var key in ModelState.Keys)
                 {
                     var state = ModelState[key];
                     foreach (var error in state.Errors)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Validation Error - {key}: {error.ErrorMessage}");
+                        System.Diagnostics.Debug.WriteLine($"ERROR - {key}: {error.ErrorMessage}");
+                        if (error.Exception != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Exception: {error.Exception.Message}");
+                        }
                     }
                 }
 
-                TempData["Error"] = "Invalid payment data. Please check all required fields.";
+                // Show error to user
+                var errors = string.Join("; ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+
+                TempData["Error"] = $"Validation failed: {errors}";
                 return RedirectToAction("Index");
             }
 
+            System.Diagnostics.Debug.WriteLine("=== VALIDATION PASSED ===");
+
             try
             {
+                System.Diagnostics.Debug.WriteLine($"Looking for invoice {model.InvoiceID}...");
+
                 var invoice = await _context.Invoices
                     .Include(i => i.Client)
                     .Include(i => i.JobOrder)
                         .ThenInclude(j => j.JobParts)
-                            .ThenInclude(p => p.Inventory) // ⬅️ IMPORTANT: Include Inventory
+                            .ThenInclude(p => p.Inventory)
                     .Include(i => i.Payments)
                     .FirstOrDefaultAsync(i => i.InvoiceID == model.InvoiceID);
 
                 if (invoice == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Invoice not found: {model.InvoiceID}");
+                    System.Diagnostics.Debug.WriteLine($"ERROR: Invoice not found: {model.InvoiceID}");
                     TempData["Error"] = "Invoice not found.";
                     return RedirectToAction("Index");
                 }
 
                 System.Diagnostics.Debug.WriteLine($"Found invoice: {invoice.InvoiceNumber}");
+                System.Diagnostics.Debug.WriteLine($"Client: {invoice.Client?.Name ?? "Walk-In"}");
 
                 // VALIDATE: For Cash payments, don't require check fields
                 if (model.PaymentMethod == "Cash")
                 {
+                    System.Diagnostics.Debug.WriteLine("Cash payment - clearing check fields");
                     model.CheckNumber = null;
                     model.BankName = null;
                     model.CheckDate = null;
@@ -458,14 +480,18 @@ namespace Moonmax.Controllers
                 // VALIDATE: For Check payments, require check fields
                 else if (model.PaymentMethod == "Check")
                 {
+                    System.Diagnostics.Debug.WriteLine("Check payment - validating check fields");
                     if (string.IsNullOrWhiteSpace(model.CheckNumber) ||
                         string.IsNullOrWhiteSpace(model.BankName) ||
                         !model.CheckDate.HasValue)
                     {
+                        System.Diagnostics.Debug.WriteLine("ERROR: Missing check fields");
                         TempData["Error"] = "For check payments, Check Number, Bank Name, and Check Date are required.";
                         return RedirectToAction("Index");
                     }
                 }
+
+                System.Diagnostics.Debug.WriteLine("Creating payment record...");
 
                 // Create Payment record
                 var payment = new Payment
@@ -480,23 +506,92 @@ namespace Moonmax.Controllers
                     ReferenceNumber = model.ReferenceNumber ?? "",
                     Notes = model.Notes ?? "",
                     ProcessedByUserID = GetCurrentUserId(),
-                    PDCStatus = model.PaymentMethod == "Check" ? "Received" : null,
+                    PDCStatus = model.PaymentMethod == "Check" ? "Received" : "N/A",
                     BounceReason = "",
                     CreatedAt = DateTime.Now
                 };
+
+                System.Diagnostics.Debug.WriteLine($"Payment record created. ProcessedByUserID: {payment.ProcessedByUserID}");
 
                 _context.Payments.Add(payment);
 
                 // Update Invoice Status
                 var totalPaid = invoice.Payments.Sum(p => p.AmountPaid) + model.AmountPaid;
+                string oldStatus = invoice.Status;
 
-                string oldStatus = invoice.Status; // Track old status
+                System.Diagnostics.Debug.WriteLine($"Total paid: {totalPaid}, Invoice amount: {invoice.Amount}");
+
+                // ✅ NEW LOGIC FOR PDC WORKFLOW
+                if (model.PaymentMethod == "Check")
+                {
+                    // For PDC/Check payments, mark as Partially Paid (waiting for clearance)
+                    invoice.Status = "Partially Paid";
+                    System.Diagnostics.Debug.WriteLine("Invoice marked as Partially Paid (PDC Received)");
+                }
+                else if (model.PaymentMethod == "Cash")
+                {
+                    // For Cash payments, check if fully paid
+                    if (totalPaid >= invoice.Amount)
+                    {
+                        invoice.Status = "Paid";
+                        System.Diagnostics.Debug.WriteLine("Invoice marked as Paid (Cash)");
+
+                        // Stock deduction for cash payments only
+                        if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Processing stock deduction for Job #{invoice.JobOrder.JobID}");
+
+                            foreach (var part in invoice.JobOrder.JobParts)
+                            {
+                                if (part.Inventory != null)
+                                {
+                                    int previousQty = part.Inventory.QuantityInStock;
+
+                                    part.Inventory.ReservedQuantity -= part.Quantity;
+                                    if (part.Inventory.ReservedQuantity < 0)
+                                        part.Inventory.ReservedQuantity = 0;
+
+                                    part.Inventory.QuantityInStock -= part.Quantity;
+                                    if (part.Inventory.QuantityInStock < 0)
+                                        part.Inventory.QuantityInStock = 0;
+
+                                    int newQty = part.Inventory.QuantityInStock;
+
+                                    System.Diagnostics.Debug.WriteLine($"Deducted: {part.Inventory.PartName} | Prev: {previousQty} | Deduct: {part.Quantity} | New: {newQty}");
+
+                                    var movement = new StockMovement
+                                    {
+                                        InventoryID = part.Inventory.InventoryID,
+                                        MovementType = "OUT",
+                                        Quantity = part.Quantity,
+                                        PreviousQuantity = previousQty,
+                                        NewQuantity = newQty,
+                                        JobOrderID = invoice.JobID,
+                                        UserID = GetCurrentUserId(),
+                                        MovementDate = DateTime.Now
+                                    };
+
+                                    _context.StockMovement.Add(movement);
+                                }
+                            }
+
+                            invoice.JobOrder.Status = "Completed";
+                            System.Diagnostics.Debug.WriteLine($"Job #{invoice.JobOrder.JobID} marked as Completed");
+                        }
+                    }
+                    else
+                    {
+                        invoice.Status = "Partially Paid";
+                        System.Diagnostics.Debug.WriteLine("Invoice marked as Partially Paid (Cash - not full amount)");
+                    }
+                }
 
                 if (totalPaid >= invoice.Amount)
                 {
                     invoice.Status = "Paid";
+                    System.Diagnostics.Debug.WriteLine("Invoice marked as Paid");
 
-                    // ⬇️⬇️⬇️ ADD STOCK DEDUCTION WHEN FULLY PAID ⬇️⬇️⬇️
+                    // Stock deduction logic
                     if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
                     {
                         System.Diagnostics.Debug.WriteLine($"Processing stock deduction for Job #{invoice.JobOrder.JobID}");
@@ -507,21 +602,18 @@ namespace Moonmax.Controllers
                             {
                                 int previousQty = part.Inventory.QuantityInStock;
 
-                                // Deduct from reserved quantity
                                 part.Inventory.ReservedQuantity -= part.Quantity;
                                 if (part.Inventory.ReservedQuantity < 0)
                                     part.Inventory.ReservedQuantity = 0;
 
-                                // Deduct from actual stock
                                 part.Inventory.QuantityInStock -= part.Quantity;
                                 if (part.Inventory.QuantityInStock < 0)
                                     part.Inventory.QuantityInStock = 0;
 
                                 int newQty = part.Inventory.QuantityInStock;
 
-                                System.Diagnostics.Debug.WriteLine($"Stock deduction: {part.Inventory.PartName} | Previous: {previousQty} | Deducted: {part.Quantity} | New: {newQty}");
+                                System.Diagnostics.Debug.WriteLine($"Deducted: {part.Inventory.PartName} | Prev: {previousQty} | Deduct: {part.Quantity} | New: {newQty}");
 
-                                // Create stock movement record
                                 var movement = new StockMovement
                                 {
                                     InventoryID = part.Inventory.InventoryID,
@@ -538,25 +630,21 @@ namespace Moonmax.Controllers
                             }
                         }
 
-                        // Mark job as completed
                         invoice.JobOrder.Status = "Completed";
-
                         System.Diagnostics.Debug.WriteLine($"Job #{invoice.JobOrder.JobID} marked as Completed");
                     }
-                    // ⬆️⬆️⬆️ END STOCK DEDUCTION ⬆️⬆️⬆️
                 }
                 else
                 {
                     invoice.Status = "Partially Paid";
+                    System.Diagnostics.Debug.WriteLine("Invoice marked as Partially Paid");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Saving payment... Total paid: {totalPaid}, Invoice amount: {invoice.Amount}");
-
+                System.Diagnostics.Debug.WriteLine("Saving changes to database...");
                 await _context.SaveChangesAsync();
+                System.Diagnostics.Debug.WriteLine("✅ Payment saved successfully!");
 
-                System.Diagnostics.Debug.WriteLine("Payment saved successfully!");
-
-                // ⬇️⬇️⬇️ ENHANCED AUDIT LOG ⬇️⬇️⬇️
+                // Audit log
                 string clientName = invoice.Client?.Name ?? $"Walk-In ({invoice.JobOrder?.ContactNumber})";
                 int totalParts = invoice.JobOrder?.JobParts?.Count ?? 0;
 
@@ -574,7 +662,6 @@ namespace Moonmax.Controllers
                     description: auditDescription,
                     targetId: invoice.InvoiceID
                 );
-                // ⬆️⬆️⬆️ END AUDIT LOG ⬆️⬆️⬆️
 
                 TempData["Success"] = $"Payment of ₱{model.AmountPaid:N2} processed successfully!" +
                                      (invoice.Status == "Paid" ? " Invoice is now fully paid and job completed." : "");
@@ -583,13 +670,17 @@ namespace Moonmax.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"❌ EXCEPTION OCCURRED ❌");
+                System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
                 TempData["Error"] = $"Error processing payment: {ex.Message}";
                 return RedirectToAction("Index");
             }
-
-
         }
 
         [HttpGet]
@@ -673,7 +764,116 @@ namespace Moonmax.Controllers
                 })
                 .ToListAsync();
 
+
+
             return View(paymentHistory);
+        }
+
+        // POST: Sales/ClearCheck
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearCheck(int invoiceId)
+        {
+            try
+            {
+                var invoice = await _context.Invoices
+                    .Include(i => i.Client)
+                    .Include(i => i.JobOrder)
+                        .ThenInclude(j => j.JobParts)
+                            .ThenInclude(p => p.Inventory)
+                    .Include(i => i.Payments)
+                    .FirstOrDefaultAsync(i => i.InvoiceID == invoiceId);
+
+                if (invoice == null)
+                {
+                    TempData["Error"] = "Invoice not found.";
+                    return RedirectToAction("Index");
+                }
+
+                // Find all PDC payments that are "Received"
+                var pdcPayments = invoice.Payments.Where(p => p.PaymentMethod == "Check" && p.PDCStatus == "Received").ToList();
+
+                if (!pdcPayments.Any())
+                {
+                    TempData["Error"] = "No checks to clear.";
+                    return RedirectToAction("Index");
+                }
+
+                // Update all PDC payments to "Cleared"
+                foreach (var payment in pdcPayments)
+                {
+                    payment.PDCStatus = "Cleared";
+                    payment.ClearanceDate = DateTime.Now;
+                    payment.ClearedByUserID = GetCurrentUserId();
+                }
+
+                // Calculate total paid after clearing
+                var totalPaid = invoice.Payments.Sum(p => p.AmountPaid);
+
+                // Mark invoice as Paid and process stock deduction
+                if (totalPaid >= invoice.Amount)
+                {
+                    invoice.Status = "Paid";
+
+                    // Process stock deduction when check clears
+                    if (invoice.JobOrder != null && invoice.JobOrder.Status != "Completed")
+                    {
+                        foreach (var part in invoice.JobOrder.JobParts)
+                        {
+                            if (part.Inventory != null)
+                            {
+                                int previousQty = part.Inventory.QuantityInStock;
+
+                                part.Inventory.ReservedQuantity -= part.Quantity;
+                                if (part.Inventory.ReservedQuantity < 0)
+                                    part.Inventory.ReservedQuantity = 0;
+
+                                part.Inventory.QuantityInStock -= part.Quantity;
+                                if (part.Inventory.QuantityInStock < 0)
+                                    part.Inventory.QuantityInStock = 0;
+
+                                int newQty = part.Inventory.QuantityInStock;
+
+                                var movement = new StockMovement
+                                {
+                                    InventoryID = part.Inventory.InventoryID,
+                                    MovementType = "OUT",
+                                    Quantity = part.Quantity,
+                                    PreviousQuantity = previousQty,
+                                    NewQuantity = newQty,
+                                    JobOrderID = invoice.JobID,
+                                    UserID = GetCurrentUserId(),
+                                    MovementDate = DateTime.Now
+                                };
+
+                                _context.StockMovement.Add(movement);
+                            }
+                        }
+
+                        invoice.JobOrder.Status = "Completed";
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Audit log
+                string clientName = invoice.Client?.Name ?? $"Walk-In ({invoice.JobOrder?.ContactNumber})";
+                await _auditService.LogAsync(
+                    userId: GetCurrentUserId(),
+                    action: "CHECK_CLEARED",
+                    module: "Sales & Billing",
+                    description: $"Cleared check(s) for Invoice {invoice.InvoiceNumber} - Client: {clientName}, Amount: ₱{totalPaid:N2}",
+                    targetId: invoice.InvoiceID
+                );
+
+                TempData["Success"] = $"Check cleared successfully! Invoice is now fully paid.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error clearing check: {ex.Message}";
+                return RedirectToAction("Index");
+            }
         }
 
 

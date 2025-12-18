@@ -19,8 +19,8 @@ namespace Moonmax.ViewModels
         public DateTime PaymentDate { get; set; }
 
         // PDC-specific fields (optional)
-        public string CheckNumber { get; set; }
-        public string BankName { get; set; }
+        public string? CheckNumber { get; set; }
+        public string? BankName { get; set; }
         public DateTime? CheckDate { get; set; }
         public string ReferenceNumber { get; set; }
         public string Notes { get; set; }
