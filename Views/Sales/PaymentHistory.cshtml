@@ -1,0 +1,356 @@
+﻿@model List<Moonmax.ViewModels.PaymentHistoryViewModel>
+
+@{
+    ViewData["Title"] = "Payment History";
+    ViewData["Nav"] = "Sales";
+    ViewData["AppShell"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tophead.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sales.css" asp-append-version="true" />
+}
+
+<div class="page page-sales">
+
+    <header class="dash-header">
+        <div>
+            <h1 class="dash-title">Sales &amp; Billing</h1>
+            <p class="dash-sub">Manage customer transactions and invoices</p>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success" style="background:#d4edda;color:#155724;padding:12px;border-radius:6px;margin-bottom:20px;border:1px solid #c3e6cb;">
+            <i class="fa-solid fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+
+    <section class="dash-kpis">
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Payments</div>
+                <div class="kpi-main">₱@Model.Sum(p => p.AmountPaid).ToString("N2")</div>
+            </div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-title">Cash Payments</div>
+                <div class="kpi-main">₱@Model.Where(p => p.PaymentMethod == "Cash").Sum(p => p.AmountPaid).ToString("N2")</div>
+            </div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-money-check"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-title">Check Payments</div>
+                <div class="kpi-main">₱@Model.Where(p => p.PaymentMethod == "Check").Sum(p => p.AmountPaid).ToString("N2")</div>
+            </div>
+        </article>
+        <article class="dash-card kpi">
+            <div class="kpi-icon"><i class="fa-solid fa-hashtag"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-title">Total Transactions</div>
+                <div class="kpi-main">@Model.Count</div>
+            </div>
+        </article>
+    </section>
+
+    <section class="inv-tabs-bar">
+        <div class="inv-tabs">
+            <a asp-controller="Sales" asp-action="Index" class="inv-tab">Transactions</a>
+            <a asp-controller="Sales" asp-action="PaymentHistory" class="inv-tab inv-tab--active">Payment History</a>
+            <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab">Customer List</a>
+        </div>
+    </section>
+
+    <section class="inv-filter-bar">
+        <div class="inv-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="inv-search-input" id="paymentSearchInput" type="text" placeholder="Search by invoice, customer, or job ID..." />
+        </div>
+        <div class="inv-filter-actions">
+            <select id="statusFilter" class="btn-chip">
+                <option value="all">All</option>
+                <option value="paid">Received</option>
+                <option value="pending">Bounced</option>
+            </select>
+        </div>
+    </section>
+
+    <div class="mm-card">
+        <table class="mm-table" id="paymentHistoryTable">
+            <thead>
+                <tr>
+                    <th>Payment Date</th>
+                    <th>Invoice ID</th>
+                    <th>Client</th>
+                    <th>      </th>
+                    <th>Method</th>
+                    <th>Amount Paid</th>
+                    <th>Check Details</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                    <th>Processed By</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var payment in Model)
+                {
+                    <tr>
+                        <td>@payment.PaymentDate.ToString("yyyy-MM-dd")</td>
+                        <td>@payment.InvoiceNumber</td>
+                        <td>@payment.ClientName</td>
+                        <td>@payment.JobID</td>
+                        <td>
+                            @if (payment.PaymentMethod == "Cash")
+                            {
+                                <span class="badge" style="background:#059669;color:white;padding:4px 8px;border-radius:4px;font-size:11px;">
+                                    <i class="fa-solid fa-money-bill-wave"></i> Cash
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background:#2563eb;color:white;padding:4px 8px;border-radius:4px;font-size:11px;">
+                                    <i class="fa-solid fa-money-check"></i> Check
+                                </span>
+                            }
+                        </td>
+                        <td style="font-weight:600;">₱@payment.AmountPaid.ToString("N2")</td>
+                        <td>
+                            @if (payment.PaymentMethod == "Check")
+                            {
+                                <div style="font-size:12px;">
+                                    <div><strong>No:</strong> @(payment.CheckNumber ?? "—")</div>
+                                    <div><strong>Bank:</strong> @(payment.BankName ?? "—")</div>
+                                    <div><strong>Date:</strong> @(payment.CheckDate?.ToString("yyyy-MM-dd") ?? "—")</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span style="color:#999;">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (payment.PaymentMethod == "Cash")
+                            {
+                                <span class="status status-paid">Completed</span>
+                            }
+                            else if (!string.IsNullOrEmpty(payment.PDCStatus))
+                            {
+                                var statusClass = payment.PDCStatus.ToLower() switch
+                                {
+                                    "cleared" => "status-paid",
+                                    "bounced" or "cancelled" => "status-warn",
+                                    _ => "status-pending"
+                                };
+                                <span class="status @statusClass">@payment.PDCStatus</span>
+                            }
+                            else
+                            {
+                                <span class="status status-pending">Received</span>
+                            }
+                        </td>
+                        <td>
+                            <span style="font-family:monospace;font-size:11px;color:#666;">
+                                @(payment.ReferenceNumber ?? "—")
+                            </span>
+                        </td>
+                        <td>@payment.ProcessedBy</td>
+                        <td class="inv-actions">
+                            <div class="sales-actions">
+                                <button type="button"
+                                        class="icon-btn-table btn-payment-details"
+                                        data-invoice="@payment.InvoiceNumber"
+                                        data-client="@payment.ClientName"
+                                        data-job="@payment.JobID"
+                                        data-method="@payment.PaymentMethod"
+                                        data-amount="@payment.AmountPaid.ToString("N2")"
+                                        data-date="@payment.PaymentDate.ToString("MMM dd, yyyy")"
+                                        data-reference="@payment.ReferenceNumber"
+                                        data-check-number="@payment.CheckNumber"
+                                        data-bank="@payment.BankName"
+                                        data-check-date="@payment.CheckDate?.ToString("yyyy-MM-dd")"
+                                        data-status="@payment.PDCStatus"
+                                        data-processed-by="@payment.ProcessedBy"
+                                        data-notes="@payment.Notes">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="icon-btn-table btn-receipt"
+                                        data-payment-id="@payment.PaymentID">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="table-pagination" id="paymentPagination">
+        <button class="pg-btn" id="paymentPrev">‹</button>
+        <span id="paymentPageIndicator">Page 1</span>
+        <button class="pg-btn" id="paymentNext">›</button>
+    </div>
+
+    <!-- View Payment Details Modal -->
+    <div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="paymentDetailsBody">
+                    <!-- Filled by JS -->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--Receipt Modal-->
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Official Receipt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="receiptModalBody">
+                    <div class="text-center text-muted">
+                        Loading receipt...
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" id="btnPrintReceipt">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                    <button class="btn btn-success" id="btnExportPDF">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+<!-- Modals and scripts remain the same as your original code, already fixed to handle nulls and reference numbers -->
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+            
+    <script>
+                document.addEventListener('DOMContentLoaded', function () {
+
+            // ===== PAYMENT DETAILS =====
+            document.querySelectorAll('.btn-payment-details').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const d = this.dataset;
+                    const has = v => v && v !== "null";
+
+                    let html = `<div class="row g-3">
+                        <div class="col-md-6"><strong>Invoice #</strong><br>${d.invoice}</div>
+                        <div class="col-md-6"><strong>Payment Date</strong><br>${d.date}</div>
+                        <div class="col-md-6"><strong>Payment Method</strong><br>${d.method}</div>
+                        <div class="col-md-6"><strong>Amount Paid</strong><br>₱${d.amount}</div>
+                        ${has(d.reference) ? `<div class="col-md-6"><strong>Reference No.</strong><br>${d.reference}</div>` : ``}
+                        ${has(d.status) ? `<div class="col-md-6"><strong>Status</strong><br>${d.status}</div>` : ``}
+                        <hr>
+                        ${has(d.checkNumber) ? `<div class="col-md-6"><strong>Check Number</strong><br>${d.checkNumber}</div>` : ``}
+                        ${has(d.bank) ? `<div class="col-md-6"><strong>Bank</strong><br>${d.bank}</div>` : ``}
+                        ${has(d.checkDate) ? `<div class="col-md-6"><strong>Check Date</strong><br>${d.checkDate}</div>` : ``}
+                        ${has(d.depositDate) ? `<div class="col-md-6"><strong>Deposit Date</strong><br>${d.depositDate}</div>` : ``}
+                        ${has(d.clearanceDate) ? `<div class="col-md-6"><strong>Clearance Date</strong><br>${d.clearanceDate}</div>` : ``}
+                        ${has(d.notes) ? `<div class="col-md-12"><strong>Notes</strong><br>${d.notes}</div>` : ``}
+                    </div>`;
+
+                    document.getElementById('paymentDetailsBody').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('paymentDetailsModal')).show();
+                });
+            });
+
+            // ===== RECEIPT BUTTONS =====
+            document.querySelectorAll('.btn-receipt').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const paymentId = this.dataset.paymentId;
+
+                    fetch(`/Sales/ViewReceiptPartial/${paymentId}`)
+                        .then(res => res.text())
+                        .then(html => {
+                            document.getElementById('receiptModalBody').innerHTML = html;
+
+                            const modal = new bootstrap.Modal(
+                                document.getElementById('receiptModal')
+                            );
+                            modal.show();
+
+                            // ===== PRINT BUTTON inside modal =====
+                            const printBtn = document.getElementById('btnPrintReceipt');
+                            if (printBtn) {
+                                printBtn.onclick = function () {
+                                    const printContents = document.getElementById('receiptModalBody').innerHTML;
+                                    const originalContents = document.body.innerHTML;
+
+                                    document.body.innerHTML = printContents;
+                                    window.print();
+                                    document.body.innerHTML = originalContents;
+                                    location.reload();
+                                };
+                            }
+                        });
+                });
+
+
+            });
+                //===== EXPORT PDF BUTTON =====//
+                    document.getElementById('btnExportPDF').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+
+            const receiptElement = document.getElementById('receiptModalBody');
+
+            html2canvas(receiptElement).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('Receipt.pdf');
+            });
+        });
+
+
+        });
+
+    </script>
+
+    
+
+
+
+}

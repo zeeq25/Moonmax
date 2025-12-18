@@ -26,6 +26,25 @@ namespace Moonmax.Controllers
             _context = context;
             _auditService = auditService;  // ⬅️ ADD THIS
         }
+        //== HELPER ==//
+        public static class InvoiceStatusHelper
+        {
+            public static string GetInvoiceStatus(IEnumerable<Payment> payments)
+            {
+                if (!payments.Any()) return "Pending";
+
+                if (payments.All(p => p.PaymentMethod == "Cash" || p.PDCStatus == "Cleared"))
+                    return "Paid";
+
+                if (payments.Any(p => p.PDCStatus == "Bounced"))
+                    return "Bounced";
+
+                if (payments.Any(p => p.PDCStatus == "Received"))
+                    return "Partially Paid";
+
+                return "Pending";
+            }
+        }
 
         // GET: Sales/CreateInvoice/5
         public async Task<IActionResult> CreateInvoice(int jobId)
@@ -96,53 +115,55 @@ namespace Moonmax.Controllers
             return RedirectToAction("Index", "Sales");
         }
 
-        // GET: Sales       
+
+        // GET: Sales/Index
         public async Task<IActionResult> Index()
         {
+            // 1️⃣ Fetch invoices including payments
             var invoices = await _context.Invoices
                 .Include(i => i.Client)
                 .Include(i => i.JobOrder)
                 .ThenInclude(j => j.JobParts)
-                .Select(i => new InvoiceViewModel
-                {
-                    InvoiceID = i.InvoiceID,
-                    InvoiceNumber = i.InvoiceNumber,
-
-                    ClientName = i.Client.Name == "Walk-In"
-                    ? $"Walk-In ({i.JobOrder.ContactNumber})"
-                    : i.Client.Name,
-
-                    ContactNumber = i.Client.Name == "Walk-In"
-                    ? i.JobOrder.ContactNumber
-                    : i.Client.ContactNumber,
-
-                    JobID = i.JobID,
-                    Amount = i.Amount,
-                    PaymentType = i.PaymentType,
-                    DateIssued = i.DateIssued,
-                    DueDate = i.DueDate,
-                    Status = i.Status
-                })
+                .Include(i => i.Payments)
                 .ToListAsync();
 
-            // REMOVED: InProgressJobs query
+            // 2️⃣ Map to ViewModel and calculate Status
+            var invoiceVMs = invoices.Select(i => new InvoiceViewModel
+            {
+                InvoiceID = i.InvoiceID,
+                InvoiceNumber = i.InvoiceNumber,
+                ClientName = i.Client != null
+                    ? i.Client.Name
+                    : $"Walk-In ({i.JobOrder.ContactNumber})",
+                ContactNumber = i.Client != null
+                    ? i.Client.ContactNumber
+                    : i.JobOrder.ContactNumber,
+                JobID = i.JobID,
+                Amount = i.Amount,
+                PaymentType = i.PaymentType,
+                DateIssued = i.DateIssued,
+                DueDate = i.DueDate,
+                Status = InvoiceStatusHelper.GetInvoiceStatus(i.Payments)
+            }).ToList();
 
-            var totalSales = invoices.Sum(i => i.Amount);
-            var paidInvoices = invoices
+            // 3️⃣ Calculate KPIs using invoiceVMs
+            var totalSales = invoiceVMs.Sum(i => i.Amount);
+            var paidInvoices = invoiceVMs
                 .Where(i => i.Status.ToLower() == "paid")
                 .Sum(i => i.Amount);
-            var pendingPDCs = invoices
-                .Where(i => i.Status.ToLower() == "pending")
+            var pendingPDCs = invoiceVMs
+                .Where(i => i.Status.ToLower() == "unpaid")
                 .Sum(i => i.Amount);
-            var activeCustomers = invoices
+            var activeCustomers = invoiceVMs
                 .Select(i => i.ClientName)
                 .Distinct()
                 .Count();
 
+            // 4️⃣ Build ViewModel
             var vm = new SalesIndexViewModel
             {
-                Invoices = invoices,
-                InProgressJobs = new List<JobOrderListingVM>(), // Empty list
+                Invoices = invoiceVMs,
+                InProgressJobs = new List<JobOrderListingVM>(), // empty for now
                 TotalSales = totalSales,
                 PaidInvoices = paidInvoices,
                 PendingPDCs = pendingPDCs,
@@ -151,6 +172,7 @@ namespace Moonmax.Controllers
 
             return View(vm);
         }
+
 
         // GET - CUSTOMER LIST
         public async Task<IActionResult> CustomerList()
@@ -566,11 +588,102 @@ namespace Moonmax.Controllers
                 TempData["Error"] = $"Error processing payment: {ex.Message}";
                 return RedirectToAction("Index");
             }
+
+
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewReceiptPartial(int id)
+        {
+            var receipt = await _context.Payments
+                .Where(p => p.PaymentID == id)
+                .Select(p => new ReceiptViewModel
+                {
+                    PaymentID = p.PaymentID,
+
+                    InvoiceNumber = p.Invoice.InvoiceNumber,
+                    ClientName = p.Invoice.Client.Name,
+                    JobID = p.Invoice.JobOrder.JobID,
+
+                    AmountPaid = p.AmountPaid,
+                    PaymentMethod = p.PaymentMethod,
+                    PaymentDate = p.PaymentDate,
+                    DateIssued = DateTime.Now,
+
+                    ReferenceNumber = p.ReferenceNumber,
+                    CheckNumber = p.CheckNumber,
+                    BankName = p.BankName,
+                    CheckDate = p.CheckDate,
+
+                    ProcessedBy = p.ProcessedByUser.FirstName + " " +
+                                  p.ProcessedByUser.LastName,
+
+                    Notes = p.Notes
+                })
+                .FirstOrDefaultAsync();
+
+            if (receipt == null)
+                return NotFound();
+
+            return PartialView("_ReceiptPartial", receipt);
+        }
+
+
+
+        public async Task<IActionResult> PaymentHistory()
+        {
+            var paymentHistory = await _context.Payments
+                .Include(p => p.Invoice)
+                    .ThenInclude(i => i.Client)
+                .Include(p => p.ProcessedByUser)
+                .Include(p => p.DepositedByUser)
+                .Include(p => p.ClearedByUser)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new PaymentHistoryViewModel
+                {
+                    PaymentID = p.PaymentID,
+                    InvoiceID = p.InvoiceID,
+                    InvoiceNumber = p.ReferenceNumber, // <-- IMPORTANT
+                    ClientName = p.Invoice != null && p.Invoice.Client != null
+                        ? p.Invoice.Client.Name
+                        : "",
+
+                    PaymentMethod = p.PaymentMethod,
+                    AmountPaid = p.AmountPaid,
+                    PaymentDate = p.PaymentDate,
+                    CheckNumber = p.CheckNumber,
+                    BankName = p.BankName,
+                    CheckDate = p.CheckDate,
+                    PDCStatus = p.PDCStatus,
+
+                    ProcessedBy = p.ProcessedByUser != null
+                        ? p.ProcessedByUser.FirstName + " " + p.ProcessedByUser.LastName
+                        : "—",
+
+                    DepositedBy = p.DepositedByUser != null
+                        ? p.DepositedByUser.FirstName + " " + p.DepositedByUser.LastName
+                        : "—",
+
+                    ClearedBy = p.ClearedByUser != null
+                        ? p.ClearedByUser.FirstName + " " + p.ClearedByUser.LastName
+                        : "—",
+
+                    ReferenceNumber = p.ReferenceNumber,
+                    Notes = p.Notes
+                })
+                .ToListAsync();
+
+            return View(paymentHistory);
+        }
+
+
+
+
+
     }
-
-
-
-
-    
 }
+
+
+
+
+

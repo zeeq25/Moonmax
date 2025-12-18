@@ -67,6 +67,7 @@
     <section class="inv-tabs-bar">
         <div class="inv-tabs">
             <a asp-controller="Sales" asp-action="Index" class="inv-tab inv-tab--active">Transactions</a>
+            <a asp-controller="Sales" asp-action="PaymentHistory" class="inv-tab">Payment History</a>
             <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab">Customer List</a>
         </div>
     </section>
@@ -83,8 +84,10 @@
             <div class="inv-filter-actions">
                 <select id="statusFilter" class="btn-chip">
                     <option value="all">All</option>
-                    <option value="paid">Paid</option>
                     <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Partially Paid</option>
+                    <option value="pending">Failed</option>                      
                 </select>               
             </div>
         </section>
@@ -124,23 +127,18 @@
                         </td>
                         <td class="inv-actions">
                             <div class="sales-actions">
-                                <!-- View Invoice Button -->
                                 <button type="button" class="icon-btn-table btn-view" title="View invoice"
                                         data-invoice-id="@invoice.InvoiceID">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
 
-                                    <!--Process Payment Button-->                                
-                                        @if (invoice.Status.ToLower() != "paid")
-                                        {
-                                            <button type="button"
-                                                    class="icon-btn-table btn-receive"
-                                                    title="Process payment"
-                                                    data-invoice-id="@invoice.InvoiceID">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        }
-
+                                @if (invoice.Status.ToLower() != "paid")
+                                    {
+                                        <button type="button" class="icon-btn-table btn-receive" title="Process payment"
+                                                data-invoice-id="@invoice.InvoiceID">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    }
                                 </div>
                             </td>
 
@@ -280,6 +278,7 @@
             </form>
         </div>
     </div>
+
 
 </div>
 
@@ -622,8 +621,6 @@
                 });
             });
         });
-    </script>
-
-      
+    </script>      
 }
 

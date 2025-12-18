@@ -74,22 +74,18 @@
 
     <!-- TABS -->
     <section class="inv-tabs-bar">
-        <div class="inv-tabs">
-            <a asp-controller="Sales" asp-action="Index" class="inv-tab">Transactions</a>
-            <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab inv-tab--active">Customer List</a>
-        </div>
+    <div class="inv-tabs">
+        <a asp-controller="Sales" asp-action="Index" class="inv-tab">Transactions</a>
+        <a asp-controller="Sales" asp-action="PaymentHistory" class="inv-tab">Payment History</a>
+        <a asp-controller="Sales" asp-action="Customerlist" class="inv-tab inv-tab--active">Customer List</a>
+    </div>
     </section>
 
-    <!-- SEARCH + FILTER / EXPORT -->
+    <!-- SEARCH -->
     <section class="inv-filter-bar">
         <div class="inv-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input class="inv-search-input" type="text" placeholder="Search by customer name, email, phone, or payment type..." />
-        </div>
-
-        <div class="inv-filter-actions">
-            <button class="btn-chip"><i class="fa-solid fa-filter"></i><span>Filter</span></button>
-            <button class="btn-chip"><i class="fa-solid fa-download"></i><span>Export</span></button>
         </div>
     </section>
 
