@@ -88,13 +88,13 @@
                            value="@DateTime.Now.ToString("yyyy-MM-dd")"
                            class="modern-input" />
 
-                    <!-- ✅ APPLY FILTER BUTTON -->
+                    <!-- APPLY FILTER BUTTON -->
                     <button id="btnApplyFilter" class="modern-btn modern-btn-primary" style="padding: 8px 16px; background-color:#4F46E5; color:#fff;">
                         <i class="fa-solid fa-filter"></i> Apply Filter
                     </button>
                 </div>
 
-                <!-- STATUS + EXPORT -->
+                <!-- STATUS -->
                 <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                     <!-- STATUS DROPDOWN -->
                     <div class="status-filter">
@@ -107,11 +107,6 @@
                             }
                         </select>
                     </div>
-
-                    <!-- ✅ EXPORT PDF BUTTON -->
-                    <button id="btnExportPdf" class="modern-btn modern-btn-export" style="padding: 8px 16px; background-color:#4F46E5; color:#fff;">
-                        <i class="fa-solid fa-file-pdf"></i> Export PDF
-                    </button>
                 </div>
 
             </div>
@@ -216,8 +211,6 @@
 @section Scripts {
     <!-- EXTERNAL LIBRARIES -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         @{
@@ -228,7 +221,16 @@
         const generatedByUser = "@generatedByUser";
 
         // ========================================
-        // 1. CHART DATA & INITIALIZATION
+        // 1. BACK BUTTON - Move to top for immediate execution
+        // ========================================
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('btnBack').addEventListener('click', function() {
+                window.history.back();
+            });
+        });
+
+        // ========================================
+        // 2. CHART DATA & INITIALIZATION
         // ========================================
         const serviceTypes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartServiceTypes));
         const serviceCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartServiceCounts));
@@ -272,7 +274,7 @@
         createChart('jobDateChart', 'line', chartDates, chartDateCounts);
 
         // ========================================
-        // 2. TABLE FILTERING & PAGINATION
+        // 3. TABLE FILTERING & PAGINATION
         // ========================================
         document.addEventListener("DOMContentLoaded", function() {
             const table = document.getElementById("jobReportsTable");
@@ -288,7 +290,7 @@
             const statusFilterSelect = document.getElementById('jobStatusFilter');
             const applyFilterBtn = document.getElementById('btnApplyFilter');
 
-            // ✅ SHARED FILTER FUNCTION - Used by both pagination AND export
+            // SHARED FILTER FUNCTION
             function getFilteredRows() {
                 const fromDate = fromDateInput.value;
                 const toDate = toDateInput.value;
@@ -296,48 +298,40 @@
 
                 const from = fromDate ? new Date(fromDate) : null;
                 const to = toDate ? new Date(toDate) : null;
-                if (to) to.setHours(23, 59, 59, 999); // Include entire end date
+                if (to) to.setHours(23, 59, 59, 999);
 
                 return rows.filter(row => {
                     const cells = row.querySelectorAll('td');
-                    const dateCreated = new Date(cells[6].textContent); // Date Created column
-                    const status = cells[8].textContent.trim(); // Status column
+                    const dateCreated = new Date(cells[6].textContent);
+                    const status = cells[8].textContent.trim();
 
-                    // Date range filter
                     const inDateRange = (!from || dateCreated >= from) && (!to || dateCreated <= to);
-
-                    // Status filter - empty string means "All Status"
                     const statusMatch = !statusFilter || status === statusFilter;
 
                     return inDateRange && statusMatch;
                 });
             }
 
-            // ✅ PAGINATION - Only shows filtered rows (10 per page)
+            // PAGINATION
             function renderTablePage(page) {
-                const filteredRows = getFilteredRows(); // Get ALL filtered rows
+                const filteredRows = getFilteredRows();
                 const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
 
-                // Validate page number
                 if (page < 1) page = 1;
                 if (page > totalPages) page = totalPages;
                 currentPage = page;
 
-                // Hide ALL rows first
                 rows.forEach(row => row.style.display = "none");
 
-                // Show only CURRENT PAGE of filtered rows
                 const start = (page - 1) * rowsPerPage;
                 const end = start + rowsPerPage;
                 filteredRows.slice(start, end).forEach(row => row.style.display = "");
 
-                // Update page indicator
                 const indicator = document.getElementById("jobReportPageIndicator");
                 if (indicator) {
                     indicator.textContent = `Page ${page} of ${totalPages} (${filteredRows.length} records)`;
                 }
 
-                // Enable/disable pagination buttons
                 const buttons = document.querySelectorAll(".job-table-pagination .pg-btn");
                 if (buttons.length === 2) {
                     buttons[0].disabled = page === 1;
@@ -345,278 +339,24 @@
                 }
             }
 
-            // Pagination navigation (global for inline onclick)
             window.changeJobPage = function(step) {
                 renderTablePage(currentPage + step);
             }
 
-            // ✅ EVENT LISTENERS - Re-render pagination when filters change
             applyFilterBtn.addEventListener('click', () => {
-                currentPage = 1; // Reset to first page
+                currentPage = 1;
                 renderTablePage(currentPage);
             });
 
             statusFilterSelect.addEventListener('change', () => {
-                currentPage = 1; // Reset to first page
+                currentPage = 1;
                 renderTablePage(currentPage);
             });
 
-            // Initial render
             renderTablePage(currentPage);
 
-            // ✅ MAKE getFilteredRows AVAILABLE TO EXPORT
             window.getFilteredJobRows = getFilteredRows;
         });
 
-                // ========================================
-        // 3. EXPORT PDF - Exports ALL Filtered Data
-        // ========================================
-        document.getElementById('btnExportPdf').addEventListener('click', function() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const table = document.getElementById('jobReportsTable');
-
-            if (!table) {
-                alert("No data to export.");
-                return;
-            }
-
-            // ===============================
-            // GET FILTER VALUES
-            // ===============================
-            const fromDate = document.getElementById('reportFromDate').value;
-            const toDate = document.getElementById('reportToDate').value;
-            const selectedStatus = document.getElementById('jobStatusFilter').value;
-
-            const from = new Date(fromDate);
-            const to = new Date(toDate);
-            to.setHours(23, 59, 59, 999);
-
-            const formattedFromDate = from.toLocaleDateString('en-US', {
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-
-            const formattedToDate = to.toLocaleDateString('en-US', {
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-
-            // ===============================
-            // ✅ GET ALL FILTERED ROWS (Not just visible page!)
-            // ===============================
-            const filteredRows = window.getFilteredJobRows ? window.getFilteredJobRows() : [];
-
-            if (!filteredRows.length) {
-                alert("No data to export with current filters.");
-                return;
-            }
-
-            console.log(`📄 Exporting ${filteredRows.length} filtered records (including hidden pages)`);
-
-            // ===============================
-            // ✅ CALCULATE SUMMARY (ALL FILTERED DATA)
-            // ===============================
-            let totalJobCost = 0;
-            let serviceTotals = {};
-            let partsCounts = {}; // Track parts/items frequency
-            let statusCounts = {};
-            let jobCount = filteredRows.length;
-
-            filteredRows.forEach(row => {
-                const cost = parseFloat(
-                    row.cells[5].textContent.replace('₱', '').replace(/,/g, '')
-                ) || 0;
-
-                const serviceType = row.cells[3].textContent.trim();
-                const partsText = row.cells[4].textContent.trim(); // Parts/Items column
-                const status = row.cells[8].textContent.trim();
-
-                totalJobCost += cost;
-                serviceTotals[serviceType] = (serviceTotals[serviceType] || 0) + cost;
-                statusCounts[status] = (statusCounts[status] || 0) + 1;
-
-                // ✅ Count parts/items (split by comma if multiple)
-                if (partsText && partsText !== '-') {
-                    const parts = partsText.split(',').map(p => p.trim());
-                    parts.forEach(part => {
-                        if (part) {
-                            partsCounts[part] = (partsCounts[part] || 0) + 1;
-                        }
-                    });
-                }
-            });
-
-            const avgJobValue = jobCount ? totalJobCost / jobCount : 0;
-
-            // ✅ Top Service Type
-            let topServiceType = "N/A";
-            let maxRevenue = 0;
-            for (const service in serviceTotals) {
-                if (serviceTotals[service] > maxRevenue) {
-                    maxRevenue = serviceTotals[service];
-                    topServiceType = service;
-                }
-            }
-
-            // ✅ Top Parts/Items (most frequently used)
-            let topPart = "N/A";
-            let maxPartCount = 0;
-            for (const part in partsCounts) {
-                if (partsCounts[part] > maxPartCount) {
-                    maxPartCount = partsCounts[part];
-                    topPart = part;
-                }
-            }
-
-            // ✅ Jobs Completed
-            const jobsCompleted = statusCounts['Completed'] || 0;
-
-            // Formatted strings
-            const totalJobRevenue = `PHP ${totalJobCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            const avgJobValueFormatted = `PHP ${avgJobValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-
-            // ===============================
-            // HEADER
-            // ===============================
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(18);
-            doc.text("JOB ORDER REPORT", 105, 20, { align: 'center' });
-
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(`Report Period: ${formattedFromDate} - ${formattedToDate}`, 105, 28, { align: 'center' });
-
-            if (selectedStatus) {
-                doc.setFontSize(9);
-                doc.text(`Status Filter: ${selectedStatus}`, 105, 34, { align: 'center' });
-            }
-
-            doc.setFontSize(8);
-            doc.setTextColor(100);
-            doc.text(`Generated by: ${generatedByUser}`, 10, 38);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 42);
-
-            doc.line(10, 45, 200, 45);
-
-            // ===============================
-            // ✅ SUMMARY SECTION (UPDATED)
-            // ===============================
-            let startY = 52;
-
-            doc.setFillColor(245, 247, 250);
-            doc.roundedRect(10, startY, 190, 55, 3, 3, 'F');
-
-            doc.setTextColor(0);
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text("Report Summary", 105, startY + 7, { align: 'center' });
-            doc.setFont('helvetica', 'normal');
-
-            const kpiY = startY + 15;
-            const col = 63;
-
-            // ✅ Row 1: Total Jobs | Jobs Completed | Top Parts
-            doc.setFontSize(9);
-            doc.text("Total Jobs:", 15, kpiY);
-            doc.setFontSize(11);
-            doc.text(jobCount.toString(), 15, kpiY + 5);
-
-            doc.setFontSize(9);
-            doc.text("Jobs Completed:", 15 + col, kpiY);
-            doc.setFontSize(11);
-            doc.text(jobsCompleted.toString(), 15 + col, kpiY + 5);
-
-            doc.setFontSize(9);
-            doc.text("Top Parts:", 15 + col * 2, kpiY);
-            doc.setFontSize(11);
-            // Truncate if too long
-            const displayTopPart = topPart.length > 15 ? topPart.substring(0, 15) + '...' : topPart;
-            doc.text(displayTopPart, 15 + col * 2, kpiY + 5);
-
-            // ✅ Row 2: Total Job Revenue | Avg Job Value | Top Service
-            const row2Y = kpiY + 18;
-            doc.setFontSize(9);
-            doc.text("Total Job Revenue:", 15, row2Y);
-            doc.setFontSize(11);
-            doc.text(totalJobRevenue, 15, row2Y + 5);
-
-            doc.setFontSize(9);
-            doc.text("Avg Job Value:", 15 + col, row2Y);
-            doc.setFontSize(11);
-            doc.text(avgJobValueFormatted, 15 + col, row2Y + 5);
-
-            doc.setFontSize(9);
-            doc.text("Top Service:", 15 + col * 2, row2Y);
-            doc.setFontSize(11);
-            doc.text(topServiceType, 15 + col * 2, row2Y + 5);
-
-            startY += 65;
-
-            // ===============================
-            // ✅ TABLE - ALL FILTERED ROWS (Font Size 8)
-            // ===============================
-            const tableBody = filteredRows.map(row => {
-                const c = row.cells;
-                return [
-                    c[0].textContent, // Job ID
-                    c[1].textContent, // Client
-                    c[2].textContent, // Technician
-                    c[3].textContent, // Service
-                    c[4].textContent, // Parts/Items
-                    c[5].textContent.replace('₱', 'PHP '), // Total Cost
-                    c[6].textContent, // Date Created
-                    c[7].textContent, // Due Date
-                    c[8].textContent  // Status
-                ];
-            });
-
-            doc.autoTable({
-            startY,
-            head: [['Job ID', 'Client', 'Technician', 'Service', 'Parts/Items', 'Total Cost', 'Date Created', 'Due Date', 'Status']],
-            body: tableBody,
-            theme: 'striped',
-            showHead: 'everyPage',
-            styles: {
-                fontSize: 7,           // Reduced from 8
-                cellPadding: 1.5,      // Reduced from 2
-                overflow: 'linebreak',
-                halign: 'left'         // Added alignment
-            },
-            headStyles: {
-                fillColor: [79, 70, 229],
-                textColor: 255,
-                fontStyle: 'bold',
-                fontSize: 7            // Reduced from 8
-            },
-            columnStyles: {
-                0: { cellWidth: 16 },   // Job ID (reduced from 18)
-                1: { cellWidth: 22 },   // Client (reduced from 25)
-                2: { cellWidth: 20 },   // Technician (reduced from 25)
-                3: { cellWidth: 22 },   // Service (reduced from 25)
-                4: { cellWidth: 28 },   // Parts/Items (reduced from 30)
-                5: { cellWidth: 20 },   // Total Cost (reduced from 22)
-                6: { cellWidth: 20 },   // Date Created (reduced from 22)
-                7: { cellWidth: 18 },   // Due Date (reduced from 22)
-                8: { cellWidth: 18 }    // Status (same)
-            },
-            margin: { left: 10, right: 10 }  // Added explicit margins
-        });
-
-            // Add footer with record count
-            const finalY = doc.lastAutoTable.finalY || startY;
-            doc.setFontSize(8);
-            doc.setTextColor(100);
-            doc.text(`Total Records Exported: ${jobCount}`, 10, finalY + 10);
-
-            doc.save(`JobOrderReport_${fromDate}_to_${toDate}.pdf`);
-
-            console.log(`✅ PDF exported successfully with ${jobCount} records`);
-        });
-
-        // ========================================
-        // 4. BACK BUTTON
-        // ========================================
-        document.getElementById('btnBack').addEventListener('click', function() {
-            window.history.back();
-        });
     </script>
 }

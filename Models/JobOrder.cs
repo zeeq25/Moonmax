@@ -29,8 +29,7 @@ namespace Moonmax.Models
 
         [Required]
         public decimal Cost { get; set; }
-
-        [Required]
+      
         public string Status { get; set; }
 
         public ICollection<JobPart> JobParts { get; set; }

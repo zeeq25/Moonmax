@@ -60,60 +60,45 @@
     </div>
 
     <!-- Payment Method Details (Compact Horizontal) -->
-    @if (!string.IsNullOrEmpty(Model.CheckNumber) || !string.IsNullOrEmpty(Model.BankName) || !string.IsNullOrEmpty(Model.ReferenceNumber))
-    {
-        <div style="margin-bottom:16px; padding:14px 20px; background:#fafafa; border-radius:6px;">
-            <p style="margin:0 0 8px 0; font-size:10px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Payment Details</p>
+    <div style="margin-bottom:16px; padding:14px 20px; background:#fafafa; border-radius:6px;">
+        <p style="margin:0 0 8px 0; font-size:10px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Payment Details</p>
 
-            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 24px;">
-                @if (!string.IsNullOrEmpty(Model.CheckNumber))
-                {
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="font-size:12px; color:#71717a;">Check No:</span>
-                        <span style="font-size:12px; color:#18181b; font-weight:600; font-family:monospace;">@Model.CheckNumber</span>
-                    </div>
-                }
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 24px;">
+            @if (!string.IsNullOrEmpty(Model.CheckNumber))
+            {
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; color:#71717a;">Check No:</span>
+                    <span style="font-size:12px; color:#18181b; font-weight:600; font-family:monospace;">@Model.CheckNumber</span>
+                </div>
+            }
 
-                @if (!string.IsNullOrEmpty(Model.BankName))
-                {
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="font-size:12px; color:#71717a;">Bank:</span>
-                        <span style="font-size:12px; color:#18181b; font-weight:600;">@Model.BankName</span>
-                    </div>
-                }
+            @if (!string.IsNullOrEmpty(Model.BankName))
+            {
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; color:#71717a;">Bank:</span>
+                    <span style="font-size:12px; color:#18181b; font-weight:600;">@Model.BankName</span>
+                </div>
+            }
 
-                @if (Model.CheckDate.HasValue)
-                {
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="font-size:12px; color:#71717a;">Check Date:</span>
-                        <span style="font-size:12px; color:#18181b; font-weight:600;">@Model.CheckDate.Value.ToString("MMM dd, yyyy")</span>
-                    </div>
-                }
+            @if (Model.CheckDate.HasValue)
+            {
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; color:#71717a;">Check Date:</span>
+                    <span style="font-size:12px; color:#18181b; font-weight:600;">@Model.CheckDate.Value.ToString("MMM dd, yyyy")</span>
+                </div>
+            }
 
-                @if (!string.IsNullOrEmpty(Model.ReferenceNumber))
-                {
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="font-size:12px; color:#71717a;">Ref No:</span>
-                        <span style="font-size:12px; color:#18181b; font-weight:600; font-family:monospace;">@Model.ReferenceNumber</span>
-                    </div>
-                }
+            <!-- ✅ ALWAYS SHOW REFERENCE NUMBER -->
+            <div style="display:flex; justify-content:space-between;">
+                <span style="font-size:12px; color:#71717a;">Ref No:</span>
+                <span style="font-size:12px; color:#18181b; font-weight:600; font-family:monospace;">@(Model.ReferenceNumber ?? "—")</span>
             </div>
         </div>
-    }
-
-    <!-- Notes (if exists) -->
-    @if (!string.IsNullOrEmpty(Model.Notes))
-    {
-        <div style="margin-bottom:16px; padding:12px 16px; background:#fafafa; border-radius:6px; border-left:3px solid #71717a;">
-            <p style="margin:0 0 4px 0; font-size:10px; color:#71717a; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Notes</p>
-            <p style="margin:0; font-size:12px; color:#52525b; line-height:1.5;">@Model.Notes</p>
-        </div>
-    }
+    </div>
 
     <!-- Footer -->
     <div style="padding-top:16px; border-top:1px solid #e4e4e7; text-align:center;">
         <p style="margin:0 0 4px 0; font-size:12px; color:#52525b; font-weight:500;">Thank you for your business!</p>
         <p style="margin:0; font-size:11px; color:#a1a1aa;">This is an official receipt. Please keep for your records.</p>
     </div>
-
 </div>

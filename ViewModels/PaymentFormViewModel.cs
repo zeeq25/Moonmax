@@ -22,7 +22,9 @@ namespace Moonmax.ViewModels
         public string? CheckNumber { get; set; }
         public string? BankName { get; set; }
         public DateTime? CheckDate { get; set; }
-        public string ReferenceNumber { get; set; }
-        public string Notes { get; set; }
+
+        // ✅ FIXED: Made these nullable so they're not required
+        public string? ReferenceNumber { get; set; }
+        public string? Notes { get; set; }
     }
 }

@@ -49,10 +49,10 @@ namespace Moonmax.Models
         // ===== TRACKING FIELDS =====
 
         [StringLength(100)]
-        public string ReferenceNumber { get; set; } // Transaction/Receipt number
+        public string? ReferenceNumber { get; set; } // Transaction/Receipt number
 
         [StringLength(500)]
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

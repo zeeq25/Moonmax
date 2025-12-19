@@ -13,54 +13,60 @@
 
 <div class="page page-dashboard">
 
-    <!-- LOW STOCK ALERT BANNER -->
+    <!-- LOW STOCK ALERT MODAL -->
     @if (Model.LowStockItems != null && Model.LowStockItems.Any())
     {
-        <div class="low-stock-banner" id="lowStockBanner">
-            <div class="low-stock-header">
-                <div class="low-stock-icon">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div class="low-stock-title">
-                    <h3>Low Stock Alert</h3>
-                    <p>@Model.LowStockItems.Count item(s) need attention</p>
-                </div>
-                <button class="low-stock-dismiss" onclick="dismissLowStockBanner()">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <ul class="low-stock-list">
-                @foreach (var item in Model.LowStockItems)
-                {
-                    <li class="low-stock-item">
-                        <div class="low-stock-item-info">
-                            <div class="low-stock-item-name">@item.ItemName</div>
-                            <div class="low-stock-item-qty">
-                                @item.Quantity units remaining
-                            </div>
+        <div class="low-stock-modal" id="lowStockModal">
+            <div class="low-stock-modal-content">
+                <div class="low-stock-modal-header">
+                    <div class="low-stock-modal-header-left">
+                        <div class="low-stock-modal-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
-                        @if (item.Quantity <= item.CriticalLevel)
-                        {
-                            <span class="low-stock-badge critical">CRITICAL</span>
-                        }
-                        else
-                        {
-                            <span class="low-stock-badge">LOW</span>
-                        }
-                    </li>
-                }
-            </ul>
+                        <div class="low-stock-modal-title">
+                            <h3>Low Stock Alert</h3>
+                            <p>@Model.LowStockItems.Count item(s) need immediate attention</p>
+                        </div>
+                    </div>
+                    <button class="low-stock-modal-close" onclick="closeLowStockModal()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
-            <div class="low-stock-actions">
-                <a asp-controller="Inventory" asp-action="Index" class="low-stock-btn low-stock-btn-primary">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                    View Inventory
-                </a>
-                <a asp-controller="Procurement" asp-action="CreatePurchaseOrder" class="low-stock-btn low-stock-btn-secondary">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    Create Purchase Order
-                </a>
+                <div class="low-stock-modal-body">
+                    <ul class="low-stock-modal-list">
+                        @foreach (var item in Model.LowStockItems)
+                        {
+                            <li class="low-stock-modal-item @(item.Quantity <= item.CriticalLevel ? "critical" : "")">
+                                <div class="low-stock-modal-item-info">
+                                    <div class="low-stock-modal-item-name">@item.ItemName</div>
+                                    <div class="low-stock-modal-item-qty">
+                                        @item.Quantity units remaining (Reorder at: @item.ReorderLevel)
+                                    </div>
+                                </div>
+                                @if (item.Quantity <= item.CriticalLevel)
+                                {
+                                    <span class="low-stock-modal-badge critical">CRITICAL</span>
+                                }
+                                else
+                                {
+                                    <span class="low-stock-modal-badge">LOW</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="low-stock-modal-footer">
+                    <a asp-controller="Inventory" asp-action="Index" class="low-stock-modal-btn low-stock-modal-btn-primary">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        View Inventory
+                    </a>
+                    <a asp-controller="Procurement" asp-action="CreatePurchaseOrder" class="low-stock-modal-btn low-stock-modal-btn-secondary">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        Create Purchase Order
+                    </a>
+                </div>
             </div>
         </div>
     }
@@ -122,105 +128,7 @@
 
     </section>
 
-    <!-- MAIN GRID: ACTIVITY + SUMMARY + COMPANY EST ===================== -->
-    <section class="dash-main-grid">
-
-        <!-- Recent Activity -->
-        <article class="panel-card activity-card">
-            <header class="panel-card-header">
-                <h2>Recent Activity</h2>
-            </header>
-
-            <ul class="activity-list">
-                @if (Model.RecentActivity != null && Model.RecentActivity.Any())
-                {
-                    foreach (var activity in Model.RecentActivity)
-                    {
-                        <li class="activity-item">
-                            <div class="activity-icon icon-green">
-                                <i class="fa-solid fa-circle-info"></i>
-                            </div>
-                            <div class="activity-body">
-                                <div class="activity-title">@activity</div>
-                                <div class="activity-meta">System Log</div>
-                            </div>
-                            <div class="activity-time">Just now</div>
-                        </li>
-                    }
-                }
-                else
-                {
-                    <li class="activity-item">
-                        <div class="activity-icon icon-blue">
-                            <i class="fa-solid fa-info-circle"></i>
-                        </div>
-                        <div class="activity-body">
-                            <div class="activity-title">No recent activity</div>
-                            <div class="activity-meta">System</div>
-                        </div>
-                        <div class="activity-time">—</div>
-                    </li>
-                }
-            </ul>
-        </article>
-
-        <!-- Today's Summary -->
-        <article class="panel-card summary-card">
-            <header class="panel-card-header panel-card-header--blue">
-                <h2>Today’s Summary</h2>
-            </header>
-
-            <ul class="summary-list">
-
-                <li class="summary-item">
-                    <div class="summary-left">
-                        <i class="fa-solid fa-clipboard-list summary-icon"></i>
-                        <span class="summary-label">New Work Orders</span>
-                    </div>
-                    <span class="summary-value">@Model.NewWorkOrders</span>
-                </li>
-
-                <li class="summary-item">
-                    <div class="summary-left">
-                        <i class="fa-solid fa-check summary-icon green"></i>
-                        <span class="summary-label">Completed Jobs</span>
-                    </div>
-                    <span class="summary-value">@Model.CompletedJobsToday</span>
-                </li>
-
-                <li class="summary-item">
-                    <div class="summary-left">
-                        <i class="fa-solid fa-paper-plane summary-icon blue"></i>
-                        <span class="summary-label">Invoices Sent</span>
-                    </div>
-                    <span class="summary-value">@Model.InvoicesSent</span>
-                </li>
-
-                <li class="summary-item highlight">
-                    <div class="summary-left">
-                        <i class="fa-solid fa-clock summary-icon orange"></i>
-                        <span class="summary-label">Pending Payments</span>
-                    </div>
-                    <span class="summary-value">
-                        ₱@Model.PendingPayments.ToString("N0")
-                    </span>
-                </li>
-
-            </ul>
-        </article>
-
-
-        <!-- Company Est -->
-        <article class="company-card">
-            <div class="company-inner">
-                <div class="company-label">COMPANY EST.</div>
-                <div class="company-date">October 1, 2015</div>
-                <div class="company-meta">10+ years of excellence</div>
-            </div>
-        </article>
-    </section>
-
-    <!-- CHART GRID ====================================================== -->
+    <!-- CHART GRID (MOVED TO TOP) ====================================== -->
     <section class="dash-chart-wrap">
 
         <!-- Work Orders + Quick Links -->
@@ -296,6 +204,104 @@
             </article>
         </div>
     </section>
+
+    <!-- MAIN GRID: ACTIVITY + SUMMARY + COMPANY EST (MOVED TO BOTTOM) === -->
+    <section class="dash-main-grid">
+
+        <!-- Recent Activity -->
+        <article class="panel-card activity-card">
+            <header class="panel-card-header">
+                <h2>Recent Activity</h2>
+            </header>
+
+            <ul class="activity-list">
+                @if (Model.RecentActivity != null && Model.RecentActivity.Any())
+                {
+                    foreach (var activity in Model.RecentActivity)
+                    {
+                        <li class="activity-item">
+                            <div class="activity-icon icon-green">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </div>
+                            <div class="activity-body">
+                                <div class="activity-title">@activity</div>
+                                <div class="activity-meta">System Log</div>
+                            </div>
+                            <div class="activity-time">Just now</div>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="activity-item">
+                        <div class="activity-icon icon-blue">
+                            <i class="fa-solid fa-info-circle"></i>
+                        </div>
+                        <div class="activity-body">
+                            <div class="activity-title">No recent activity</div>
+                            <div class="activity-meta">System</div>
+                        </div>
+                        <div class="activity-time">—</div>
+                    </li>
+                }
+            </ul>
+        </article>
+
+        <!-- Today's Summary -->
+        <article class="panel-card summary-card">
+            <header class="panel-card-header panel-card-header--blue">
+                <h2>Today's Summary</h2>
+            </header>
+
+            <ul class="summary-list">
+
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-clipboard-list summary-icon"></i>
+                        <span class="summary-label">New Work Orders</span>
+                    </div>
+                    <span class="summary-value">@Model.NewWorkOrders</span>
+                </li>
+
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-check summary-icon green"></i>
+                        <span class="summary-label">Completed Jobs</span>
+                    </div>
+                    <span class="summary-value">@Model.CompletedJobsToday</span>
+                </li>
+
+                <li class="summary-item">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-paper-plane summary-icon blue"></i>
+                        <span class="summary-label">Invoices Sent</span>
+                    </div>
+                    <span class="summary-value">@Model.InvoicesSent</span>
+                </li>
+
+                <li class="summary-item highlight">
+                    <div class="summary-left">
+                        <i class="fa-solid fa-clock summary-icon orange"></i>
+                        <span class="summary-label">Pending Payments</span>
+                    </div>
+                    <span class="summary-value">
+                        ₱@Model.PendingPayments.ToString("N0")
+                    </span>
+                </li>
+
+            </ul>
+        </article>
+
+        <!-- Company Est -->
+        <article class="company-card">
+            <div class="company-inner">
+                <div class="company-label">COMPANY EST.</div>
+                <div class="company-date">October 1, 2015</div>
+                <div class="company-meta">10+ years of excellence</div>
+            </div>
+        </article>
+    </section>
+
 </div>
 
 @section Scripts {
@@ -355,40 +361,38 @@
     </script>
 
     <script>
-                function dismissLowStockBanner() {
-            const banner = document.getElementById('lowStockBanner');
-            banner.style.animation = 'slideUp 0.3s ease-out';
-
-            setTimeout(() => {
-                banner.style.display = 'none';
-                // Store dismissal in session storage (reappears on page reload)
-                sessionStorage.setItem('lowStockDismissed', 'true');
-            }, 300);
+        // Low Stock Modal Functions
+        function closeLowStockModal() {
+            const modal = document.getElementById('lowStockModal');
+            modal.classList.remove('show');
         }
 
-        // Check if banner was dismissed in this session
+        // Show modal on page load
         window.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('lowStockBanner');
-            if (banner && sessionStorage.getItem('lowStockDismissed') === 'true') {
-                banner.style.display = 'none';
+            const modal = document.getElementById('lowStockModal');
+            if (!modal) return;
+
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 500);
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('lowStockModal');
+            if (event.target === modal) {
+                closeLowStockModal();
             }
         });
 
-        // Add slideUp animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @@keyframes slideUp {
-                from {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateY(-20px);
+        // Close modal with ESC key
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('lowStockModal');
+                if (modal && modal.classList.contains('show')) {
+                    closeLowStockModal();
                 }
             }
-        `;
-        document.head.appendChild(style);
+        });
     </script>
 }
-

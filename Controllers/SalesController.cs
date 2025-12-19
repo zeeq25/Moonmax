@@ -490,7 +490,7 @@ namespace Moonmax.Controllers
                     CheckNumber = model.CheckNumber ?? "",
                     BankName = model.BankName ?? "",
                     CheckDate = model.CheckDate,
-                    ReferenceNumber = model.ReferenceNumber ?? "",
+                    ReferenceNumber = model.ReferenceNumber ?? invoice.InvoiceNumber, //AUTO FILL
                     Notes = model.Notes ?? "",
                     ProcessedByUserID = GetCurrentUserId(),
                     PDCStatus = model.PaymentMethod == "Check" ? "Received" : "N/A",
@@ -655,7 +655,8 @@ namespace Moonmax.Controllers
                 {
                     PaymentID = p.PaymentID,
                     InvoiceID = p.InvoiceID,
-                    InvoiceNumber = p.ReferenceNumber, // <-- IMPORTANT
+                    InvoiceNumber = p.Invoice.InvoiceNumber,  // ✅ CORRECT
+                    JobID = p.Invoice.JobID,  // ✅ ADD THIS TOO
                     ClientName = p.Invoice != null && p.Invoice.Client != null
                         ? p.Invoice.Client.Name
                         : "",

@@ -99,10 +99,10 @@
                         <option value="Paid">Paid</option>
                     </select>
 
-                    <!-- Export Button -->
+                    <!-- Export Button 
                     <button id="btnExportPdf" class="modern-btn modern-btn-export" style="flex:1; min-width:120px; background-color:#4F46E5; color:#fff;">
                         <i class="fa-solid fa-file-pdf"></i> Export PDF
-                    </button>
+                    </button> -->
                 </div>
 
             </div>
@@ -201,10 +201,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 
-    <!--Back Button-->
+    <!-- ✅ FIXED: Back Button - Goes to Reports Index -->
     <script>
         document.getElementById('btnBack').addEventListener('click', function() {
-            window.history.back(); // Goes back to the previous page
+            // Instead of window.history.back(), use a specific route
+            window.location.href = '@Url.Action("Index", "Reports")';
         });
     </script>
 
@@ -236,7 +237,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // allow canvas to respect height
+                maintainAspectRatio: false,
                 plugins: { legend: { display: true } },
                 scales: { y: { beginAtZero: true } }
             }
@@ -252,38 +253,71 @@
                     backgroundColor: generateColors(serviceRevenue.length)
                 }]
             },
-            options: { responsive: true,
-            maintainAspectRatio: false, // allow canvas to respect height
-            plugins: { legend: { position: 'right' } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
         });
     </script>
 
 
-    <!--Pagination-->
+    <!-- ✅ FIXED: Pagination with Status Filter Support -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const table = document.getElementById("invoiceTable");
-            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const allRows = Array.from(table.querySelectorAll("tbody tr"));
             const rowsPerPage = 10;
             let currentPage = 1;
+            let filteredRows = allRows; // Initially show all rows
+
+            // ✅ Filter rows based on status
+            function applyStatusFilter() {
+                const selectedStatus = document.getElementById('statusFilter').value;
+
+                if (!selectedStatus) {
+                    filteredRows = allRows;
+                } else {
+                    filteredRows = allRows.filter(row => {
+                        const statusCell = row.cells[7]; // Status column
+                        return statusCell && statusCell.textContent.trim() === selectedStatus;
+                    });
+                }
+
+                currentPage = 1; // Reset to page 1 when filter changes
+                renderTablePage(currentPage);
+            }
 
             function renderTablePage(page) {
-                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
-                rows.forEach((row, index) => {
-                    row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? "" : "none";
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+
+                // Hide all rows first
+                allRows.forEach(row => row.style.display = "none");
+
+                // Show only filtered rows for current page
+                filteredRows.forEach((row, index) => {
+                    if (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) {
+                        row.style.display = "";
+                    }
                 });
-                document.getElementById("invoicePageIndicator").textContent = `Page ${page} of ${totalPages}`;
+
+                document.getElementById("invoicePageIndicator").textContent =
+                    `Page ${page} of ${totalPages} (${filteredRows.length} records)`;
+
                 document.querySelectorAll(".table-pagination .pg-btn")[0].disabled = page === 1;
                 document.querySelectorAll(".table-pagination .pg-btn")[1].disabled = page === totalPages;
             }
 
             window.changeInvoicePage = function(step) {
-                const totalPages = Math.ceil(rows.length / rowsPerPage) || 1;
+                const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
                 currentPage += step;
                 if (currentPage < 1) currentPage = 1;
                 if (currentPage > totalPages) currentPage = totalPages;
                 renderTablePage(currentPage);
             }
+
+            // ✅ Listen to status filter changes
+            document.getElementById('statusFilter').addEventListener('change', applyStatusFilter);
 
             renderTablePage(currentPage);
         });
@@ -314,9 +348,11 @@
     </script>
 
 
-    <!-- Export button (FINAL FIX: date + status + pagination-safe + full summary) -->
+    <!-- ✅ FIXED: Export PDF - Doesn't affect history -->
     <script>
-        document.getElementById('btnExportPdf').addEventListener('click', function () {
+        document.getElementById('btnExportPdf').addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent any default behavior
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -340,7 +376,7 @@
             });
 
             // ===============================
-            // 🔥 STEP 1: FILTER ROWS FIRST
+            // FILTER ROWS
             // ===============================
             const allRows = Array.from(document.querySelectorAll('#invoiceTable tbody tr'));
 
@@ -354,68 +390,66 @@
                 return matchesStatus && matchesDate;
             });
 
-        // ===============================
-        // FILTER-AWARE SUMMARY
-        // ===============================
-        let totalRevenueValue = 0;
-        let serviceTotals = {};
-        let clientTotals = {}; // track revenue by client
-        let paymentTotals = {}; // track count by payment method
-        let invoiceCount = filteredRows.length;
+            // ===============================
+            // FILTER-AWARE SUMMARY
+            // ===============================
+            let totalRevenueValue = 0;
+            let serviceTotals = {};
+            let clientTotals = {};
+            let paymentTotals = {};
+            let invoiceCount = filteredRows.length;
 
-        filteredRows.forEach(row => {
-            const amount = parseFloat(
-                row.cells[3].textContent.replace('₱', '').replace(/,/g, '')
-            ) || 0;
+            filteredRows.forEach(row => {
+                const amount = parseFloat(
+                    row.cells[3].textContent.replace('₱', '').replace(/,/g, '')
+                ) || 0;
 
-            const serviceType = row.cells[2].textContent.trim();
-            const client = row.cells[1].textContent.trim();
-            const paymentType = row.cells[4].textContent.trim();
+                const serviceType = row.cells[2].textContent.trim();
+                const client = row.cells[1].textContent.trim();
+                const paymentType = row.cells[4].textContent.trim();
 
-            totalRevenueValue += amount;
-            serviceTotals[serviceType] = (serviceTotals[serviceType] || 0) + amount;
-            clientTotals[client] = (clientTotals[client] || 0) + amount;
-            paymentTotals[paymentType] = (paymentTotals[paymentType] || 0) + 1;
-        });
+                totalRevenueValue += amount;
+                serviceTotals[serviceType] = (serviceTotals[serviceType] || 0) + amount;
+                clientTotals[client] = (clientTotals[client] || 0) + amount;
+                paymentTotals[paymentType] = (paymentTotals[paymentType] || 0) + 1;
+            });
 
-        const avgInvoiceValueValue = invoiceCount ? totalRevenueValue / invoiceCount : 0;
+            const avgInvoiceValueValue = invoiceCount ? totalRevenueValue / invoiceCount : 0;
 
-        // Top Service Type
-        let topServiceType = "N/A";
-        let maxRevenue = 0;
-        for (const service in serviceTotals) {
-            if (serviceTotals[service] > maxRevenue) {
-                maxRevenue = serviceTotals[service];
-                topServiceType = service;
+            // Top Service Type
+            let topServiceType = "N/A";
+            let maxRevenue = 0;
+            for (const service in serviceTotals) {
+                if (serviceTotals[service] > maxRevenue) {
+                    maxRevenue = serviceTotals[service];
+                    topServiceType = service;
+                }
             }
-        }
 
-        // Top Client
-        let topClient = "N/A";
-        let maxClientRevenue = 0;
-        for (const client in clientTotals) {
-            if (clientTotals[client] > maxClientRevenue) {
-                maxClientRevenue = clientTotals[client];
-                topClient = client;
+            // Top Client
+            let topClient = "N/A";
+            let maxClientRevenue = 0;
+            for (const client in clientTotals) {
+                if (clientTotals[client] > maxClientRevenue) {
+                    maxClientRevenue = clientTotals[client];
+                    topClient = client;
+                }
             }
-        }
 
-        // Top Payment Method
-        let topPaymentMethod = "N/A";
-        let maxPaymentCount = 0;
-        for (const method in paymentTotals) {
-            if (paymentTotals[method] > maxPaymentCount) {
-                maxPaymentCount = paymentTotals[method];
-                topPaymentMethod = method;
+            // Top Payment Method
+            let topPaymentMethod = "N/A";
+            let maxPaymentCount = 0;
+            for (const method in paymentTotals) {
+                if (paymentTotals[method] > maxPaymentCount) {
+                    maxPaymentCount = paymentTotals[method];
+                    topPaymentMethod = method;
+                }
             }
-        }
 
-        // Formatted strings
-        const totalRevenue = `PHP ${totalRevenueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-        const invoicesIssued = invoiceCount.toString();
-        const avgInvoiceValue = `PHP ${avgInvoiceValueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-
-
+            // Formatted strings
+            const totalRevenue = `PHP ${totalRevenueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            const invoicesIssued = invoiceCount.toString();
+            const avgInvoiceValue = `PHP ${avgInvoiceValueValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
             // ===============================
             // HEADER
@@ -445,55 +479,48 @@
             // ===============================
             let startY = 52;
 
-        // 🔥 FIX 1: Set light background color (light gray)
-        doc.setFillColor(245, 247, 250); // light dashboard-style background
-        doc.roundedRect(10, startY, 190, 55, 3, 3, 'F');
+            doc.setFillColor(245, 247, 250);
+            doc.roundedRect(10, startY, 190, 55, 3, 3, 'F');
 
-        // 🔥 FIX 2: Reset text color to black
-        doc.setTextColor(0);
-        doc.setFontSize(12);
-        doc.text("Report Summary", 105, startY + 7, { align: 'center' });
+            doc.setTextColor(0);
+            doc.setFontSize(12);
+            doc.text("Report Summary", 105, startY + 7, { align: 'center' });
 
-        const kpiY = startY + 15;
-        const col = 63;
-               
-        doc.setFontSize(9);
-        doc.text("Total Revenue (PHP):", 15, kpiY);
-        doc.setFontSize(11);
-        doc.text(totalRevenue, 15, kpiY + 5);
+            const kpiY = startY + 15;
+            const col = 63;
 
-        doc.setFontSize(9);
-        doc.text("Invoices Issued:", 15 + col, kpiY);
-        doc.setFontSize(11);
-        doc.text(invoicesIssued, 15 + col, kpiY + 5);
+            doc.setFontSize(9);
+            doc.text("Total Revenue (PHP):", 15, kpiY);
+            doc.setFontSize(11);
+            doc.text(totalRevenue, 15, kpiY + 5);
 
-        // Top Client
-        doc.setFontSize(9);
-        doc.text("Top Client:", 15 + col * 2, kpiY);
-        doc.setFontSize(11);
-        doc.text(topClient, 15 + col * 2, kpiY + 5);
+            doc.setFontSize(9);
+            doc.text("Invoices Issued:", 15 + col, kpiY);
+            doc.setFontSize(11);
+            doc.text(invoicesIssued, 15 + col, kpiY + 5);
 
-        const row2Y = kpiY + 18;
-        doc.setFontSize(9);
-        doc.text("Avg Invoice Value (PHP):", 15, row2Y);
-        doc.setFontSize(11);
-        doc.text(avgInvoiceValue, 15, row2Y + 5);
+            doc.setFontSize(9);
+            doc.text("Top Client:", 15 + col * 2, kpiY);
+            doc.setFontSize(11);
+            doc.text(topClient, 15 + col * 2, kpiY + 5);
 
-        doc.setFontSize(9);
-        doc.text("Top Service Type:", 15 + col, row2Y);
-        doc.setFontSize(11);
-        doc.text(topServiceType, 15 + col, row2Y + 5);
+            const row2Y = kpiY + 18;
+            doc.setFontSize(9);
+            doc.text("Avg Invoice Value (PHP):", 15, row2Y);
+            doc.setFontSize(11);
+            doc.text(avgInvoiceValue, 15, row2Y + 5);
 
-        // Top Payment Method
-        doc.setFontSize(9);
-        doc.text("Top Payment Method:", 15 + col * 2, row2Y);
-        doc.setFontSize(11);
-        doc.text(topPaymentMethod, 15 + col * 2, row2Y + 5);
+            doc.setFontSize(9);
+            doc.text("Top Service Type:", 15 + col, row2Y);
+            doc.setFontSize(11);
+            doc.text(topServiceType, 15 + col, row2Y + 5);
 
+            doc.setFontSize(9);
+            doc.text("Top Payment Method:", 15 + col * 2, row2Y);
+            doc.setFontSize(11);
+            doc.text(topPaymentMethod, 15 + col * 2, row2Y + 5);
 
-
-        startY += 65;
-
+            startY += 65;
 
             // ===============================
             // TABLE
@@ -529,6 +556,5 @@
             doc.save(`SalesReport_${fromDate}_to_${toDate}.pdf`);
         });
     </script>
-    
 }
 

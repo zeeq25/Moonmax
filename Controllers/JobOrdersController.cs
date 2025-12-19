@@ -115,12 +115,7 @@ namespace Moonmax.Controllers
                 Clients = _db.Client
                     .Select(c => new SelectListItem { Value = c.ClientID.ToString(), Text = c.Name })
                     .ToList(),
-
-                StatusList = new List<SelectListItem>
-                {
-                    new SelectListItem { Value = "Pending", Text = "Pending" }
-                },
-
+            
                 ServiceTypes = new List<SelectListItem>
         {
                 new SelectListItem { Value = "Hydraulic Hose Fabrication", Text = "Hydraulic Hose Fabrication" },
@@ -245,166 +240,167 @@ namespace Moonmax.Controllers
                 new SelectListItem { Value = "Machining Job", Text = "Machining Job" },
     };
 
-            vm.StatusList = new List<SelectListItem>
-    {
-        new SelectListItem { Value = "Pending", Text = "Pending" },
-        new SelectListItem { Value = "In Progress", Text = "In Progress" }
-    };
-        }
-
-        // ========================================
-        // COMPLETE FIXED ADDPARTS METHODS
-        // ========================================
-
-        // ADD PARTS GET
-        [HttpGet]
-        public async Task<IActionResult> AddParts(int id)
-        {
-            var job = await _db.JobOrders
-                .Include(j => j.Client)
-                .FirstOrDefaultAsync(j => j.JobID == id);
-
-            if (job == null) return NotFound();
-
-            var parts = await _db.JobParts
-                .Include(p => p.Inventory)
-                .Where(p => p.JobID == id)
-                .ToListAsync();
-
-
-
-            // Get ALL distinct categories from inventory (ignore stock for category dropdown)
-            var categories = await _db.Inventories
-                .Where(i => !string.IsNullOrWhiteSpace(i.Category))
-                .Select(i => i.Category.Trim())
-                .Distinct()
-                .OrderBy(c => c)
-                .ToListAsync();
-
-            var vm = new AddPartsViewModel
+             vm.StatusList = new List<SelectListItem>
             {
-                JobID = job.JobID,
-                JobClient = job.ClientID == null ? $"Walk-In ({job.ContactNumber})" : job.Client!.Name,
-                ServiceType = job.ServiceType ?? "",
-                JobStatus = job.Status, // ⬅️ ADDED THIS
-                Parts = parts.Select(p => new JobPartListingVM
-                {
-                    PartID = p.PartID,
-                    PartName = p.Inventory.PartName,
-                    Quantity = p.Quantity,
-                    UnitCost = p.UnitCost,
-                    TotalCost = p.TotalCost
-                }).ToList(),
-
-                // Populate categories - make sure there's at least a placeholder if empty
-                Categories = categories.Any()
-                ? categories.Select(c => new SelectListItem { Value = c, Text = c }).ToList()
-                : new List<SelectListItem>
-                {
-                new SelectListItem { Value = "", Text = "No categories available", Disabled = true }
-                },
-
-
-                InventoryItems = await _db.Inventories
-                    .Where(i => (i.QuantityInStock - i.ReservedQuantity) > 0) // Only show available items
-                    .Select(i => new SelectListItem
-                    {
-                        Value = i.InventoryID.ToString(),
-                        Text = $"{i.PartName} (Available: {i.QuantityInStock - i.ReservedQuantity})"
-                    })
-                    .ToListAsync()
+            new SelectListItem { Value = "Pending", Text = "Pending" },
+            new SelectListItem { Value = "In Progress", Text = "In Progress" }
             };
-
-
-
-            return View(vm);
-        }
-
-        // ADD PARTS POST - PRODUCTION VERSION
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddParts(AddPartsViewModel vm)
-        {
-            // Validate basic requirements
-            if (vm.InventoryID <= 0)
-            {
-                ModelState.AddModelError("InventoryID", "Please select a part");
             }
 
-            if (vm.Quantity <= 0)
+            // ========================================
+            // COMPLETE FIXED ADDPARTS METHODS
+            // ========================================
+
+            // ADD PARTS GET
+            [HttpGet]
+            public async Task<IActionResult> AddParts(int id)
             {
-                ModelState.AddModelError("Quantity", "Quantity must be greater than 0");
-            }
+                var job = await _db.JobOrders
+                    .Include(j => j.Client)
+                    .FirstOrDefaultAsync(j => j.JobID == id);
 
-            if (!ModelState.IsValid)
-            {
-                TempData["AddPartsError"] = "Please fill in all required fields correctly.";
-                await ReloadInventoryDropdownAndParts(vm);
-                return View(vm);
-            }
+                if (job == null) return NotFound();
 
-            // Get inventory item
-            var inventoryItem = await _db.Inventories
-                .FirstOrDefaultAsync(i => i.InventoryID == vm.InventoryID);
+                var parts = await _db.JobParts
+                    .Include(p => p.Inventory)
+                    .Where(p => p.JobID == id)
+                    .ToListAsync();
 
-            if (inventoryItem == null)
-            {
-                TempData["AddPartsError"] = "Selected part not found in inventory.";
-                await ReloadInventoryDropdownAndParts(vm);
-                return View(vm);
-            }
 
-            // Calculate available stock (actual stock minus reserved)
-            var availableStock = inventoryItem.QuantityInStock - inventoryItem.ReservedQuantity;
 
-            // Check if we have enough stock
-            if (vm.Quantity > availableStock)
-            {
-                TempData["AddPartsError"] = $"Cannot add {vm.Quantity} units of {inventoryItem.PartName}. Only {availableStock} units available (Total Stock: {inventoryItem.QuantityInStock}, Reserved: {inventoryItem.ReservedQuantity}).";
-                await ReloadInventoryDropdownAndParts(vm);
-                return View(vm);
-            }
+                // Get ALL distinct categories from inventory (ignore stock for category dropdown)
+                var categories = await _db.Inventories
+                    .Where(i => !string.IsNullOrWhiteSpace(i.Category))
+                    .Select(i => i.Category.Trim())
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToListAsync();
 
-            // Check reorder level (BLOCKING - must maintain minimum stock)
-            const int reorderLevel = 10;
-            var stockAfterAddition = availableStock - vm.Quantity;
-
-            if (stockAfterAddition < reorderLevel)
-            {
-                TempData["AddPartsError"] = $"❌ Cannot add {vm.Quantity} units of {inventoryItem.PartName}. This would bring stock below minimum level. Available: {availableStock}, After addition: {stockAfterAddition}, Minimum required: {reorderLevel}. Maximum you can add: {availableStock - reorderLevel} units.";
-                await ReloadInventoryDropdownAndParts(vm);
-                return View(vm);
-            }
-
-            try
-            {
-                // Create the job part
-                var part = new JobPart
+                var vm = new AddPartsViewModel
                 {
-                    JobID = vm.JobID,
-                    InventoryID = vm.InventoryID,
-                    Quantity = vm.Quantity,
-                    UnitCost = inventoryItem.UnitCost
+                    JobID = job.JobID,
+                    JobClient = job.ClientID == null ? $"Walk-In ({job.ContactNumber})" : job.Client!.Name,
+                    ServiceType = job.ServiceType ?? "",
+                    JobStatus = job.Status, // ⬅️ ADDED THIS
+                    Parts = parts.Select(p => new JobPartListingVM
+                    {
+                        PartID = p.PartID,
+                        PartName = p.Inventory.PartName,
+                        Quantity = p.Quantity,
+                        UnitCost = p.UnitCost,
+                        TotalCost = p.TotalCost
+                    }).ToList(),
+
+                    // Populate categories - make sure there's at least a placeholder if empty
+                    Categories = categories.Any()
+                    ? categories.Select(c => new SelectListItem { Value = c, Text = c }).ToList()
+                    : new List<SelectListItem>
+                    {
+                new SelectListItem { Value = "", Text = "No categories available", Disabled = true }
+                    },
+
+
+                    InventoryItems = await _db.Inventories
+                        .Where(i => (i.QuantityInStock - i.ReservedQuantity) > 0) // Only show available items
+                        .Select(i => new SelectListItem
+                        {
+                            Value = i.InventoryID.ToString(),
+                            Text = $"{i.PartName} (Available: {i.QuantityInStock - i.ReservedQuantity})"
+                        })
+                        .ToListAsync()
                 };
 
-                _db.JobParts.Add(part);
-                await _db.SaveChangesAsync();
 
-                // Show success message (or warning if stock is low)
-                if (string.IsNullOrEmpty(TempData["AddPartsWarning"] as string))
-                {
-                    TempData["AddPartsSuccess"] = $"Successfully added {vm.Quantity} units of {inventoryItem.PartName}!";
-                }
 
-                return RedirectToAction(nameof(AddParts), new { id = vm.JobID });
-            }
-            catch (Exception ex)
-            {
-                TempData["AddPartsError"] = $"Error adding part: {ex.Message}";
-                await ReloadInventoryDropdownAndParts(vm);
                 return View(vm);
             }
-        }
+
+            // ADD PARTS POST - PRODUCTION VERSION
+            [HttpPost]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> AddParts(AddPartsViewModel vm)
+            {
+                // Validate basic requirements
+                if (vm.InventoryID <= 0)
+                {
+                    ModelState.AddModelError("InventoryID", "Please select a part");
+                }
+
+                if (vm.Quantity <= 0)
+                {
+                    ModelState.AddModelError("Quantity", "Quantity must be greater than 0");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    TempData["AddPartsError"] = "Please fill in all required fields correctly.";
+                    await ReloadInventoryDropdownAndParts(vm);
+                    return View(vm);
+                }
+
+                // Get inventory item
+                var inventoryItem = await _db.Inventories
+                    .FirstOrDefaultAsync(i => i.InventoryID == vm.InventoryID);
+
+                if (inventoryItem == null)
+                {
+                    TempData["AddPartsError"] = "Selected part not found in inventory.";
+                    await ReloadInventoryDropdownAndParts(vm);
+                    return View(vm);
+                }
+
+                // Calculate available stock (actual stock minus reserved)
+                var availableStock = inventoryItem.QuantityInStock - inventoryItem.ReservedQuantity;
+
+                // Check if we have enough stock
+                if (vm.Quantity > availableStock)
+                {
+                    TempData["AddPartsError"] = $"Cannot add {vm.Quantity} units of {inventoryItem.PartName}. Only {availableStock} units available (Total Stock: {inventoryItem.QuantityInStock}, Reserved: {inventoryItem.ReservedQuantity}).";
+                    await ReloadInventoryDropdownAndParts(vm);
+                    return View(vm);
+                }
+
+                // Check reorder level (BLOCKING - must maintain minimum stock)
+                const int reorderLevel = 10;
+                var stockAfterAddition = availableStock - vm.Quantity;
+
+                if (stockAfterAddition < reorderLevel)
+                {
+                    TempData["AddPartsError"] = $"❌ Cannot add {vm.Quantity} units of {inventoryItem.PartName}. This would bring stock below minimum level. Available: {availableStock}, After addition: {stockAfterAddition}, Minimum required: {reorderLevel}. Maximum you can add: {availableStock - reorderLevel} units.";
+                    await ReloadInventoryDropdownAndParts(vm);
+                    return View(vm);
+                }
+
+                try
+                {
+                    // Create the job part
+                    var part = new JobPart
+                    {
+                        JobID = vm.JobID,
+                        InventoryID = vm.InventoryID,
+                        Quantity = vm.Quantity,
+                        UnitCost = inventoryItem.UnitCost
+                    };
+
+                    _db.JobParts.Add(part);
+                    await _db.SaveChangesAsync();
+
+                    // Show success message (or warning if stock is low)
+                    if (string.IsNullOrEmpty(TempData["AddPartsWarning"] as string))
+                    {
+                        TempData["AddPartsSuccess"] = $"Successfully added {vm.Quantity} units of {inventoryItem.PartName}!";
+                    }
+
+                    return RedirectToAction(nameof(AddParts), new { id = vm.JobID });
+                }
+                catch (Exception ex)
+                {
+                    TempData["AddPartsError"] = $"Error adding part: {ex.Message}";
+                    await ReloadInventoryDropdownAndParts(vm);
+                    return View(vm);
+                }
+            }
+        
 
         // RELOAD HELPER
         private async Task ReloadInventoryDropdownAndParts(AddPartsViewModel vm)

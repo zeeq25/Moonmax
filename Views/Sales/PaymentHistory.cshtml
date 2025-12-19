@@ -280,7 +280,7 @@
                         ${has(d.checkDate) ? `<div class="col-md-6"><strong>Check Date</strong><br>${d.checkDate}</div>` : ``}
                         ${has(d.depositDate) ? `<div class="col-md-6"><strong>Deposit Date</strong><br>${d.depositDate}</div>` : ``}
                         ${has(d.clearanceDate) ? `<div class="col-md-6"><strong>Clearance Date</strong><br>${d.clearanceDate}</div>` : ``}
-                        ${has(d.notes) ? `<div class="col-md-12"><strong>Notes</strong><br>${d.notes}</div>` : ``}
+                        <div class="col-md-12"><strong>Notes</strong><br>${d.notes || '—'}</div>
                     </div>`;
 
                     document.getElementById('paymentDetailsBody').innerHTML = html;

@@ -123,6 +123,8 @@
                                 }
 
                                 @* Only show Create Invoice for In Progress jobs *@
+                                @* Only show Create Invoice for In Progress jobs *@
+                                @* Only show Create Invoice for In Progress jobs *@
                                 @if (string.Equals(jo.Status?.Trim(), "In Progress", StringComparison.OrdinalIgnoreCase) && !jo.HasInvoice)
                                 {
                                     <a class="icon-btn-table btn-create-invoice"
@@ -131,7 +133,7 @@
                                        title="Create Invoice"
                                        data-job-id="@jo.JobID"
                                        data-client="@jo.Client"
-                                       data-cost="@jo.Cost.ToString("C")">
+                                       data-cost="&#8369;@jo.Cost.ToString("N2")">
                                         <i class="fa-solid fa-file-invoice"></i>
                                     </a>
                                 }

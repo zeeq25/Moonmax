@@ -25,8 +25,8 @@ namespace Moonmax.ViewModels
         [Range(0.01, double.MaxValue, ErrorMessage = "Job cost must be greater than 0")]
         public decimal Cost { get; set; }
 
-        [Required(ErrorMessage = "Status is required.")]
-        public string Status { get; set; }
+        
+        //public string Status { get; set; }
 
         public List<SelectListItem> Technicians { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Clients { get; set; } = new List<SelectListItem>();

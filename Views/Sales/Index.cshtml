@@ -439,7 +439,7 @@
                     checkDate.value = '';
                     const now = new Date();
                     const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
-                    referenceNumber.value = `CASH-${dateStr}`;
+                    
                 } else {
                     checkFields.style.display = 'none';
                     checkNumber.removeAttribute('required');
