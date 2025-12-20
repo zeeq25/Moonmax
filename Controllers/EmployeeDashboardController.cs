@@ -23,6 +23,9 @@ namespace Moonmax.Controllers
 
             var vm = new DashboardViewModel
             {
+                // USERS
+                TotalUsers = _db.Users.Count(),
+                ActiveUsers = _db.Users.Count(u => u.IsActive),
                 // JOB ORDERS
                 ActiveRepairs = _db.JobOrders.Count(j => j.Status == "In Progress"),
                 CompletedJobsMonth = _db.JobOrders.Count(j =>
@@ -31,14 +34,20 @@ namespace Moonmax.Controllers
                 ),
                 // INVENTORY
                 TotalInventoryStock = _db.Inventories.Sum(i => i.QuantityInStock),
-
+                // SALES
+                MonthlySales = _db.Invoices
+                    .Where(i => i.Status == "Paid" && i.DateIssued >= firstDayMonth)
+                    .Sum(i => (decimal?)i.Amount) ?? 0,
                 // TODAY SUMMARY
                 NewWorkOrders = _db.JobOrders.Count(j => j.CreatedAt.Date == now.Date),
                 CompletedJobsToday = _db.JobOrders.Count(j =>
                     j.Status == "Completed" &&
                     j.DueDate != null &&
                     j.DueDate.Value.Date == now.Date),
-
+                InvoicesSent = _db.Invoices.Count(i => i.DateIssued.Date == now.Date),
+                PendingPayments = _db.Invoices
+                    .Where(i => i.Status == "Pending")
+                    .Sum(i => (decimal?)i.Amount) ?? 0,
                 // ACTIVITY FEED
                 RecentActivity = _db.JobOrders
                     .Include(j => j.Client)
@@ -47,7 +56,7 @@ namespace Moonmax.Controllers
                     .Select(j => $"Job Order #{j.JobID} created for {j.Client.Name}")
                     .ToList(),
 
-                // LOW STOCK ITEMS
+                // LOW STOCK ITEMS - NEW
                 LowStockItems = _db.Inventories
                     .Where(i => i.QuantityInStock <= i.ReorderLevel)
                     .OrderBy(i => i.QuantityInStock)
